@@ -1,0 +1,98 @@
+╔════════════════════════════════════════════════════════════╗
+║              MÉMO RAPIDE - MODIFICATIONS                   ║
+╚════════════════════════════════════════════════════════════╝
+
+🎯 3 MÉTHODES PRINCIPALES
+
+┌────────────────────────────────────────────────────────────┐
+│ 1. GESTIONNAIRE DE FICHIERS HOSTINGER (Le plus simple)    │
+└────────────────────────────────────────────────────────────┘
+
+   Panneau Hostinger → Gestionnaire de fichiers
+   → Naviguez vers le fichier
+   → Clic droit → Éditer
+   → Modifiez → Enregistrez
+
+   ✓ Parfait pour: petites corrections urgentes
+   ✗ Pas idéal pour: gros changements
+
+┌────────────────────────────────────────────────────────────┐
+│ 2. FILEZILLA (Recommandé - facile et puissant)            │
+└────────────────────────────────────────────────────────────┘
+
+   1. Modifier localement (VS Code + WAMP)
+   2. Tester: http://localhost/api
+   3. Ouvrir FileZilla
+   4. Glisser-déposer les fichiers modifiés
+   5. Tester: https://votredomaine.com/api
+
+   ✓ Parfait pour: développement quotidien
+   ✓ Édition locale avec votre éditeur préféré
+
+┌────────────────────────────────────────────────────────────┐
+│ 3. GIT + GITHUB (Professionnel)                           │
+└────────────────────────────────────────────────────────────┘
+
+   1. git add .
+   2. git commit -m "message"
+   3. git push
+   4. Uploader sur Hostinger (FTP ou SSH)
+
+   ✓ Parfait pour: projets en équipe, historique
+   ✓ Permet de revenir en arrière facilement
+
+════════════════════════════════════════════════════════════
+
+⚡ WORKFLOW ULTRA-RAPIDE (5 ÉTAPES)
+
+   1. 📝 MODIFIER    → VS Code (local)
+   2. 🧪 TESTER     → http://localhost/api
+   3. 📤 UPLOADER   → FileZilla
+   4. ✅ VÉRIFIER   → https://votredomaine.com/api
+   5. 🎉 TERMINÉ    → C'est en ligne!
+
+════════════════════════════════════════════════════════════
+
+📦 CONFIGURATION FILEZILLA
+
+   Hôte:         ftp.votredomaine.com
+   Port:         21
+   Utilisateur:  [dans Hostinger → FTP Accounts]
+   Mot de passe: [dans Hostinger → FTP Accounts]
+
+   Local:   c:\wamp64\www\api\
+   Serveur: public_html/api/
+
+════════════════════════════════════════════════════════════
+
+⚠️ RÈGLES D'OR
+
+   1. TOUJOURS tester localement d'abord
+   2. NE JAMAIS modifier database.php en production
+   3. TOUJOURS faire une sauvegarde avant gros changement
+   4. VIDER le cache après modification (Ctrl+F5)
+
+════════════════════════════════════════════════════════════
+
+🆘 AIDE RAPIDE
+
+   Modifications non visibles?
+   → Ctrl+F5 pour vider le cache
+
+   Erreur 500?
+   → Hostinger → Error Logs
+   → Restaurez l'ancien fichier
+
+   FTP ne marche pas?
+   → Vérifiez identifiants dans Hostinger
+   → Essayez Port 21
+
+════════════════════════════════════════════════════════════
+
+📚 DOCUMENTATION COMPLÈTE
+
+   WORKFLOW_SIMPLE.txt        → Guide pas à pas
+   GESTION_MODIFICATIONS.md   → Tous les détails
+   DEPLOIEMENT_HOSTINGER.md   → Déploiement initial
+
+════════════════════════════════════════════════════════════

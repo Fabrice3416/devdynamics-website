@@ -1,0 +1,108 @@
+/* ============================================ */
+/* PROGRAMMES PAGE STYLES */
+/* ============================================ */
+
+.programmes-hero {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: var(--color-white);
+  padding: var(--spacing-4xl) 0 var(--spacing-3xl);
+  text-align: center;
+}
+
+.programmes-hero h1 {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.programmes-hero p {
+  font-size: var(--font-size-lg);
+  opacity: 0.9;
+}
+
+.programmes-section {
+  padding: var(--spacing-4xl) 0;
+  background-color: var(--color-background);
+}
+
+.programmes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--spacing-2xl);
+}
+
+.programme-card {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-2xl);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+}
+
+.programme-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+.programme-card h3 {
+  font-size: var(--font-size-xl);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.programme-card .programme-category {
+  display: inline-block;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--spacing-md);
+}
+
+.programme-card .programme-description {
+  color: var(--color-text);
+  line-height: 1.6;
+  margin-bottom: var(--spacing-lg);
+}
+
+.programme-card .programme-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.programme-card .programme-link {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.programme-card .programme-link:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .programmes-hero h1 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .programmes-hero p {
+    font-size: var(--font-size-base);
+  }
+
+  .programmes-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  .programme-card {
+    padding: var(--spacing-lg);
+  }
+}

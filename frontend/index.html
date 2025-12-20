@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DevDynamics - Association éducative et technologique à but non lucratif en Haïti">
+  <meta name="keywords" content="éducation, technologie, Haïti, formation, programmation">
+  <title>DevDynamics - Propulser la jeunesse haïtienne vers l'avenir</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages/home.css">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="assets/images/new_icon_2.jpg">
+</head>
+<body>
+  <!-- HEADER / NAVIGATION -->
+  <header>
+    <div class="container">
+      <nav>
+        <div class="logo">
+          <img src="assets/images/logo_6.png" alt="DevDynamics Logo" class="logo-img">
+        </div>
+
+        <ul class="nav-menu">
+          <li><a href="#accueil" class="nav-link active">Accueil</a></li>
+          <li><a href="#programmes" class="nav-link">Programmes</a></li>
+          <li><a href="#cours" class="nav-link">Cours</a></li>
+          <li><a href="#temoignages" class="nav-link">Témoignages</a></li>
+          <li><a href="#equipe" class="nav-link">Équipe</a></li>
+          <li><a href="#blog" class="nav-link">Blog</a></li>
+          <li><a href="#sponsors" class="nav-link">Sponsors</a></li>
+          <li><a href="#contact" class="nav-link">Contact</a></li>
+        </ul>
+
+        <div class="nav-cta">
+          <a href="#dons" class="btn btn-primary btn-sm">Faire un don</a>
+          <a href="pages/admin-login.html" class="btn btn-ghost btn-sm">Admin</a>
+          <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero" id="accueil">
+    <div class="hero-content">
+      <h1>Propulser la jeunesse haïtienne vers l'avenir</h1>
+      <p>DevDynamics est une association éducative et technologique à but non lucratif qui transforme des vies par la formation en informatique et l'innovation technologique.</p>
+      <div class="hero-cta">
+        <a href="#programmes" class="btn btn-secondary btn-lg">Découvrir nos programmes</a>
+        <a href="#contact" class="btn btn-outline btn-lg">Nous contacter</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS SECTION -->
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" data-count="500">0</div>
+          <div class="stat-label">Étudiants formés</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="courses-count" data-count="0">0</div>
+          <div class="stat-label">Cours disponibles</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" data-count="15">0</div>
+          <div class="stat-label">Programmes actifs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" data-count="100">0</div>
+          <div class="stat-label">% de réussite</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROGRAMMES SECTION -->
+  <section id="programmes">
+    <div class="container">
+      <div class="section-title">
+        <h2>Nos Programmes</h2>
+        <p class="section-subtitle">Découvrez les formations que nous proposons pour développer les compétences technologiques</p>
+      </div>
+      <div class="grid grid-3" id="programs-container">
+        <!-- Loaded dynamically -->
+      </div>
+      <div class="text-center mt-2xl">
+        <a href="pages/programmes.html" class="btn btn-primary">Voir tous les programmes</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- COURS SECTION -->
+  <section id="cours">
+    <div class="container">
+      <div class="section-title">
+        <h2>Nos Cours</h2>
+        <p class="section-subtitle">Inscrivez-vous à nos cours pour acquérir de nouvelles compétences et avancer dans votre carrière</p>
+      </div>
+      <div class="grid grid-3" id="courses-container">
+        <!-- Loaded dynamically -->
+      </div>
+      <div class="text-center mt-2xl">
+        <a href="pages/cours-list.html" class="btn btn-primary">Voir tous les cours</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEMOIGNAGES SECTION -->
+  <section id="temoignages" class="testimonials-section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Histoires de Succès</h2>
+        <p class="section-subtitle">Écoutez les témoignages de nos étudiants qui ont transformé leur vie grâce à DevDynamics</p>
+      </div>
+      <div class="grid grid-3" id="testimonials-container">
+        <!-- Loaded dynamically -->
+      </div>
+      <div class="text-center mt-2xl">
+        <a href="pages/temoignages.html" class="btn btn-primary">Voir tous les témoignages</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- EQUIPE SECTION -->
+  <section id="equipe" class="team-section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Notre Équipe</h2>
+        <p class="section-subtitle">Rencontrez les fondateurs et leaders de DevDynamics</p>
+      </div>
+      <div class="grid grid-3" id="team-container">
+        <!-- Loaded dynamically -->
+      </div>
+      <div class="text-center mt-2xl">
+        <a href="pages/equipe.html" class="btn btn-primary">Voir toute l'équipe</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- MISSION SECTION -->
+  <section class="mission-section">
+    <div class="container">
+      <div class="mission-content">
+        <h2>Notre Mission</h2>
+        <p id="mission-text">Créer un écosystème technologique inclusif et durable en Haïti, où chaque jeune a accès à une éducation de qualité en informatique et peut réaliser son potentiel.</p>
+        <div class="mission-values">
+          <div class="value-card">
+            <div class="value-icon">🎯</div>
+            <h3>Excellence</h3>
+            <p>Nous nous engageons à fournir une formation de qualité supérieure</p>
+          </div>
+          <div class="value-card">
+            <div class="value-icon">🤝</div>
+            <h3>Inclusion</h3>
+            <p>Nous croyons que la technologie doit être accessible à tous</p>
+          </div>
+          <div class="value-card">
+            <div class="value-icon">🚀</div>
+            <h3>Innovation</h3>
+            <p>Nous encourageons la créativité et l'innovation constante</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BLOG SECTION -->
+  <section id="blog">
+    <div class="container">
+      <div class="section-title">
+        <h2>Ressources & Blog</h2>
+        <p class="section-subtitle">Restez informé avec nos articles et tutoriels sur la technologie en Haïti</p>
+      </div>
+      <div class="grid grid-2" id="blog-container">
+        <!-- Loaded dynamically -->
+      </div>
+      <div class="text-center mt-2xl">
+        <a href="pages/blog.html" class="btn btn-primary">Voir tous les articles</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- DONATIONS SECTION -->
+  <section id="dons" class="donations-section">
+    <div class="container">
+      <div class="donations-content">
+        <h2>Soutenez Notre Mission</h2>
+        <p>Votre contribution nous aide à former plus de jeunes et à créer un avenir meilleur pour Haïti</p>
+        <form id="donation-form" class="donation-form">
+          <div class="form-group">
+            <label for="donor-name">Votre nom</label>
+            <input type="text" id="donor-name" name="donor_name" required>
+          </div>
+          <div class="form-group">
+            <label for="donor-email">Votre email</label>
+            <input type="email" id="donor-email" name="donor_email" required>
+          </div>
+          <div class="form-group">
+            <label for="amount">Montant (USD)</label>
+            <input type="number" id="amount" name="amount" min="1" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="message">Message (optionnel)</label>
+            <textarea id="message" name="message" placeholder="Partagez votre message d'encouragement..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-secondary btn-lg btn-block">Faire un don</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPONSORS SECTION -->
+  <section id="sponsors" class="sponsors-section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Nos Sponsors & Partenaires</h2>
+        <p class="section-subtitle">Merci à nos partenaires qui soutiennent notre mission</p>
+      </div>
+      <div id="sponsors-container" class="sponsors-home-grid">
+        <!-- Loaded dynamically -->
+      </div>
+      <div class="text-center mt-2xl">
+        <a href="pages/sponsors.html" class="btn btn-primary">Voir tous les sponsors</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT SECTION -->
+  <section id="contact" class="contact-section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Nous Contacter</h2>
+        <p class="section-subtitle">Avez-vous des questions? Nous serions heureux de vous aider</p>
+      </div>
+      <div class="grid grid-2">
+        <form id="contact-form" class="contact-form">
+          <div class="form-group">
+            <label for="contact-name">Nom</label>
+            <input type="text" id="contact-name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="contact-email">Email</label>
+            <input type="email" id="contact-email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label for="contact-phone">Téléphone</label>
+            <input type="tel" id="contact-phone" name="phone">
+          </div>
+          <div class="form-group">
+            <label for="contact-subject">Sujet</label>
+            <input type="text" id="contact-subject" name="subject" required>
+          </div>
+          <div class="form-group">
+            <label for="contact-message">Message</label>
+            <textarea id="contact-message" name="message" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Envoyer</button>
+        </form>
+
+        <div class="contact-info">
+          <div class="info-card">
+            <h3>📍 Adresse</h3>
+            <p id="org-address">Port-au-Prince, Haïti</p>
+          </div>
+          <div class="info-card">
+            <h3>📞 Téléphone</h3>
+            <p id="org-phone">+509 XXXX XXXX</p>
+          </div>
+          <div class="info-card">
+            <h3>📧 Email</h3>
+            <p id="org-email">contact@devdynamics.ht</p>
+          </div>
+          <div class="info-card">
+            <h3>💬 WhatsApp</h3>
+            <p id="org-whatsapp">+509 XXXX XXXX</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>DevDynamics</h4>
+          <p>Association éducative et technologique à but non lucratif en Haïti</p>
+          <div class="social-links">
+            <a href="#" title="Facebook">f</a>
+            <a href="#" title="Twitter">𝕏</a>
+            <a href="#" title="LinkedIn">in</a>
+            <a href="#" title="Instagram">📷</a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="#programmes">Programmes</a></li>
+            <li><a href="#temoignages">Témoignages</a></li>
+            <li><a href="#equipe">Équipe</a></li>
+            <li><a href="#blog">Blog</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>Ressources</h4>
+          <ul>
+            <li><a href="#">Politique de confidentialité</a></li>
+            <li><a href="#">Conditions d'utilisation</a></li>
+            <li><a href="#">Transparence</a></li>
+            <li><a href="#">Rapports annuels</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>Rejoignez-nous</h4>
+          <p>Inscrivez-vous à notre newsletter pour les dernières mises à jour</p>
+          <form id="newsletter-form" class="newsletter-form">
+            <input type="email" name="email" placeholder="Votre email" required>
+            <button type="submit" class="btn btn-primary btn-sm">S'abonner</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2024 DevDynamics. Tous droits réservés. | Créé avec ❤️ pour Haïti</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/pages/home.js"></script>
+</body>
+</html>

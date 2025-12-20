@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion - DevDynamics</title>
+
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages/admin.css">
+</head>
+<body class="admin-login-page">
+  <div class="login-container">
+    <div class="login-box">
+      <div class="login-header">
+        <h1>Connexion</h1>
+        <p>Connectez-vous pour accéder à vos cours</p>
+      </div>
+
+      <form id="login-form" class="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="votre.email@example.com"
+            class="form-control"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            placeholder="Votre mot de passe"
+            class="form-control"
+          >
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: var(--spacing-sm);">
+          <input type="checkbox" id="remember_me" name="remember_me">
+          <label for="remember_me" style="margin: 0; font-weight: normal;">
+            Se souvenir de moi
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg">
+          Se connecter
+        </button>
+
+        <div class="login-footer">
+          <p><a href="#">Mot de passe oublié ?</a></p>
+          <p>Pas encore de compte ? <a href="student-register.html">Créer un compte</a></p>
+          <p><a href="../index.html">← Retour à l'accueil</a></p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/pages/student-login.js"></script>
+</body>
+</html>

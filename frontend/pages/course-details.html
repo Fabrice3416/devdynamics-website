@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Détails du cours - DevDynamics</title>
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages/home.css">
+  <link rel="stylesheet" href="../css/course-details.css">
+</head>
+<body>
+  <!-- HEADER / NAVIGATION -->
+  <header>
+    <div class="container">
+      <nav>
+        <div class="logo">
+          <img src="../assets/images/logo_6.png" alt="DevDynamics Logo" class="logo-img">
+        </div>
+
+        <ul class="nav-menu">
+          <li><a href="../index.html#accueil" class="nav-link">Accueil</a></li>
+          <li><a href="../index.html#programmes" class="nav-link">Programmes</a></li>
+          <li><a href="../index.html#cours" class="nav-link active">Cours</a></li>
+          <li><a href="../index.html#temoignages" class="nav-link">Témoignages</a></li>
+          <li><a href="../index.html#equipe" class="nav-link">Équipe</a></li>
+          <li><a href="../index.html#blog" class="nav-link">Blog</a></li>
+          <li><a href="../index.html#contact" class="nav-link">Contact</a></li>
+        </ul>
+
+        <div class="nav-cta">
+          <a href="../index.html#dons" class="btn btn-primary btn-sm">Faire un don</a>
+          <a href="student-login.html" class="btn btn-ghost btn-sm" id="auth-btn">Connexion</a>
+          <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Course Details -->
+  <div class="course-details-container">
+    <div class="container">
+      <!-- Loading State -->
+      <div id="loading-state" class="loading-state">
+        <p>Chargement...</p>
+      </div>
+
+      <!-- Course Not Found -->
+      <div id="not-found-state" class="not-found-state" style="display: none;">
+        <h2>Cours non trouvé</h2>
+        <p>Le cours que vous recherchez n'existe pas ou n'est plus disponible.</p>
+        <a href="../index.html" class="btn btn-primary">Retour à l'accueil</a>
+      </div>
+
+      <!-- Course Content -->
+      <div id="course-content" style="display: none;">
+        <div class="course-header">
+          <div class="course-header-content">
+            <div class="course-breadcrumb">
+              <a href="../index.html">Accueil</a> / <a href="../index.html#courses">Cours</a> / <span id="breadcrumb-title">Cours</span>
+            </div>
+            <h1 id="course-title">Titre du cours</h1>
+            <p id="course-description" class="course-lead"></p>
+
+            <div class="course-meta-info">
+              <div class="meta-item">
+                <span class="meta-icon"><i class="ti ti-school"></i></span>
+                <div>
+                  <small>Instructeur</small>
+                  <strong id="course-instructor">-</strong>
+                </div>
+              </div>
+              <div class="meta-item">
+                <span class="meta-icon"><i class="ti ti-chart-bar"></i></span>
+                <div>
+                  <small>Niveau</small>
+                  <strong id="course-level">-</strong>
+                </div>
+              </div>
+              <div class="meta-item">
+                <span class="meta-icon"><i class="ti ti-clock"></i></span>
+                <div>
+                  <small>Durée</small>
+                  <strong id="course-duration">-</strong>
+                </div>
+              </div>
+              <div class="meta-item">
+                <span class="meta-icon"><i class="ti ti-calendar"></i></span>
+                <div>
+                  <small>Début</small>
+                  <strong id="course-start-date">-</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="course-sidebar-card">
+            <div class="course-thumbnail" id="course-thumbnail">
+              <div class="placeholder-thumbnail"><i class="ti ti-certificate"></i></div>
+            </div>
+            <div class="price-section">
+              <div class="price" id="course-price">Gratuit</div>
+            </div>
+            <button id="enroll-btn" class="btn btn-primary btn-full btn-lg">
+              S'inscrire maintenant
+            </button>
+            <div class="course-includes">
+              <h4>Ce cours inclut:</h4>
+              <ul id="course-includes-list">
+                <li><i class="ti ti-check"></i> Accès à vie au contenu</li>
+                <li><i class="ti ti-check"></i> Support de l'instructeur</li>
+                <li><i class="ti ti-check"></i> Certificat de complétion</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="course-body">
+          <div class="course-main-content">
+            <!-- Description complète -->
+            <section class="course-section">
+              <h2>Description</h2>
+              <div id="full-description" class="course-description"></div>
+            </section>
+
+            <!-- Ce que vous allez apprendre -->
+            <section class="course-section" id="learning-objectives-section" style="display: none;">
+              <h2>Ce que vous allez apprendre</h2>
+              <ul class="learning-objectives" id="learning-objectives">
+              </ul>
+            </section>
+
+            <!-- Programme du cours (pour les cours en ligne) -->
+            <section class="course-section" id="curriculum-section" style="display: none;">
+              <h2>Programme du cours</h2>
+              <div id="course-curriculum" class="curriculum-container">
+                <p class="empty-state">Le programme sera bientôt disponible</p>
+              </div>
+            </section>
+
+            <!-- Calendrier (pour les cours physiques) -->
+            <section class="course-section" id="schedule-section" style="display: none;">
+              <h2>Horaires</h2>
+              <div class="schedule-info">
+                <p id="course-schedule"></p>
+                <div class="date-range">
+                  <div class="date-item">
+                    <strong>Date de début:</strong>
+                    <span id="start-date-full"></span>
+                  </div>
+                  <div class="date-item">
+                    <strong>Date de fin:</strong>
+                    <span id="end-date-full"></span>
+                  </div>
+                  <div class="date-item" id="enrollment-deadline-item" style="display: none;">
+                    <strong>Date limite d'inscription:</strong>
+                    <span id="enrollment-deadline"></span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Instructeur -->
+            <section class="course-section">
+              <h2>À propos de l'instructeur</h2>
+              <div class="instructor-card">
+                <div class="instructor-avatar"><i class="ti ti-school"></i></div>
+                <div class="instructor-info">
+                  <h3 id="instructor-name"></h3>
+                  <p id="instructor-bio">Instructeur expérimenté chez DevDynamics</p>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- Sidebar supplémentaire -->
+          <aside class="course-sidebar">
+            <div class="sidebar-widget">
+              <h3>Informations</h3>
+              <ul class="info-list">
+                <li>
+                  <strong>Catégorie:</strong>
+                  <span id="course-category">-</span>
+                </li>
+                <li>
+                  <strong>Type:</strong>
+                  <span id="course-type">-</span>
+                </li>
+                <li id="max-students-info" style="display: none;">
+                  <strong>Places disponibles:</strong>
+                  <span id="max-students">-</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="sidebar-widget">
+              <h3>Partager</h3>
+              <div class="share-buttons">
+                <a href="#" class="share-btn" id="share-facebook"><i class="ti ti-brand-facebook"></i> Facebook</a>
+                <a href="#" class="share-btn" id="share-twitter"><i class="ti ti-brand-twitter"></i> Twitter</a>
+                <a href="#" class="share-btn" id="share-whatsapp"><i class="ti ti-brand-whatsapp"></i> WhatsApp</a>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2024 DevDynamics. Tous droits réservés.</p>
+      <p><a href="../index.html">Retour à l'accueil</a></p>
+    </div>
+  </footer>
+
+  <!-- ENROLLMENT MODAL - Quick Registration/Login -->
+  <div id="enrollment-modal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="enrollment-modal-title">S'inscrire au cours</h2>
+        <button type="button" class="modal-close" onclick="closeEnrollmentModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Choice: Login or Register -->
+        <div id="enrollment-choice" class="enrollment-step">
+          <p style="margin-bottom: var(--spacing-lg); text-align: center;">
+            Pour vous inscrire à ce cours, vous devez avoir un compte.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+            <button onclick="showLoginForm()" class="btn btn-primary btn-full">
+              J'ai déjà un compte - Me connecter
+            </button>
+            <button onclick="showRegisterForm()" class="btn btn-ghost btn-full">
+              Créer un nouveau compte
+            </button>
+          </div>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-form-container" class="enrollment-step" style="display: none;">
+          <form id="quick-login-form">
+            <div class="form-group">
+              <label for="login-email">Email</label>
+              <input type="email" id="login-email" required>
+            </div>
+            <div class="form-group">
+              <label for="login-password">Mot de passe</label>
+              <input type="password" id="login-password" required>
+            </div>
+            <div class="modal-footer" style="margin-top: var(--spacing-lg);">
+              <button type="button" class="btn btn-ghost" onclick="showEnrollmentChoice()">Retour</button>
+              <button type="submit" class="btn btn-primary">Se connecter</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Register Form -->
+        <div id="register-form-container" class="enrollment-step" style="display: none;">
+          <form id="quick-register-form">
+            <div class="form-group">
+              <label for="register-name">Nom complet *</label>
+              <input type="text" id="register-name" required>
+            </div>
+            <div class="form-group">
+              <label for="register-email">Email *</label>
+              <input type="email" id="register-email" required>
+            </div>
+            <div class="form-group">
+              <label for="register-password">Mot de passe *</label>
+              <input type="password" id="register-password" minlength="6" required>
+            </div>
+            <div class="form-group">
+              <label for="register-phone">Téléphone (optionnel)</label>
+              <input type="tel" id="register-phone">
+            </div>
+            <div class="modal-footer" style="margin-top: var(--spacing-lg);">
+              <button type="button" class="btn btn-ghost" onclick="showEnrollmentChoice()">Retour</button>
+              <button type="submit" class="btn btn-primary">Créer mon compte et m'inscrire</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Payment Options (for paid courses) -->
+        <div id="payment-options-container" class="enrollment-step" style="display: none;">
+          <h3 style="margin-bottom: var(--spacing-lg);">Choisissez votre méthode de paiement</h3>
+          <div class="payment-methods" style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+            <button onclick="selectPaymentMethod('moncash')" class="payment-method-btn">
+              <span class="payment-icon"><i class="ti ti-credit-card"></i></span>
+              <div>
+                <strong>MonCash</strong>
+                <small>Paiement mobile</small>
+              </div>
+            </button>
+            <button onclick="selectPaymentMethod('bank')" class="payment-method-btn">
+              <span class="payment-icon"><i class="ti ti-building-bank"></i></span>
+              <div>
+                <strong>Virement bancaire</strong>
+                <small>Sogebank, BUH, Capital Bank</small>
+              </div>
+            </button>
+            <button onclick="selectPaymentMethod('paypal')" class="payment-method-btn">
+              <span class="payment-icon"><i class="ti ti-coin"></i></span>
+              <div>
+                <strong>PayPal</strong>
+                <small>Carte de crédit / PayPal</small>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirmation (for free courses) -->
+        <div id="confirmation-container" class="enrollment-step" style="display: none;">
+          <div style="text-align: center; padding: var(--spacing-2xl);">
+            <div style="font-size: 48px; margin-bottom: var(--spacing-lg);"><i class="ti ti-circle-check"></i></div>
+            <h3>Inscription réussie!</h3>
+            <p style="margin: var(--spacing-lg) 0;">
+              Vous êtes maintenant inscrit à ce cours.
+            </p>
+            <button onclick="goToDashboard()" class="btn btn-primary btn-full">
+              Accéder à mon tableau de bord
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/pages/course-details.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+</body>
+</html>

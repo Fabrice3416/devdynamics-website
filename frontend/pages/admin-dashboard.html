@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - DevDynamics Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages/admin.css">
+</head>
+<body class="admin-page">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <img src="../assets/images/logo_6_white.png" alt="DevDynamics Logo" class="logo-img">
+      </div>
+      <button class="sidebar-toggle"><i class="ti ti-menu-2"></i></button>
+    </div>
+
+    <nav class="sidebar-menu">
+      <a href="#dashboard" class="menu-item active" data-page="dashboard">
+        <i class="ti ti-chart-bar"></i> Tableau de bord
+      </a>
+      <a href="#programs" class="menu-item" data-page="programs">
+        <i class="ti ti-book"></i> Programmes
+      </a>
+      <a href="#testimonials" class="menu-item" data-page="testimonials">
+        <i class="ti ti-star"></i> Témoignages
+      </a>
+      <a href="#blog" class="menu-item" data-page="blog">
+        <i class="ti ti-file-text"></i> Blog
+      </a>
+      <a href="#courses" class="menu-item" data-page="courses">
+        <i class="ti ti-certificate"></i> Cours
+      </a>
+      <a href="#donations" class="menu-item" data-page="donations">
+        <i class="ti ti-coin"></i> Dons
+      </a>
+      <a href="#contact" class="menu-item" data-page="contact">
+        <i class="ti ti-mail"></i> Messages
+      </a>
+      <a href="#sponsors" class="menu-item" data-page="sponsors">
+        <i class="ti ti-handshake"></i> Sponsors
+      </a>
+      <a href="#organization" class="menu-item" data-page="organization">
+        <i class="ti ti-settings"></i> Organisation
+      </a>
+      <a href="#users" class="menu-item" data-page="users">
+        <i class="ti ti-users"></i> Utilisateurs
+      </a>
+      <button id="logout-btn" class="menu-item logout">
+        <i class="ti ti-logout"></i> Déconnexion
+      </button>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="admin-main">
+    <!-- HEADER -->
+    <header class="admin-header">
+      <div class="header-left">
+        <button class="mobile-menu-toggle"><i class="ti ti-menu-2"></i></button>
+        <h1 id="page-title">Tableau de bord</h1>
+      </div>
+      <div class="header-right">
+        <div class="user-info">
+          <span id="user-name">Admin</span>
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23008080'/%3E%3Ctext y='70' font-size='50' fill='white' text-anchor='middle'%3EU%3C/text%3E%3C/svg%3E" alt="User" class="user-avatar">
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT AREA -->
+    <div class="admin-content">
+      <!-- DASHBOARD PAGE -->
+      <section id="dashboard-page" class="page-content active">
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-icon"><i class="ti ti-coin"></i></div>
+            <div class="stat-details">
+              <div class="stat-label">Dons reçus</div>
+              <div class="stat-value" id="stat-donations">0</div>
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon"><i class="ti ti-mail"></i></div>
+            <div class="stat-details">
+              <div class="stat-label">Messages non lus</div>
+              <div class="stat-value" id="stat-contacts">0</div>
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon"><i class="ti ti-handshake"></i></div>
+            <div class="stat-details">
+              <div class="stat-label">Sponsors actifs</div>
+              <div class="stat-value" id="stat-sponsors">0</div>
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon"><i class="ti ti-book"></i></div>
+            <div class="stat-details">
+              <div class="stat-label">Programmes actifs</div>
+              <div class="stat-value" id="stat-programs">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-2 mt-2xl">
+          <div class="card">
+            <div class="card-body">
+              <h3 class="card-title">Bienvenue!</h3>
+              <p>Vous êtes connecté en tant qu'administrateur. Utilisez le menu latéral pour gérer le contenu du site.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <h3 class="card-title">Raccourcis rapides</h3>
+              <ul style="list-style: none; margin: 0;">
+                <li><a href="#" class="quick-link" data-page="programs">+ Ajouter un programme</a></li>
+                <li><a href="#" class="quick-link" data-page="blog">+ Écrire un article</a></li>
+                <li><a href="#" class="quick-link" data-page="contact">Voir les messages</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROGRAMS PAGE -->
+      <section id="programs-page" class="page-content">
+        <div class="page-header">
+          <h2>Programmes</h2>
+          <button id="add-program-btn" class="btn btn-primary">+ Ajouter un programme</button>
+        </div>
+        <div id="programs-list" class="table-container">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- TESTIMONIALS PAGE -->
+      <section id="testimonials-page" class="page-content">
+        <div class="page-header">
+          <h2>Témoignages</h2>
+          <button id="add-testimonial-btn" class="btn btn-primary">+ Ajouter un témoignage</button>
+        </div>
+        <div id="testimonials-list" class="table-container">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- BLOG PAGE -->
+      <section id="blog-page" class="page-content">
+        <div class="page-header">
+          <h2>Articles de Blog</h2>
+          <button id="add-blog-btn" class="btn btn-primary">+ Écrire un article</button>
+        </div>
+        <div id="blog-list" class="table-container">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- COURSES PAGE -->
+      <section id="courses-page" class="page-content">
+        <div class="page-header">
+          <h2>Gestion des Cours</h2>
+          <button id="add-course-btn" class="btn btn-primary">+ Ajouter un cours</button>
+        </div>
+        <div id="courses-list" class="table-container">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- DONATIONS PAGE -->
+      <section id="donations-page" class="page-content">
+        <div class="page-header">
+          <h2>Dons</h2>
+        </div>
+        <div id="donations-list" class="table-container">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- CONTACT PAGE -->
+      <section id="contact-page" class="page-content">
+        <div class="page-header">
+          <h2>Messages de Contact</h2>
+        </div>
+        <div id="contact-list" class="table-container">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- SPONSORS PAGE -->
+      <section id="sponsors-page" class="page-content">
+        <div class="page-header">
+          <h2>Sponsors</h2>
+          <button id="add-sponsor-btn" class="btn btn-primary">+ Ajouter un sponsor</button>
+        </div>
+        <div id="sponsors-list" class="table-container">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- ORGANIZATION PAGE -->
+      <section id="organization-page" class="page-content">
+        <div class="page-header">
+          <h2>Informations de l'Organisation</h2>
+        </div>
+        <form id="organization-form" class="form-card">
+          <div class="form-group">
+            <label for="org-name">Nom</label>
+            <input type="text" id="org-name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="org-email">Email</label>
+            <input type="email" id="org-email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label for="org-phone">Téléphone</label>
+            <input type="tel" id="org-phone" name="phone">
+          </div>
+          <div class="form-group">
+            <label for="org-whatsapp">WhatsApp</label>
+            <input type="tel" id="org-whatsapp" name="whatsapp_number">
+          </div>
+          <div class="form-group">
+            <label for="org-mission">Mission</label>
+            <textarea id="org-mission" name="mission" rows="4"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="org-vision">Vision</label>
+            <textarea id="org-vision" name="vision" rows="4"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+        </form>
+      </section>
+
+      <!-- USERS PAGE -->
+      <section id="users-page" class="page-content">
+        <div class="page-header">
+          <h2>Utilisateurs</h2>
+        </div>
+        <div id="users-list" class="table-container">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- MODALS -->
+  <div id="program-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Ajouter/Modifier un programme</h2>
+        <button type="button" class="modal-close" onclick="closeModal('program-modal')">&times;</button>
+      </div>
+      <form id="program-form" class="modal-body">
+        <div class="form-group">
+          <label for="program-title">Titre</label>
+          <input type="text" id="program-title" name="title" required>
+        </div>
+        <div class="form-group">
+          <label for="program-description">Description</label>
+          <textarea id="program-description" name="description" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="program-category">Catégorie</label>
+          <input type="text" id="program-category" name="category">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('program-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SPONSOR MODAL -->
+  <div id="sponsor-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Ajouter/Modifier un sponsor</h2>
+        <button type="button" class="modal-close" onclick="closeModal('sponsor-modal')">&times;</button>
+      </div>
+      <form id="sponsor-form" class="modal-body">
+        <div class="form-group">
+          <label for="sponsor-name">Nom du sponsor</label>
+          <input type="text" id="sponsor-name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="sponsor-logo">URL du logo</label>
+          <input type="url" id="sponsor-logo" name="logo_url" required placeholder="https://example.com/logo.png">
+        </div>
+        <div class="form-group">
+          <label for="sponsor-website">Site web</label>
+          <input type="url" id="sponsor-website" name="website_url" placeholder="https://example.com">
+        </div>
+        <div class="form-group">
+          <label for="sponsor-description">Description</label>
+          <textarea id="sponsor-description" name="description" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="sponsor-tier">Niveau</label>
+          <select id="sponsor-tier" name="tier" required>
+            <option value="platinum">Platine</option>
+            <option value="gold">Or</option>
+            <option value="silver">Argent</option>
+            <option value="bronze">Bronze</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="sponsor-order">Ordre d'affichage</label>
+          <input type="number" id="sponsor-order" name="order_position" value="0" min="0">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('sponsor-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/pages/admin-dashboard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificat - DevDynamics</title>
+
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/certificates.css">
+</head>
+<body class="certificate-page">
+  <div class="certificate-container">
+    <div class="certificate-actions-bar">
+      <button class="btn btn-ghost" onclick="window.history.back()"><i class="ti ti-arrow-left"></i> Retour</button>
+      <button class="btn btn-primary" onclick="window.print()"><i class="ti ti-printer"></i> Imprimer</button>
+    </div>
+
+    <div class="certificate-wrapper" id="certificate-wrapper">
+      <p class="loading-text">Chargement du certificat...</p>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check authentication
+      if (!api.token) {
+        window.location.href = 'student-login.html';
+        return;
+      }
+
+      // Get certificate ID from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const certificateId = urlParams.get('id');
+
+      if (!certificateId) {
+        alert('ID de certificat manquant');
+        window.history.back();
+        return;
+      }
+
+      await loadCertificate(certificateId);
+    });
+
+    async function loadCertificate(certificateId) {
+      try {
+        const response = await api.getCertificate(certificateId);
+        const cert = response.data;
+
+        renderCertificate(cert);
+      } catch (error) {
+        console.error('Error loading certificate:', error);
+        document.getElementById('certificate-wrapper').innerHTML = `
+          <div class="error-message">
+            <p>Erreur lors du chargement du certificat</p>
+            <button class="btn btn-primary" onclick="window.history.back()">Retour</button>
+          </div>
+        `;
+      }
+    }
+
+    function renderCertificate(cert) {
+      const issueDate = formatDate(cert.issue_date);
+      const currentYear = new Date().getFullYear();
+
+      const certificateHTML = `
+        <div class="certificate-document" id="certificate-document">
+          <div class="certificate-border">
+            <div class="certificate-header">
+              <img src="../assets/images/logo_6.png" alt="DevDynamics Logo" class="certificate-logo">
+              <h1 class="certificate-title">Certificat de Complétion</h1>
+              <p class="certificate-subtitle">Certificate of Completion</p>
+            </div>
+
+            <div class="certificate-body">
+              <p class="certificate-intro">Ce certificat atteste que</p>
+              <h2 class="certificate-student-name">${cert.student_name}</h2>
+              <p class="certificate-text">a complété avec succès le cours</p>
+              <h3 class="certificate-course-name">${cert.course_title}</h3>
+
+              ${cert.course_description ? `
+                <p class="certificate-course-description">${cert.course_description}</p>
+              ` : ''}
+
+              <div class="certificate-details">
+                <div class="certificate-detail-item">
+                  <span class="detail-label">Date de délivrance:</span>
+                  <span class="detail-value">${issueDate}</span>
+                </div>
+                <div class="certificate-detail-item">
+                  <span class="detail-label">Numéro de certificat:</span>
+                  <span class="detail-value">${cert.certificate_number}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="certificate-footer">
+              <div class="signature-section">
+                <div class="signature-line"></div>
+                <p class="signature-name">DevDynamics</p>
+                <p class="signature-title">Directeur Académique</p>
+              </div>
+
+              <div class="certificate-seal">
+                <div class="seal-circle">
+                  <div class="seal-inner">
+                    <span class="seal-text">${currentYear}<br>DEVDYNAMICS</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="certificate-verification">
+              <p class="verification-text">
+                Vérifiez l'authenticité de ce certificat sur <strong>devdynamics.ht/verify</strong>
+              </p>
+              <p class="verification-code-display">Code: <strong>${cert.verification_code}</strong></p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('certificate-wrapper').innerHTML = certificateHTML;
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+</body>
+</html>

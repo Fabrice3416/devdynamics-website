@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paiement réussi - DevDynamics</title>
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/payment-status.css">
+</head>
+<body>
+  <div class="status-container">
+    <div class="status-box success">
+      <div class="status-icon"><i class="ti ti-circle-check"></i></div>
+      <h1>Paiement réussi !</h1>
+      <p class="status-message">
+        Félicitations ! Votre paiement a été traité avec succès.
+        Vous avez maintenant accès à votre cours.
+      </p>
+
+      <div class="status-details">
+        <div class="detail-item">
+          <strong>Méthode de paiement:</strong>
+          <span id="payment-method">-</span>
+        </div>
+        <div class="detail-item">
+          <strong>Date:</strong>
+          <span id="payment-date">-</span>
+        </div>
+      </div>
+
+      <div class="status-actions">
+        <a href="student-dashboard.html" class="btn btn-primary btn-lg">
+          Accéder à mes cours
+        </a>
+        <a href="../index.html" class="btn btn-secondary">
+          Retour à l'accueil
+        </a>
+      </div>
+
+      <div class="next-steps">
+        <h3>Prochaines étapes</h3>
+        <ul>
+          <li><i class="ti ti-circle-check"></i> Votre accès au cours a été activé</li>
+          <li><i class="ti ti-circle-check"></i> Vous recevrez un email de confirmation</li>
+          <li><i class="ti ti-circle-check"></i> Vous pouvez commencer l'apprentissage immédiatement</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Display payment method
+    const urlParams = new URLSearchParams(window.location.search);
+    const method = urlParams.get('method');
+
+    const methodNames = {
+      'moncash': 'MonCash',
+      'paypal': 'PayPal',
+      'bank_transfer': 'Virement bancaire'
+    };
+
+    document.getElementById('payment-method').textContent = methodNames[method] || 'Inconnu';
+    document.getElementById('payment-date').textContent = new Date().toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    // Redirect to dashboard after 5 seconds
+    setTimeout(() => {
+      window.location.href = 'student-dashboard.html';
+    }, 5000);
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+</body>
+</html>

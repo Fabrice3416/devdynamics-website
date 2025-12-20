@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paiement - DevDynamics</title>
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/checkout.css">
+</head>
+<body>
+  <div class="checkout-container">
+    <div class="container">
+      <div class="checkout-header">
+        <a href="../index.html" class="back-link"><i class="ti ti-arrow-left"></i> Retour</a>
+        <h1>Finaliser votre inscription</h1>
+      </div>
+
+      <div class="checkout-grid">
+        <!-- Order Summary -->
+        <div class="order-summary">
+          <h2>Résumé de la commande</h2>
+
+          <div id="course-summary" class="course-summary-card">
+            <div class="summary-loading">Chargement...</div>
+          </div>
+
+          <div class="price-breakdown">
+            <div class="price-row">
+              <span>Prix du cours</span>
+              <span id="course-price-display">--</span>
+            </div>
+            <div class="price-row total">
+              <span>Total</span>
+              <strong id="total-price-display">--</strong>
+            </div>
+          </div>
+
+          <div class="security-badges">
+            <p><i class="ti ti-lock"></i> Paiement sécurisé</p>
+            <p><i class="ti ti-check"></i> Accès immédiat après paiement</p>
+            <p><i class="ti ti-check"></i> Garantie de remboursement 30 jours</p>
+          </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="payment-section">
+          <h2>Choisissez votre méthode de paiement</h2>
+
+          <div class="payment-methods">
+            <!-- MonCash -->
+            <div class="payment-method" data-method="moncash">
+              <input type="radio" name="payment_method" id="moncash" value="moncash">
+              <label for="moncash">
+                <div class="method-header">
+                  <div class="method-logo">
+                    <span class="logo-placeholder"><i class="ti ti-credit-card"></i></span>
+                    <strong>MonCash</strong>
+                  </div>
+                  <span class="recommended-badge">Recommandé</span>
+                </div>
+                <p class="method-description">Paiement mobile sécurisé pour Haïti</p>
+              </label>
+            </div>
+
+            <!-- PayPal -->
+            <div class="payment-method" data-method="paypal">
+              <input type="radio" name="payment_method" id="paypal" value="paypal">
+              <label for="paypal">
+                <div class="method-header">
+                  <div class="method-logo">
+                    <span class="logo-placeholder"><i class="ti ti-brand-paypal"></i></span>
+                    <strong>PayPal</strong>
+                  </div>
+                </div>
+                <p class="method-description">Paiement international sécurisé</p>
+              </label>
+            </div>
+
+            <!-- Bank Transfer -->
+            <div class="payment-method" data-method="bank">
+              <input type="radio" name="payment_method" id="bank" value="bank_transfer">
+              <label for="bank">
+                <div class="method-header">
+                  <div class="method-logo">
+                    <span class="logo-placeholder"><i class="ti ti-building-bank"></i></span>
+                    <strong>Virement bancaire</strong>
+                  </div>
+                </div>
+                <p class="method-description">Validation manuelle sous 24-48h</p>
+              </label>
+            </div>
+          </div>
+
+          <!-- MonCash Form -->
+          <div id="moncash-form" class="payment-form" style="display: none;">
+            <h3>Paiement MonCash</h3>
+            <form id="moncash-payment-form">
+              <div class="form-group">
+                <label for="moncash-phone">Numéro de téléphone MonCash</label>
+                <input
+                  type="tel"
+                  id="moncash-phone"
+                  name="phone"
+                  placeholder="+509 XXXX XXXX"
+                  required
+                >
+                <small>Format: +509 XXXX XXXX</small>
+              </div>
+
+              <div class="instructions">
+                <p><strong>Instructions:</strong></p>
+                <ol>
+                  <li>Entrez votre numéro MonCash</li>
+                  <li>Vous recevrez une notification sur votre téléphone</li>
+                  <li>Validez le paiement dans l'application MonCash</li>
+                  <li>Votre accès sera activé automatiquement</li>
+                </ol>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full btn-lg">
+                Payer <span id="moncash-amount">0</span> HTG
+              </button>
+            </form>
+          </div>
+
+          <!-- PayPal Form -->
+          <div id="paypal-form" class="payment-form" style="display: none;">
+            <h3>Paiement PayPal</h3>
+            <div class="instructions">
+              <p>Vous serez redirigé vers PayPal pour finaliser votre paiement de manière sécurisée.</p>
+              <p>Après le paiement, vous serez automatiquement redirigé vers votre espace étudiant.</p>
+            </div>
+            <div id="paypal-button-container"></div>
+            <button type="button" id="paypal-submit-btn" class="btn btn-primary btn-full btn-lg">
+              Continuer avec PayPal
+            </button>
+          </div>
+
+          <!-- Bank Transfer Form -->
+          <div id="bank-form" class="payment-form" style="display: none;">
+            <h3>Virement bancaire</h3>
+            <div class="bank-info">
+              <p><strong>Informations bancaires:</strong></p>
+              <div class="info-box">
+                <p><strong>Banque:</strong> [Nom de la banque]</p>
+                <p><strong>Titulaire:</strong> DevDynamics</p>
+                <p><strong>Numéro de compte:</strong> XXXX-XXXX-XXXX</p>
+                <p><strong>Référence:</strong> <span id="bank-reference">--</span></p>
+              </div>
+              <div class="alert alert-warning">
+                <i class="ti ti-alert-triangle"></i> Important: Incluez la référence dans le libellé de votre virement
+              </div>
+            </div>
+
+            <form id="bank-transfer-form">
+              <div class="form-group">
+                <label for="bank-receipt">Preuve de paiement (facultatif)</label>
+                <input
+                  type="file"
+                  id="bank-receipt"
+                  name="receipt"
+                  accept="image/*,.pdf"
+                >
+                <small>Format accepté: JPG, PNG, PDF</small>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full btn-lg">
+                Confirmer la commande
+              </button>
+              <p class="text-center" style="margin-top: 16px; color: #666; font-size: 14px;">
+                Votre accès sera activé dans les 24-48h après vérification
+              </p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/pages/checkout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+</body>
+</html>

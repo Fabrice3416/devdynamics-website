@@ -1,0 +1,749 @@
+/* ============================================
+   CERTIFICATES STYLES
+   ============================================ */
+
+/* ============================================
+   CERTIFICATES LIST PAGE
+   ============================================ */
+
+.content-section {
+  margin-bottom: var(--spacing-3xl);
+}
+
+.section-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.section-header h2 {
+  color: var(--color-dark);
+  margin-bottom: var(--spacing-sm);
+}
+
+.section-header p {
+  color: var(--color-gray);
+  font-size: var(--font-size-base);
+}
+
+/* Certificate Cards */
+.certificate-card {
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-2xl);
+  margin-bottom: var(--spacing-lg);
+  display: flex;
+  gap: var(--spacing-xl);
+  align-items: flex-start;
+  border-left: 4px solid var(--color-success);
+  transition: all var(--transition-base);
+}
+
+.certificate-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.certificate-icon {
+  flex-shrink: 0;
+}
+
+.certificate-seal {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(var(--color-success-rgb), 0.3);
+}
+
+.certificate-seal span {
+  font-size: 40px;
+  color: var(--color-white);
+  font-weight: bold;
+}
+
+.certificate-details {
+  flex: 1;
+}
+
+.certificate-course {
+  color: var(--color-dark);
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-xl);
+}
+
+.certificate-meta {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.certificate-number {
+  font-family: 'Courier New', monospace;
+  color: var(--color-gray);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.certificate-dates {
+  display: flex;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.date-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.date-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray);
+}
+
+.date-value {
+  font-size: var(--font-size-base);
+  color: var(--color-dark);
+  font-weight: var(--font-weight-medium);
+}
+
+.verification-info {
+  background-color: var(--color-lighter-gray);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  margin-top: var(--spacing-md);
+}
+
+.verification-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray);
+  margin-right: var(--spacing-sm);
+}
+
+.verification-code {
+  font-family: 'Courier New', monospace;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  font-size: var(--font-size-base);
+}
+
+.certificate-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* Eligible Courses */
+.eligible-courses-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.eligible-course-card {
+  background-color: var(--color-success-lighter);
+  border: 2px solid var(--color-success);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.eligible-course-card h4 {
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--color-dark);
+}
+
+.success-text {
+  color: var(--color-success);
+  font-weight: var(--font-weight-medium);
+  margin: 0;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-3xl);
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.empty-state h3 {
+  color: var(--color-dark);
+  margin-bottom: var(--spacing-sm);
+}
+
+.empty-state p {
+  color: var(--color-gray);
+  font-size: var(--font-size-lg);
+}
+
+/* Info Box */
+.info-box {
+  background-color: var(--color-primary-lighter);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl);
+  margin-top: var(--spacing-2xl);
+}
+
+.info-box h3 {
+  color: var(--color-dark);
+  margin-bottom: var(--spacing-md);
+}
+
+.info-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.info-box li {
+  padding: var(--spacing-sm) 0;
+  color: var(--color-dark);
+  position: relative;
+  padding-left: var(--spacing-lg);
+}
+
+.info-box li:before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--color-primary);
+  font-weight: bold;
+  font-size: var(--font-size-lg);
+}
+
+/* ============================================
+   CERTIFICATE DOCUMENT VIEWER
+   ============================================ */
+
+.certificate-page {
+  background-color: var(--color-lighter-gray);
+  min-height: 100vh;
+}
+
+.certificate-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--spacing-2xl);
+}
+
+.certificate-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-md) 0;
+}
+
+.certificate-wrapper {
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: var(--spacing-2xl);
+}
+
+.certificate-document {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-3xl);
+  background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid var(--color-light-gray);
+  position: relative;
+}
+
+.certificate-border {
+  border: 8px double var(--color-primary);
+  padding: var(--spacing-3xl);
+  position: relative;
+}
+
+.certificate-border::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  border: 1px solid var(--color-primary-light);
+  pointer-events: none;
+}
+
+.certificate-header {
+  text-align: center;
+  margin-bottom: var(--spacing-3xl);
+  padding-bottom: var(--spacing-xl);
+  border-bottom: 2px solid var(--color-light-gray);
+}
+
+.certificate-logo {
+  max-height: 80px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.certificate-title {
+  font-size: 36px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.certificate-subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-gray);
+  font-style: italic;
+  margin: 0;
+}
+
+.certificate-body {
+  text-align: center;
+  margin-bottom: var(--spacing-3xl);
+}
+
+.certificate-intro {
+  font-size: var(--font-size-lg);
+  color: var(--color-gray);
+  margin-bottom: var(--spacing-md);
+}
+
+.certificate-student-name {
+  font-size: 42px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-dark);
+  margin: var(--spacing-lg) 0;
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: var(--spacing-sm);
+  display: inline-block;
+  min-width: 400px;
+}
+
+.certificate-text {
+  font-size: var(--font-size-lg);
+  color: var(--color-gray);
+  margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+}
+
+.certificate-course-name {
+  font-size: 28px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  margin: var(--spacing-lg) 0;
+}
+
+.certificate-course-description {
+  font-size: var(--font-size-base);
+  color: var(--color-gray);
+  max-width: 600px;
+  margin: var(--spacing-lg) auto;
+  line-height: 1.6;
+}
+
+.certificate-details {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-3xl);
+  margin-top: var(--spacing-2xl);
+}
+
+.certificate-detail-item {
+  text-align: center;
+}
+
+.detail-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-gray);
+  margin-bottom: var(--spacing-xs);
+}
+
+.detail-value {
+  display: block;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-dark);
+  font-family: 'Courier New', monospace;
+}
+
+.certificate-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: var(--spacing-3xl);
+  padding-top: var(--spacing-2xl);
+  border-top: 2px solid var(--color-light-gray);
+}
+
+.signature-section {
+  text-align: center;
+}
+
+.signature-line {
+  width: 200px;
+  height: 2px;
+  background-color: var(--color-dark);
+  margin-bottom: var(--spacing-sm);
+}
+
+.signature-name {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-dark);
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+.signature-title {
+  color: var(--color-gray);
+  margin: var(--spacing-xs) 0 0 0;
+  font-size: var(--font-size-sm);
+}
+
+.certificate-seal .seal-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid var(--color-gold, #FFD700);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  position: relative;
+  padding: var(--spacing-sm);
+}
+
+.seal-inner {
+  text-align: center;
+  width: 100%;
+}
+
+.seal-text {
+  color: var(--color-white);
+  font-size: 11px !important;
+  font-weight: var(--font-weight-bold) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1.5 !important;
+  display: inline-block !important;
+}
+
+.certificate-verification {
+  text-align: center;
+  margin-top: var(--spacing-2xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px dashed var(--color-light-gray);
+}
+
+.verification-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray);
+  margin-bottom: var(--spacing-xs);
+}
+
+.verification-code-display {
+  font-family: 'Courier New', monospace;
+  font-size: var(--font-size-base);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ============================================
+   VERIFY CERTIFICATE PAGE
+   ============================================ */
+
+.verify-page {
+  min-height: calc(100vh - 200px);
+  padding: var(--spacing-3xl) 0;
+  background-color: var(--color-lighter-gray);
+}
+
+.verify-section {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.verify-header {
+  text-align: center;
+  margin-bottom: var(--spacing-3xl);
+}
+
+.verify-header h1 {
+  color: var(--color-dark);
+  margin-bottom: var(--spacing-md);
+}
+
+.verify-header p {
+  color: var(--color-gray);
+  font-size: var(--font-size-lg);
+}
+
+.verify-form-container {
+  background-color: var(--color-white);
+  padding: var(--spacing-3xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.verify-form .form-group {
+  margin-bottom: var(--spacing-xl);
+}
+
+.verify-form label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-dark);
+  font-weight: var(--font-weight-medium);
+}
+
+.verify-form input {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: 2px solid var(--color-light-gray);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-lg);
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  transition: all var(--transition-fast);
+}
+
+.verify-form input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.form-help {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray);
+  margin-top: var(--spacing-sm);
+}
+
+.verify-form button[type="submit"] {
+  width: 100%;
+}
+
+.verify-result {
+  background-color: var(--color-white);
+  padding: var(--spacing-3xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.verify-success, .verify-error {
+  text-align: center;
+}
+
+.success-icon {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: var(--color-success);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 60px;
+  margin: 0 auto var(--spacing-xl);
+  box-shadow: 0 4px 12px rgba(var(--color-success-rgb), 0.3);
+}
+
+.error-icon {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: var(--color-secondary);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 60px;
+  margin: 0 auto var(--spacing-xl);
+  box-shadow: 0 4px 12px rgba(var(--color-secondary-rgb), 0.3);
+}
+
+.verify-success h2 {
+  color: var(--color-success);
+  margin-bottom: var(--spacing-md);
+}
+
+.verify-error h2 {
+  color: var(--color-secondary);
+  margin-bottom: var(--spacing-md);
+}
+
+.success-message, .error-message {
+  font-size: var(--font-size-lg);
+  color: var(--color-gray);
+  margin-bottom: var(--spacing-xl);
+}
+
+.error-help {
+  color: var(--color-gray);
+  margin-bottom: var(--spacing-xl);
+}
+
+.certificate-info-card {
+  background-color: var(--color-lighter-gray);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl);
+  margin: var(--spacing-2xl) 0;
+  text-align: left;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-md) 0;
+  border-bottom: 1px solid var(--color-light-gray);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-gray);
+}
+
+.info-value {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-dark);
+}
+
+.verify-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+  margin-top: var(--spacing-2xl);
+}
+
+.loading-state {
+  text-align: center;
+  padding: var(--spacing-3xl);
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--color-light-gray);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto var(--spacing-lg);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .certificate-actions-bar,
+  .btn,
+  .sidebar,
+  .header,
+  .footer,
+  .dashboard-sidebar,
+  .dashboard-header {
+    display: none !important;
+  }
+
+  .certificate-document {
+    box-shadow: none;
+    border: none;
+  }
+
+  .certificate-page {
+    background-color: white;
+  }
+
+  body {
+    background-color: white;
+  }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .certificate-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .certificate-actions {
+    width: 100%;
+  }
+
+  .certificate-actions button {
+    width: 100%;
+  }
+
+  .certificate-dates {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .eligible-course-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .certificate-document {
+    padding: var(--spacing-lg);
+  }
+
+  .certificate-border {
+    padding: var(--spacing-lg);
+  }
+
+  .certificate-student-name {
+    font-size: 28px;
+    min-width: auto;
+  }
+
+  .certificate-title {
+    font-size: 24px;
+  }
+
+  .certificate-course-name {
+    font-size: 20px;
+  }
+
+  .certificate-footer {
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    align-items: center;
+  }
+
+  .verify-actions {
+    flex-direction: column;
+  }
+
+  .verify-actions button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vérification de Certificat - DevDynamics</title>
+
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/certificates.css">
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <img src="../assets/images/logo_6_white.png" alt="DevDynamics Logo" style="max-height: 50px;">
+        </div>
+        <nav class="header-nav">
+          <a href="../index.html" class="nav-link">Accueil</a>
+          <a href="student-login.html" class="btn btn-primary btn-sm">Connexion</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="verify-page">
+    <div class="container">
+      <div class="verify-section">
+        <div class="verify-header">
+          <h1><i class="ti ti-search"></i> Vérification de Certificat</h1>
+          <p>Vérifiez l'authenticité d'un certificat DevDynamics</p>
+        </div>
+
+        <!-- Search Form -->
+        <div class="verify-form-container" id="verify-form-container">
+          <form id="verify-form" class="verify-form">
+            <div class="form-group">
+              <label for="verification-code">Code de vérification</label>
+              <input
+                type="text"
+                id="verification-code"
+                placeholder="Ex: ABC123XYZ"
+                required
+                autocomplete="off"
+              >
+              <p class="form-help">Entrez le code de vérification du certificat (trouvé sur le certificat)</p>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg">
+              Vérifier le certificat
+            </button>
+          </form>
+        </div>
+
+        <!-- Result Container -->
+        <div class="verify-result" id="verify-result" style="display: none;">
+          <!-- Results will be displayed here -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2024 DevDynamics. Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('verify-form');
+      const resultContainer = document.getElementById('verify-result');
+      const formContainer = document.getElementById('verify-form-container');
+
+      // Check if there's a code in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const codeFromUrl = urlParams.get('code');
+
+      if (codeFromUrl) {
+        document.getElementById('verification-code').value = codeFromUrl;
+        verifyCertificate(codeFromUrl);
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const code = document.getElementById('verification-code').value.trim();
+        await verifyCertificate(code);
+      });
+    });
+
+    async function verifyCertificate(code) {
+      const resultContainer = document.getElementById('verify-result');
+      const formContainer = document.getElementById('verify-form-container');
+
+      // Show loading
+      resultContainer.style.display = 'block';
+      resultContainer.innerHTML = `
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Vérification en cours...</p>
+        </div>
+      `;
+
+      try {
+        const response = await api.verifyCertificate(code);
+        const cert = response.data;
+
+        const issueDate = formatDate(cert.issue_date);
+        const expiryDate = cert.expiry_date ? formatDate(cert.expiry_date) : 'Permanent';
+
+        resultContainer.innerHTML = `
+          <div class="verify-success">
+            <div class="success-icon"><i class="ti ti-circle-check"></i></div>
+            <h2>Certificat Valide</h2>
+            <p class="success-message">Ce certificat est authentique et a été délivré par DevDynamics</p>
+
+            <div class="certificate-info-card">
+              <div class="info-row">
+                <span class="info-label">Titulaire:</span>
+                <span class="info-value">${cert.student_name}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Cours:</span>
+                <span class="info-value">${cert.course_title}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Numéro:</span>
+                <span class="info-value">${cert.certificate_number}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Date de délivrance:</span>
+                <span class="info-value">${issueDate}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Validité:</span>
+                <span class="info-value">
+                  ${cert.is_expired ?
+                    `<span class="badge badge-warning">Expiré le ${expiryDate}</span>` :
+                    `<span class="badge badge-success">Valide jusqu'au ${expiryDate}</span>`
+                  }
+                </span>
+              </div>
+            </div>
+
+            <div class="verify-actions">
+              <button class="btn btn-primary" onclick="window.print()"><i class="ti ti-printer"></i> Imprimer</button>
+              <button class="btn btn-ghost" onclick="resetVerification()">Vérifier un autre certificat</button>
+            </div>
+          </div>
+        `;
+
+      } catch (error) {
+        console.error('Verification error:', error);
+
+        resultContainer.innerHTML = `
+          <div class="verify-error">
+            <div class="error-icon"><i class="ti ti-circle-x"></i></div>
+            <h2>Certificat Non Trouvé</h2>
+            <p class="error-message">
+              Aucun certificat ne correspond à ce code de vérification.
+            </p>
+            <p class="error-help">
+              Veuillez vérifier que vous avez entré le bon code ou contactez DevDynamics pour assistance.
+            </p>
+            <button class="btn btn-primary" onclick="resetVerification()">Réessayer</button>
+          </div>
+        `;
+      }
+    }
+
+    function resetVerification() {
+      document.getElementById('verify-result').style.display = 'none';
+      document.getElementById('verification-code').value = '';
+      document.getElementById('verification-code').focus();
+
+      // Clear URL parameter
+      const url = new URL(window.location.href);
+      url.searchParams.delete('code');
+      window.history.replaceState({}, '', url);
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+</body>
+</html>

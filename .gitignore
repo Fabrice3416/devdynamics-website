@@ -1,0 +1,39 @@
+# Environment files
+.env
+.env.local
+*.env
+!.env.example
+
+# Logs
+*.log
+backend/logs/
+
+# Uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Dependencies
+backend/vendor/
+node_modules/
+
+# Backups
+*.backup
+*.sql
+
+# Build
+*.zip
+
+# Dev scripts
+backend/create-*.php
+backend/check-*.php
+backend/test-*.php
+backend/*.ps1
+backend/*.bat

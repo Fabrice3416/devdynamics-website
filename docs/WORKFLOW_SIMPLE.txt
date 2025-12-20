@@ -1,0 +1,196 @@
+╔════════════════════════════════════════════════════════════════════╗
+║         WORKFLOW SIMPLE - MODIFICATIONS HOSTINGER                  ║
+╚════════════════════════════════════════════════════════════════════╝
+
+📝 MÉTHODE RECOMMANDÉE POUR VOUS: FileZilla (FTP)
+
+═══════════════════════════════════════════════════════════════════
+
+🔧 INSTALLATION FILEZILLA (UNE SEULE FOIS)
+
+1. Téléchargez FileZilla Client: https://filezilla-project.org/
+2. Installez le programme
+3. Ouvrez FileZilla
+
+═══════════════════════════════════════════════════════════════════
+
+⚙️ CONFIGURATION FILEZILLA (UNE SEULE FOIS)
+
+1. Fichier → Gestionnaire de sites → Nouveau site
+2. Remplissez:
+
+   Protocole:    FTP
+   Hôte:         ftp.votredomaine.com
+   Port:         21
+   Chiffrement:  Utiliser FTP explicite sur TLS
+   Identifiant:  [trouvé dans Hostinger → FTP Accounts]
+   Mot de passe: [trouvé dans Hostinger → FTP Accounts]
+
+3. Cliquez sur "Connexion"
+4. Acceptez le certificat si demandé
+
+═══════════════════════════════════════════════════════════════════
+
+🚀 WORKFLOW QUOTIDIEN
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. MODIFIER LOCALEMENT                                          │
+└─────────────────────────────────────────────────────────────────┘
+
+   → Ouvrez VS Code
+   → Modifiez vos fichiers dans: c:\wamp64\www\api\
+   → Sauvegardez
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. TESTER LOCALEMENT                                            │
+└─────────────────────────────────────────────────────────────────┘
+
+   → Démarrez WAMP (icône verte)
+   → Testez: http://localhost/api/votre-route
+   → Vérifiez que tout fonctionne
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. UPLOADER SUR HOSTINGER                                       │
+└─────────────────────────────────────────────────────────────────┘
+
+   → Ouvrez FileZilla
+   → Connectez-vous à Hostinger
+
+   Gauche (Local):  c:\wamp64\www\api\
+   Droite (Serveur): public_html/api/
+
+   → Glissez-déposez les fichiers modifiés de gauche à droite
+   → Attendez la fin du transfert (barre verte en bas)
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. TESTER EN PRODUCTION                                         │
+└─────────────────────────────────────────────────────────────────┘
+
+   → Ouvrez votre navigateur
+   → Testez: https://votredomaine.com/api/votre-route
+   → Videz le cache si nécessaire (Ctrl+F5)
+
+═══════════════════════════════════════════════════════════════════
+
+📂 STRUCTURE DES DOSSIERS
+
+Local (votre PC):
+c:\wamp64\www\api\
+├── config/
+├── routes/
+├── utils/
+├── middleware/
+└── index.php
+
+Hostinger (serveur):
+public_html/api/
+├── config/
+├── routes/
+├── utils/
+├── middleware/
+└── index.php
+
+═══════════════════════════════════════════════════════════════════
+
+🎯 EXEMPLES PRATIQUES
+
+Exemple 1: Modifier une route existante
+   1. Éditez: c:\wamp64\www\api\routes\courses.php
+   2. Testez: http://localhost/api/courses
+   3. Uploadez via FileZilla: routes/courses.php
+   4. Vérifiez: https://votredomaine.com/api/courses
+
+Exemple 2: Ajouter une nouvelle route
+   1. Créez: c:\wamp64\www\api\routes\notifications.php
+   2. Testez localement
+   3. Uploadez le nouveau fichier
+   4. Testez en production
+
+Exemple 3: Modifier le frontend
+   1. Éditez: frontend\js\api.js
+   2. Uploadez vers: public_html/js/api.js
+   3. Videz le cache navigateur (Ctrl+F5)
+
+═══════════════════════════════════════════════════════════════════
+
+⚠️ FICHIERS À NE PAS TOUCHER DIRECTEMENT SUR HOSTINGER
+
+❌ Ne modifiez JAMAIS directement sur le serveur:
+   - config/database.php
+   - .htaccess
+   - .env
+   - index.php
+
+✅ Toujours modifier localement puis uploader!
+
+═══════════════════════════════════════════════════════════════════
+
+🆘 PROBLÈMES COURANTS
+
+Problème: FileZilla ne se connecte pas
+Solution:
+   → Vérifiez vos identifiants dans Hostinger
+   → Essayez Port 21 au lieu de 22
+   → Désactivez temporairement l'antivirus
+
+Problème: Modifications non visibles
+Solution:
+   → Videz le cache: Ctrl+F5
+   → Vérifiez que le bon fichier a été uploadé
+   → Attendez 1-2 minutes (propagation)
+
+Problème: Erreur 500 après upload
+Solution:
+   → Vérifiez les logs dans Hostinger
+   → Restaurez l'ancien fichier
+   → Vérifiez la syntaxe PHP
+
+═══════════════════════════════════════════════════════════════════
+
+💡 ASTUCES PRO
+
+✓ Utilisez "Comparaison de répertoires" dans FileZilla
+  (icône avec deux dossiers dans la barre d'outils)
+  → Montre automatiquement les fichiers différents
+
+✓ Créez un signet dans FileZilla
+  → Clic droit sur le dossier → Ajouter aux signets
+  → Accès rapide la prochaine fois
+
+✓ Sauvegardez avant de modifier
+  → Téléchargez le fichier original avant d'uploader
+  → Ou faites une copie avec ".backup" à la fin
+
+✓ Utilisez la file d'attente
+  → Glissez plusieurs fichiers d'un coup
+  → FileZilla les uploade automatiquement
+
+═══════════════════════════════════════════════════════════════════
+
+📋 CHECKLIST RAPIDE
+
+Avant chaque modification:
+□ Code testé localement
+□ WAMP fonctionne correctement
+□ Sauvegarde du fichier original (si modification importante)
+□ FileZilla connecté à Hostinger
+
+Après chaque modification:
+□ Upload réussi (100% dans FileZilla)
+□ Test en production
+□ Pas d'erreurs dans les logs
+□ Cache navigateur vidé
+
+═══════════════════════════════════════════════════════════════════
+
+🔗 LIENS UTILES
+
+FileZilla: https://filezilla-project.org/
+FTP Hostinger: Panneau → FTP Accounts
+Logs PHP: Panneau Hostinger → Error Logs
+
+═══════════════════════════════════════════════════════════════════
+
+Besoin d'aide? Consultez: GESTION_MODIFICATIONS.md
+
+═══════════════════════════════════════════════════════════════════

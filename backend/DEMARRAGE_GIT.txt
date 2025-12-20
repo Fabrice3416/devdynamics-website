@@ -1,0 +1,168 @@
+╔════════════════════════════════════════════════════════════════╗
+║          DEMARRAGE RAPIDE - GIT + GITHUB                       ║
+╚════════════════════════════════════════════════════════════════╝
+
+🎯 EN 5 MINUTES CHRONO!
+
+═══════════════════════════════════════════════════════════════
+
+📋 ÉTAPE 1: INSTALLER GIT (si pas déjà fait)
+
+   1. Téléchargez: https://git-scm.com/download/win
+   2. Installez avec les options par défaut
+   3. Vérifiez:
+      > git --version
+
+═══════════════════════════════════════════════════════════════
+
+📋 ÉTAPE 2: REORGANISER VOS FICHIERS
+
+   Clic droit sur: reorganiser-pour-git.ps1
+   → "Exécuter avec PowerShell"
+
+   Cela va créer:
+   C:\DevDynamics-Project\
+   ├── backend/     (votre API PHP)
+   ├── frontend/    (votre site web)
+   ├── docs/        (documentation)
+   └── .gitignore
+
+   ✓ Le script fait tout automatiquement!
+
+═══════════════════════════════════════════════════════════════
+
+📋 ÉTAPE 3: CRÉER UN COMPTE GITHUB
+
+   1. Allez sur: https://github.com
+   2. Sign up (c'est gratuit!)
+   3. Confirmez votre email
+
+═══════════════════════════════════════════════════════════════
+
+📋 ÉTAPE 4: CRÉER UN DÉPÔT GITHUB
+
+   1. Sur GitHub, cliquez le + → New repository
+   2. Nom: devdynamics-website
+   3. Description: Site web DevDynamics
+   4. Private (ou Public si vous voulez)
+   5. NE COCHEZ RIEN d'autre
+   6. Create repository
+
+═══════════════════════════════════════════════════════════════
+
+📋 ÉTAPE 5: CONNECTER VOTRE CODE À GITHUB
+
+   Ouvrez PowerShell et exécutez:
+
+   > cd C:\DevDynamics-Project
+   > git remote add origin https://github.com/VOTRE-USERNAME/devdynamics-website.git
+   > git branch -M main
+   > git push -u origin main
+
+   Remplacez VOTRE-USERNAME par votre nom GitHub!
+
+   La première fois, GitHub va demander:
+   - Username: votre nom GitHub
+   - Password: utilisez un TOKEN (voir ci-dessous)
+
+═══════════════════════════════════════════════════════════════
+
+🔑 CRÉER UN TOKEN GITHUB (pour le mot de passe)
+
+   1. GitHub → Settings (en haut à droite)
+   2. Developer settings (tout en bas à gauche)
+   3. Personal access tokens → Tokens (classic)
+   4. Generate new token (classic)
+   5. Nom: DevDynamics Local Dev
+   6. Cochez: ☑ repo (tout)
+   7. Generate token
+   8. COPIEZ LE TOKEN (vous ne le verrez plus!)
+   9. Utilisez-le comme mot de passe quand Git demande
+
+═══════════════════════════════════════════════════════════════
+
+✅ C'EST FAIT! Votre code est sur GitHub!
+
+═══════════════════════════════════════════════════════════════
+
+🔄 UTILISATION QUOTIDIENNE
+
+Quand vous modifiez du code:
+
+   1. Modifier vos fichiers dans C:\DevDynamics-Project\
+   2. Tester localement avec WAMP
+   3. Sauvegarder sur GitHub:
+
+      > cd C:\DevDynamics-Project
+      > git add .
+      > git commit -m "Description de vos changements"
+      > git push
+
+   4. Uploader sur Hostinger via FTP
+
+   C'est tout!
+
+═══════════════════════════════════════════════════════════════
+
+🎯 COMMANDES GIT ESSENTIELLES
+
+   git status           → Voir ce qui a changé
+   git add .            → Ajouter tous les changements
+   git commit -m "msg"  → Sauvegarder avec un message
+   git push             → Envoyer sur GitHub
+   git pull             → Récupérer depuis GitHub
+   git log              → Voir l'historique
+
+═══════════════════════════════════════════════════════════════
+
+📊 WORKFLOW COMPLET
+
+   LOCAL (votre PC)                    GITHUB              HOSTINGER
+   ┌─────────────┐                  ┌──────────┐         ┌──────────┐
+   │ Modifier    │                  │          │         │          │
+   │ Tester      │──git push──────→ │  Repo    │         │ Site en  │
+   │ Commiter    │                  │  GitHub  │         │ ligne    │
+   └─────────────┘                  └──────────┘         └──────────┘
+          │                              │                     ▲
+          │                              └─────────────────────┘
+          └────────────── FTP Upload ─────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+💡 POURQUOI C'EST GÉNIAL?
+
+   ✓ Historique complet de tous vos changements
+   ✓ Retour en arrière facile si problème
+   ✓ Sauvegarde automatique sur GitHub
+   ✓ Collaboration facile en équipe
+   ✓ Professionnel et utilisé partout
+
+═══════════════════════════════════════════════════════════════
+
+🆘 PROBLÈMES COURANTS
+
+   "git n'est pas reconnu"
+   → Installez Git: https://git-scm.com/download/win
+
+   "Permission denied"
+   → Utilisez un Personal Access Token (pas votre mot de passe)
+
+   "Je ne vois pas mes fichiers sur GitHub"
+   → Vérifiez que vous avez fait: git add . puis git commit puis git push
+
+═══════════════════════════════════════════════════════════════
+
+📚 DOCUMENTATION COMPLÈTE
+
+   → SETUP_GIT_GITHUB.md     (guide détaillé)
+   → GESTION_MODIFICATIONS.md (workflow avec Git)
+
+═══════════════════════════════════════════════════════════════
+
+🎉 PRÊT À COMMENCER?
+
+   1. Double-cliquez sur: reorganiser-pour-git.ps1
+   2. Suivez les ÉTAPES 3-5 ci-dessus
+   3. Vous êtes prêt!
+
+═══════════════════════════════════════════════════════════════

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mes Certificats - DevDynamics</title>
+
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages/student.css">
+  <link rel="stylesheet" href="../css/certificates.css">
+</head>
+<body class="student-page">
+  <!-- SIDEBAR -->
+  <aside class="student-sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <img src="../assets/images/logo_6_white.png" alt="DevDynamics Logo" class="logo-img" style="max-width: 150px;">
+      </div>
+      <h2>Espace Étudiant</h2>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="student-dashboard.html" class="nav-item">
+        <i class="ti ti-chart-bar"></i> Tableau de bord
+      </a>
+      <a href="student-dashboard.html#my-courses" class="nav-item">
+        <i class="ti ti-book"></i> Mes cours
+      </a>
+      <a href="student-certificates.html" class="nav-item active">
+        <i class="ti ti-certificate"></i> Mes certificats
+      </a>
+      <a href="student-dashboard.html#profile" class="nav-item">
+        <i class="ti ti-user"></i> Mon profil
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="logout-btn" class="nav-item">
+        <i class="ti ti-logout"></i> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="student-main">
+    <header class="student-header">
+      <div class="header-left">
+        <h1><i class="ti ti-certificate"></i> Mes Certificats</h1>
+        <p>Gérez et téléchargez vos certificats de complétion</p>
+      </div>
+    </header>
+
+    <div class="student-content">
+      <!-- Eligible Courses Section -->
+      <section id="eligible-section">
+        <div class="section-header">
+          <h2>Cours éligibles pour certificat</h2>
+          <p>Ces cours ont été complétés à 100% et sont prêts pour la génération de certificat</p>
+        </div>
+        <div id="eligible-courses">
+          <p class="loading-text">Chargement...</p>
+        </div>
+      </section>
+
+      <!-- Certificates Section -->
+      <section id="certificates-section">
+        <div class="section-header">
+          <h2>Mes certificats délivrés</h2>
+        </div>
+        <div id="certificates-list">
+          <p class="loading-text">Chargement des certificats...</p>
+        </div>
+      </section>
+
+      <!-- Info Section -->
+      <section class="info-box">
+        <h3><i class="ti ti-info-circle"></i> À propos des certificats</h3>
+        <ul>
+          <li>Les certificats sont délivrés automatiquement après avoir complété un cours à 100%</li>
+          <li>Tous les quiz requis doivent être passés avec succès</li>
+          <li>Chaque certificat contient un code de vérification unique</li>
+          <li>Les certificats peuvent être partagés avec des employeurs ou sur LinkedIn</li>
+          <li>Utilisez le code de vérification pour prouver l'authenticité de votre certificat</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/pages/student-certificates.js"></script>
+
+  <script>
+    // Logout functionality
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      await api.logout();
+      window.location.href = '../index.html';
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+</body>
+</html>

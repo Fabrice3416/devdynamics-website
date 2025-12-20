@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestionnaire de Contenu - DevDynamics</title>
+
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages/admin.css">
+</head>
+<body class="admin-page">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <img src="../assets/images/logo_6_white.png" alt="DevDynamics Logo" class="logo-img" style="max-width: 150px;">
+      </div>
+      <h2>Admin Panel</h2>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="admin-dashboard.html" class="menu-item">
+        <i class="ti ti-arrow-left"></i> Retour au dashboard
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="logout-btn" class="menu-item">
+        <i class="ti ti-logout"></i> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="admin-main">
+    <header class="admin-header">
+      <div class="header-left">
+        <h1 id="course-title">Chargement...</h1>
+        <p id="course-subtitle"></p>
+      </div>
+      <div class="header-right">
+        <button id="add-module-btn" class="btn btn-primary"><i class="ti ti-plus"></i> Ajouter un chapitre</button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <!-- Module List -->
+      <div id="modules-container" class="modules-list">
+        <p class="empty-state">Aucun chapitre. Commencez par en ajouter un!</p>
+      </div>
+
+      <!-- Final Quiz Section -->
+      <div class="final-quiz-section" style="margin-top: 40px;">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <div>
+            <h2 style="margin: 0 0 5px 0;"><i class="ti ti-file-text"></i> Quiz Final du Cours</h2>
+            <p style="margin: 0; color: #666; font-size: 14px;">Quiz final requis pour obtenir le certificat (optionnel)</p>
+          </div>
+          <button id="create-final-quiz-btn" class="btn btn-primary" style="display: none;">
+            <i class="ti ti-plus"></i> Créer le quiz final
+          </button>
+        </div>
+        <div id="final-quiz-container">
+          <p class="empty-state">Chargement...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODULE MODAL -->
+  <div id="module-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Ajouter/Modifier un chapitre</h2>
+        <button type="button" class="modal-close" onclick="closeModal('module-modal')"><i class="ti ti-x"></i></button>
+      </div>
+      <form id="module-form" class="modal-body">
+        <div class="form-group">
+          <label for="module-title">Titre du chapitre *</label>
+          <input type="text" id="module-title" required>
+        </div>
+        <div class="form-group">
+          <label for="module-description">Description</label>
+          <textarea id="module-description" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="module-published">
+            Publié
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('module-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- LESSON MODAL -->
+  <div id="lesson-modal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Ajouter/Modifier une leçon</h2>
+        <button type="button" class="modal-close" onclick="closeModal('lesson-modal')">&times;</button>
+      </div>
+      <form id="lesson-form" class="modal-body">
+        <div class="form-group">
+          <label for="lesson-title">Titre de la leçon *</label>
+          <input type="text" id="lesson-title" required>
+        </div>
+        <div class="form-group">
+          <label for="lesson-description">Description</label>
+          <textarea id="lesson-description" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="lesson-content">Contenu (Markdown)</label>
+          <textarea id="lesson-content" rows="10" placeholder="Utilisez la syntaxe Markdown pour formater votre contenu..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="lesson-video">URL de la vidéo (YouTube, Vimeo, etc.)</label>
+          <input type="url" id="lesson-video" placeholder="https://youtube.com/watch?v=...">
+        </div>
+        <div class="form-group">
+          <label for="lesson-duration">Durée de la vidéo (minutes)</label>
+          <input type="number" id="lesson-duration" min="0">
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="lesson-preview">
+            Aperçu gratuit
+          </label>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="lesson-published">
+            Publié
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('lesson-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- QUIZ MODAL -->
+  <div id="quiz-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Créer/Modifier un quiz</h2>
+        <button type="button" class="modal-close" onclick="closeModal('quiz-modal')">&times;</button>
+      </div>
+      <form id="quiz-form" class="modal-body">
+        <div class="form-group">
+          <label for="quiz-title">Titre du quiz *</label>
+          <input type="text" id="quiz-title" required>
+        </div>
+        <div class="form-group">
+          <label for="quiz-description">Description</label>
+          <textarea id="quiz-description" rows="2"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quiz-passing-score">Score requis (%)*</label>
+            <input type="number" id="quiz-passing-score" min="0" max="100" required>
+          </div>
+          <div class="form-group">
+            <label for="quiz-time-limit">Temps limite (min)*</label>
+            <input type="number" id="quiz-time-limit" min="1" required>
+          </div>
+          <div class="form-group">
+            <label for="quiz-max-attempts">Tentatives max*</label>
+            <input type="number" id="quiz-max-attempts" min="1" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="quiz-required">
+            Requis pour compléter le chapitre
+          </label>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="quiz-published">
+            Publié
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('quiz-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- QUESTIONS MODAL -->
+  <div id="questions-modal" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Gérer les questions</h2>
+        <button type="button" class="modal-close" onclick="closeModal('questions-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 20px;">
+          <button class="btn btn-primary" onclick="addQuestion()">+ Ajouter une question</button>
+        </div>
+        <div id="questions-list-modal">
+          <!-- Questions will be rendered here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closeModal('questions-modal')">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION MODAL -->
+  <div id="question-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Ajouter/Modifier une question</h2>
+        <button type="button" class="modal-close" onclick="closeModal('question-modal')">&times;</button>
+      </div>
+      <form id="question-form" class="modal-body">
+        <div class="form-group">
+          <label for="question-text">Texte de la question *</label>
+          <textarea id="question-text" rows="3" required></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="question-type">Type de question</label>
+            <select id="question-type">
+              <option value="multiple_choice">Choix multiples</option>
+              <option value="true_false">Vrai/Faux</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="question-points">Points *</label>
+            <input type="number" id="question-points" min="1" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="question-explanation">Explication (optionnel)</label>
+          <textarea id="question-explanation" rows="2" placeholder="Explication affichée après la réponse..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('question-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ANSWERS MODAL -->
+  <div id="answers-modal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Gérer les réponses</h2>
+        <button type="button" class="modal-close" onclick="closeModal('answers-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 20px;">
+          <button class="btn btn-primary" onclick="addAnswer()">+ Ajouter une réponse</button>
+        </div>
+        <div id="answers-list-modal">
+          <!-- Answers will be rendered here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closeModal('answers-modal')">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANSWER MODAL -->
+  <div id="answer-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Ajouter/Modifier une réponse</h2>
+        <button type="button" class="modal-close" onclick="closeModal('answer-modal')">&times;</button>
+      </div>
+      <form id="answer-form" class="modal-body">
+        <div class="form-group">
+          <label for="answer-text">Texte de la réponse *</label>
+          <textarea id="answer-text" rows="2" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="answer-correct">
+            Cette réponse est correcte
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('answer-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FINAL QUIZ MODAL -->
+  <div id="final-quiz-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Créer/Modifier le Quiz Final</h2>
+        <button type="button" class="modal-close" onclick="closeModal('final-quiz-modal')">&times;</button>
+      </div>
+      <form id="final-quiz-form" class="modal-body">
+        <div class="form-group">
+          <label for="final-quiz-title">Titre du quiz *</label>
+          <input type="text" id="final-quiz-title" required placeholder="Ex: Quiz Final - Développement Web">
+        </div>
+        <div class="form-group">
+          <label for="final-quiz-description">Description</label>
+          <textarea id="final-quiz-description" rows="3" placeholder="Description du quiz final..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="final-quiz-passing-score">Score de passage (%) *</label>
+          <input type="number" id="final-quiz-passing-score" min="0" max="100" value="80" required>
+        </div>
+        <div class="form-group">
+          <label for="final-quiz-time-limit">Temps limite (minutes) *</label>
+          <input type="number" id="final-quiz-time-limit" min="1" value="60" required>
+        </div>
+        <div class="form-group">
+          <label for="final-quiz-max-attempts">Nombre de tentatives *</label>
+          <input type="number" id="final-quiz-max-attempts" min="1" value="2" required>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="final-quiz-published">
+            Publié
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('final-quiz-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/pages/admin-course-builder.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+</body>
+</html>

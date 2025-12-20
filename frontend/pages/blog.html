@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Blog de DevDynamics - Ressources et tutoriels sur la technologie en Haïti">
+  <title>Blog - DevDynamics</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages/blog.css">
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="container">
+      <nav>
+        <div class="logo">
+          <img src="../assets/images/logo_6.png" alt="DevDynamics Logo" class="logo-img">
+        </div>
+
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Accueil</a></li>
+          <li><a href="../index.html#programmes" class="nav-link">Programmes</a></li>
+          <li><a href="../index.html#temoignages" class="nav-link">Témoignages</a></li>
+          <li><a href="../index.html#equipe" class="nav-link">Équipe</a></li>
+          <li><a href="blog.html" class="nav-link active">Blog</a></li>
+          <li><a href="../index.html#contact" class="nav-link">Contact</a></li>
+        </ul>
+
+        <div class="nav-cta">
+          <a href="../index.html#dons" class="btn btn-primary btn-sm">Faire un don</a>
+          <a href="admin-login.html" class="btn btn-ghost btn-sm">Admin</a>
+          <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="blog-hero">
+    <div class="container">
+      <h1>Ressources & Blog</h1>
+      <p>Découvrez nos articles, tutoriels et ressources sur la technologie en Haïti</p>
+    </div>
+  </section>
+
+  <!-- BLOG CONTENT -->
+  <section class="blog-section">
+    <div class="container">
+      <div class="blog-layout">
+        <!-- MAIN CONTENT -->
+        <main class="blog-main">
+          <div id="blog-posts" class="blog-grid">
+            <!-- Loaded dynamically -->
+          </div>
+
+          <!-- PAGINATION -->
+          <div id="pagination" class="pagination">
+            <!-- Loaded dynamically -->
+          </div>
+        </main>
+
+        <!-- SIDEBAR -->
+        <aside class="blog-sidebar">
+          <!-- SEARCH -->
+          <div class="sidebar-widget">
+            <h3>Rechercher</h3>
+            <form id="search-form" class="search-form">
+              <input type="text" id="search-input" placeholder="Rechercher...">
+              <button type="submit" class="btn btn-primary btn-sm">Chercher</button>
+            </form>
+          </div>
+
+          <!-- CATEGORIES -->
+          <div class="sidebar-widget">
+            <h3>Catégories</h3>
+            <ul id="categories-list" class="categories-list">
+              <!-- Loaded dynamically -->
+            </ul>
+          </div>
+
+          <!-- RECENT POSTS -->
+          <div class="sidebar-widget">
+            <h3>Articles Récents</h3>
+            <ul id="recent-posts" class="recent-posts-list">
+              <!-- Loaded dynamically -->
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>DevDynamics</h4>
+          <p>Association éducative et technologique à but non lucratif en Haïti</p>
+          <div class="social-links">
+            <a href="#" title="Facebook"><i class="ti ti-brand-facebook"></i></a>
+            <a href="#" title="Twitter"><i class="ti ti-brand-x"></i></a>
+            <a href="#" title="LinkedIn"><i class="ti ti-brand-linkedin"></i></a>
+            <a href="#" title="Instagram"><i class="ti ti-brand-instagram"></i></a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="../index.html#programmes">Programmes</a></li>
+            <li><a href="../index.html#temoignages">Témoignages</a></li>
+            <li><a href="../index.html#equipe">Équipe</a></li>
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="../index.html#contact">Contact</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>Ressources</h4>
+          <ul>
+            <li><a href="#">Politique de confidentialité</a></li>
+            <li><a href="#">Conditions d'utilisation</a></li>
+            <li><a href="#">Transparence</a></li>
+            <li><a href="#">Rapports annuels</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>Rejoignez-nous</h4>
+          <p>Inscrivez-vous à notre newsletter pour les dernières mises à jour</p>
+          <form id="newsletter-form" class="newsletter-form">
+            <input type="email" name="email" placeholder="Votre email" required>
+            <button type="submit" class="btn btn-primary btn-sm">S'abonner</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2024 DevDynamics. Tous droits réservés. | Créé avec <i class="ti ti-heart"></i> pour Haïti</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/pages/blog.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+/* ============================================
+   PAYMENT STATUS PAGES STYLES
+   ============================================ */
+
+.status-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.status-box {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 100%;
+  padding: 48px 40px;
+  text-align: center;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.status-icon {
+  font-size: 80px;
+  margin-bottom: 24px;
+  animation: scaleIn 0.5s ease-out 0.2s both;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.status-box h1 {
+  font-size: 32px;
+  margin-bottom: 16px;
+  color: var(--color-text);
+}
+
+.status-box.success h1 {
+  color: var(--color-success);
+}
+
+.status-box.pending h1 {
+  color: #ffa500;
+}
+
+.status-message {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.status-details {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+  text-align: left;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-item strong {
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.detail-item span {
+  color: #666;
+  font-size: 14px;
+}
+
+.status-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.status-actions .btn {
+  width: 100%;
+}
+
+.next-steps {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.next-steps h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+  color: var(--color-text);
+}
+
+.next-steps ul {
+  list-style: none;
+  padding: 0;
+}
+
+.next-steps li {
+  padding: 8px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.support-info {
+  padding: 16px;
+  background: #fff3cd;
+  border-radius: 6px;
+  color: #856404;
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .status-box {
+    padding: 32px 24px;
+  }
+
+  .status-icon {
+    font-size: 60px;
+  }
+
+  .status-box h1 {
+    font-size: 24px;
+  }
+
+  .status-message {
+    font-size: 16px;
+  }
+}

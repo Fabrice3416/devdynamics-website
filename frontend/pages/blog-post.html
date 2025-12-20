@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Article - DevDynamics</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages/blog-post.css">
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="container">
+      <nav>
+        <div class="logo">
+          <img src="../assets/images/logo_6.png" alt="DevDynamics Logo" class="logo-img">
+        </div>
+
+        <ul class="nav-menu">
+          <li><a href="../index.html" class="nav-link">Accueil</a></li>
+          <li><a href="../index.html#programmes" class="nav-link">Programmes</a></li>
+          <li><a href="../index.html#temoignages" class="nav-link">Témoignages</a></li>
+          <li><a href="../index.html#equipe" class="nav-link">Équipe</a></li>
+          <li><a href="blog.html" class="nav-link active">Blog</a></li>
+          <li><a href="../index.html#contact" class="nav-link">Contact</a></li>
+        </ul>
+
+        <div class="nav-cta">
+          <a href="../index.html#dons" class="btn btn-primary btn-sm">Faire un don</a>
+          <a href="admin-login.html" class="btn btn-ghost btn-sm">Admin</a>
+          <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ARTICLE CONTENT -->
+  <article class="blog-post-container">
+    <div class="container">
+      <div class="blog-post-header">
+        <h1 id="post-title">Article</h1>
+        <div class="post-meta">
+          <span id="post-date" class="post-date">Date</span>
+          <span id="post-category" class="badge badge-primary">Catégorie</span>
+        </div>
+      </div>
+
+      <!-- Featured Image -->
+      <div id="post-featured-image-container" class="post-featured-image" style="display: none;">
+        <img id="post-featured-image" src="" alt="" style="width: 100%; max-height: 500px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: var(--spacing-2xl);">
+      </div>
+
+      <div class="blog-post-content">
+        <div class="post-main">
+          <div id="post-body" class="post-body">
+            <!-- Contenu chargé dynamiquement -->
+          </div>
+
+          <!-- NAVIGATION ARTICLES -->
+          <div class="post-navigation">
+            <a id="prev-post" href="#" class="nav-post prev-post">
+              <span><i class="ti ti-arrow-left"></i> Article précédent</span>
+            </a>
+            <a id="next-post" href="#" class="nav-post next-post">
+              <span>Article suivant <i class="ti ti-arrow-right"></i></span>
+            </a>
+          </div>
+
+          <!-- PARTAGE -->
+          <div class="post-share">
+            <h3>Partager cet article</h3>
+            <div class="share-buttons">
+              <a href="#" class="share-btn facebook" title="Facebook"><i class="ti ti-brand-facebook"></i></a>
+              <a href="#" class="share-btn twitter" title="Twitter"><i class="ti ti-brand-x"></i></a>
+              <a href="#" class="share-btn linkedin" title="LinkedIn"><i class="ti ti-brand-linkedin"></i></a>
+              <a href="#" class="share-btn whatsapp" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></a>
+            </div>
+          </div>
+
+          <!-- COMMENTAIRES (optionnel) -->
+          <div class="post-comments">
+            <h3>Commentaires</h3>
+            <p class="text-gray">Les commentaires sont actuellement désactivés.</p>
+          </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <aside class="post-sidebar">
+          <!-- AUTEUR -->
+          <div class="sidebar-widget author-widget">
+            <h3>À propos de l'auteur</h3>
+            <div class="author-info">
+              <div class="author-avatar"><i class="ti ti-user"></i></div>
+              <div class="author-details">
+                <div class="author-name" id="author-name">Auteur</div>
+                <p id="author-bio" class="author-bio">Bio de l'auteur</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ARTICLES CONNEXES -->
+          <div class="sidebar-widget">
+            <h3>Articles Connexes</h3>
+            <ul id="related-posts" class="related-posts-list">
+              <!-- Chargé dynamiquement -->
+            </ul>
+          </div>
+
+          <!-- APPEL À L'ACTION -->
+          <div class="sidebar-widget cta-widget">
+            <h3>Soutenez notre mission</h3>
+            <p>Votre contribution nous aide à former plus de jeunes en Haïti.</p>
+            <a href="../index.html#dons" class="btn btn-primary btn-block">Faire un don</a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </article>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>DevDynamics</h4>
+          <p>Association éducative et technologique à but non lucratif en Haïti</p>
+          <div class="social-links">
+            <a href="#" title="Facebook"><i class="ti ti-brand-facebook"></i></a>
+            <a href="#" title="Twitter"><i class="ti ti-brand-x"></i></a>
+            <a href="#" title="LinkedIn"><i class="ti ti-brand-linkedin"></i></a>
+            <a href="#" title="Instagram"><i class="ti ti-brand-instagram"></i></a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="../index.html#programmes">Programmes</a></li>
+            <li><a href="../index.html#temoignages">Témoignages</a></li>
+            <li><a href="../index.html#equipe">Équipe</a></li>
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="../index.html#contact">Contact</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>Ressources</h4>
+          <ul>
+            <li><a href="#">Politique de confidentialité</a></li>
+            <li><a href="#">Conditions d'utilisation</a></li>
+            <li><a href="#">Transparence</a></li>
+            <li><a href="#">Rapports annuels</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h4>Rejoignez-nous</h4>
+          <p>Inscrivez-vous à notre newsletter pour les dernières mises à jour</p>
+          <form id="newsletter-form" class="newsletter-form">
+            <input type="email" name="email" placeholder="Votre email" required>
+            <button type="submit" class="btn btn-primary btn-sm">S'abonner</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2024 DevDynamics. Tous droits réservés. | Créé avec <i class="ti ti-heart"></i> pour Haïti</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/pages/blog-post.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+</body>
+</html>

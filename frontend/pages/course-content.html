@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cours - DevDynamics</title>
+
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages/course-content.css">
+</head>
+<body class="course-content-page">
+  <!-- Mobile Overlay -->
+  <div id="mobile-overlay" class="mobile-overlay"></div>
+
+  <!-- SIDEBAR - Course Navigation -->
+  <aside class="course-sidebar" id="course-sidebar">
+    <div class="sidebar-header">
+      <a href="student-dashboard.html" class="back-link">
+        <i class="ti ti-arrow-left"></i> Retour au dashboard
+      </a>
+      <h2 id="course-title">Chargement...</h2>
+      <p id="course-subtitle"></p>
+    </div>
+
+    <div class="course-progress-summary">
+      <div class="progress-circle" id="progress-circle">
+        <svg width="80" height="80">
+          <circle cx="40" cy="40" r="35" fill="none" stroke="#e0e0e0" stroke-width="6"></circle>
+          <circle id="progress-arc" cx="40" cy="40" r="35" fill="none" stroke="#4A90E2" stroke-width="6"
+                  stroke-dasharray="220" stroke-dashoffset="220"></circle>
+          <text x="40" y="45" text-anchor="middle" font-size="16" fill="#333" id="progress-text">0%</text>
+        </svg>
+      </div>
+      <p class="progress-label">Progression du cours</p>
+    </div>
+
+    <nav class="modules-nav" id="modules-nav">
+      <p class="loading-text">Chargement des chapitres...</p>
+    </nav>
+
+    <!-- Final Quiz Section -->
+    <div id="final-quiz-nav" class="final-quiz-nav" style="display: none;">
+      <!-- Will be populated by JavaScript -->
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT - Lesson Display -->
+  <main class="course-main">
+    <header class="course-header">
+      <div class="header-left">
+        <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Toggle menu"><i class="ti ti-menu-2"></i></button>
+        <h1 id="lesson-title">Sélectionnez une leçon</h1>
+      </div>
+      <div class="header-right">
+        <div class="lesson-nav-buttons">
+          <button id="prev-lesson-btn" class="btn btn-ghost btn-sm" disabled><i class="ti ti-arrow-left"></i> Précédent</button>
+          <button id="next-lesson-btn" class="btn btn-primary btn-sm" disabled>Suivant <i class="ti ti-arrow-right"></i></button>
+        </div>
+      </div>
+    </header>
+
+    <div class="course-content">
+      <!-- WELCOME / NO LESSON SELECTED -->
+      <div id="welcome-section" class="content-section active">
+        <div class="welcome-card">
+          <div class="welcome-icon"><i class="ti ti-book"></i></div>
+          <h2>Bienvenue dans votre cours</h2>
+          <p>Sélectionnez un chapitre et une leçon dans le menu de gauche pour commencer votre apprentissage.</p>
+        </div>
+      </div>
+
+      <!-- LESSON CONTENT -->
+      <div id="lesson-section" class="content-section">
+        <!-- Video Player -->
+        <div id="video-container" class="video-container" style="display: none;">
+          <div id="video-player"></div>
+        </div>
+
+        <!-- Lesson Content (Markdown rendered) -->
+        <div id="lesson-content" class="lesson-content">
+          <p class="loading-text">Chargement de la leçon...</p>
+        </div>
+
+        <!-- Mark as Complete Button -->
+        <div class="lesson-actions">
+          <button id="mark-complete-btn" class="btn btn-success">
+            <i class="ti ti-check"></i> Marquer comme terminé
+          </button>
+        </div>
+      </div>
+
+      <!-- MODULE QUIZ SECTION -->
+      <div id="quiz-section" class="content-section">
+        <div class="quiz-container">
+          <div class="quiz-header">
+            <h2 id="quiz-title">Quiz du chapitre</h2>
+            <p id="quiz-description"></p>
+            <div class="quiz-info">
+              <span class="quiz-info-item"><i class="ti ti-file-text"></i> <span id="quiz-questions-count">0</span> questions</span>
+              <span class="quiz-info-item"><i class="ti ti-clock"></i> <span id="quiz-time-limit">0</span> minutes</span>
+              <span class="quiz-info-item"><i class="ti ti-target"></i> Score minimum: <span id="quiz-passing-score">0</span>%</span>
+            </div>
+          </div>
+          <div id="quiz-content">
+            <p class="empty-state">Aucun quiz pour ce chapitre</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/pages/course-content.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+</body>
+</html>

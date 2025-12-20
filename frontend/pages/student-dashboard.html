@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon espace - DevDynamics</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages/student.css">
+</head>
+<body class="student-page">
+  <!-- SIDEBAR -->
+  <aside class="student-sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <img src="../assets/images/logo_6_white.png" alt="DevDynamics Logo" class="logo-img" style="max-width: 150px;">
+      </div>
+      <h2>Espace Étudiant</h2>
+      <p id="user-greeting">Chargement...</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-section="overview">
+        <i class="ti ti-chart-bar"></i> Vue d'ensemble
+      </a>
+      <a href="#" class="nav-item" data-section="my-courses">
+        <i class="ti ti-book"></i> Mes cours
+      </a>
+      <a href="student-certificates.html" class="nav-item">
+        <i class="ti ti-certificate"></i> Mes certificats
+      </a>
+      <a href="#" class="nav-item" data-section="browse-courses">
+        <i class="ti ti-search"></i> Parcourir les cours
+      </a>
+      <a href="#" class="nav-item" data-section="profile">
+        <i class="ti ti-user"></i> Mon profil
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="#" id="logout-btn" class="nav-item">
+        <i class="ti ti-logout"></i> Déconnexion
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="student-main">
+    <!-- HEADER -->
+    <header class="student-header">
+      <div class="header-left">
+        <button class="mobile-menu-toggle">☰</button>
+        <h1 id="section-title">Vue d'ensemble</h1>
+      </div>
+      <div class="header-right">
+        <div class="user-info">
+          <span id="user-name">Chargement...</span>
+          <div id="user-avatar-container"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT AREA -->
+    <div class="student-content">
+      <!-- OVERVIEW PAGE -->
+      <section id="overview-section" class="content-section active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="ti ti-book"></i></div>
+            <div class="stat-info">
+              <div class="stat-value" id="enrolled-courses-count">0</div>
+              <div class="stat-label">Cours inscrits</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="ti ti-circle-check"></i></div>
+            <div class="stat-info">
+              <div class="stat-value" id="completed-courses-count">0</div>
+              <div class="stat-label">Cours complétés</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="ti ti-clock"></i></div>
+            <div class="stat-info">
+              <div class="stat-value" id="in-progress-count">0</div>
+              <div class="stat-label">En cours</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="ti ti-certificate"></i></div>
+            <div class="stat-info">
+              <div class="stat-value" id="certificates-count">0</div>
+              <div class="stat-label">Certificats</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <h2>Continuer l'apprentissage</h2>
+        </div>
+        <div id="continue-learning-container" class="courses-grid">
+          <p class="empty-state">Vous n'avez pas de cours en cours</p>
+        </div>
+      </section>
+
+      <!-- MY COURSES PAGE -->
+      <section id="my-courses-section" class="content-section">
+        <div class="section-header">
+          <h2>Mes cours</h2>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="tabs" style="margin-bottom: var(--spacing-xl);">
+          <button class="tab active" data-filter="all">Tous</button>
+          <button class="tab" data-filter="online">En ligne</button>
+          <button class="tab" data-filter="physical">Présentiel</button>
+        </div>
+
+        <div id="my-courses-container" class="courses-grid">
+          <p class="empty-state">Vous n'êtes inscrit à aucun cours</p>
+        </div>
+      </section>
+
+      <!-- BROWSE COURSES PAGE -->
+      <section id="browse-courses-section" class="content-section">
+        <div class="section-header">
+          <h2>Parcourir les cours disponibles</h2>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="tabs" style="margin-bottom: var(--spacing-xl);">
+          <button class="tab active" data-filter="all">Tous</button>
+          <button class="tab" data-filter="online">En ligne</button>
+          <button class="tab" data-filter="physical">Présentiel</button>
+          <button class="tab" data-filter="free">Gratuits</button>
+        </div>
+
+        <div id="browse-courses-container" class="courses-grid">
+          <p class="empty-state">Chargement...</p>
+        </div>
+      </section>
+
+      <!-- PROFILE PAGE -->
+      <section id="profile-section" class="content-section">
+        <div class="section-header">
+          <h2>Mon profil</h2>
+        </div>
+
+        <div class="profile-container">
+          <div class="profile-form-wrapper">
+            <form id="profile-form" class="profile-form">
+              <h3>Informations personnelles</h3>
+              <div class="form-group">
+                <label for="profile-full-name">Nom complet</label>
+                <input type="text" id="profile-full-name" name="full_name" required class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="profile-email">Email</label>
+                <input type="email" id="profile-email" name="email" disabled class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="profile-phone">Téléphone</label>
+                <input type="tel" id="profile-phone" name="phone_number" class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="profile-dob">Date de naissance</label>
+                <input type="date" id="profile-dob" name="date_of_birth" class="form-control">
+              </div>
+              <button type="submit" class="btn btn-primary">Mettre à jour</button>
+            </form>
+          </div>
+
+          <div class="change-password-section">
+            <h3>Changer le mot de passe</h3>
+            <form id="password-form">
+              <div class="form-group">
+                <label for="current-password">Mot de passe actuel</label>
+                <input type="password" id="current-password" name="current_password" required class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="new-password">Nouveau mot de passe</label>
+                <input type="password" id="new-password" name="new_password" required minlength="6" class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="confirm-password">Confirmer le mot de passe</label>
+                <input type="password" id="confirm-password" name="confirm_password" required minlength="6" class="form-control">
+              </div>
+              <button type="submit" class="btn btn-secondary">Changer le mot de passe</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/pages/student-dashboard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+</body>
+</html>
