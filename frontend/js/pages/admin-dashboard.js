@@ -334,7 +334,7 @@ function getTierBadge(tier) {
     platinum: '<i class="ti ti-diamond"></i> Platine',
     gold: '<i class="ti ti-medal-2"></i> Or',
     silver: '<i class="ti ti-medal"></i> Argent',
-    bronze: '🥉 Bronze'
+    bronze: 'Bronze'
   };
   return badges[tier] || tier;
 }
@@ -583,8 +583,8 @@ async function loadCourses() {
           <tbody>
             ${response.data.map(course => {
               const courseTypeLabel = {
-                'online': '💻 En ligne',
-                'physical': '📍 Présentiel'
+                'online': 'En ligne',
+                'physical': 'Présentiel'
               };
               return `
               <tr>

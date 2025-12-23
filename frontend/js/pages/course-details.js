@@ -73,9 +73,9 @@ function displayCourseDetails(course) {
   document.getElementById('instructor-name').textContent = course.instructor || 'DevDynamics';
 
   const levelLabels = {
-    'debutant': '🟢 Débutant',
-    'intermediaire': '🟡 Intermédiaire',
-    'avance': '🔴 Avancé'
+    'debutant': 'Débutant',
+    'intermediaire': 'Intermédiaire',
+    'avance': 'Avancé'
   };
   document.getElementById('course-level').textContent = levelLabels[course.level] || course.level;
   document.getElementById('course-duration').textContent = course.duration || 'Non spécifié';
@@ -102,7 +102,7 @@ function displayCourseDetails(course) {
       <span class="price-amount">${course.price} USD</span>
     `;
   } else {
-    priceElement.innerHTML = '<span class="price-free">✨ Gratuit</span>';
+    priceElement.innerHTML = '<span class="price-free">Gratuit</span>';
   }
 
   // Thumbnail
@@ -115,8 +115,8 @@ function displayCourseDetails(course) {
   document.getElementById('course-category').textContent = course.category || 'Général';
 
   const typeLabels = {
-    'physical': '📍 Cours en présentiel',
-    'online': '💻 Cours en ligne'
+    'physical': 'Cours en présentiel',
+    'online': 'Cours en ligne'
   };
   document.getElementById('course-type').textContent = typeLabels[course.course_type] || course.course_type;
 

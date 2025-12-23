@@ -181,8 +181,8 @@ function createEnrollmentCard(enrollment, showProgress = false) {
   };
 
   const courseTypeLabel = {
-    'online': '💻 En ligne',
-    'physical': '📍 Présentiel'
+    'online': 'En ligne',
+    'physical': 'Présentiel'
   };
 
   return `
@@ -190,7 +190,7 @@ function createEnrollmentCard(enrollment, showProgress = false) {
       <div class="course-thumbnail">
         ${enrollment.thumbnail_url
           ? `<img src="${enrollment.thumbnail_url}" alt="${enrollment.title}">`
-          : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:60px;">🎓</div>'}
+          : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:60px;"></div>'}
         ${enrollment.course_type ? `<div class="course-type-badge">${courseTypeLabel[enrollment.course_type] || enrollment.course_type}</div>` : ''}
       </div>
       <div class="course-info">
@@ -269,14 +269,14 @@ function filterBrowseCourses() {
 
 function createCourseCard(course) {
   const levelBadge = {
-    'debutant': '🟢 Débutant',
-    'intermediaire': '🟡 Intermédiaire',
-    'avance': '🔴 Avancé'
+    'debutant': 'Débutant',
+    'intermediaire': 'Intermédiaire',
+    'avance': 'Avancé'
   };
 
   const courseTypeLabel = {
-    'online': '💻 En ligne',
-    'physical': '📍 Présentiel'
+    'online': 'En ligne',
+    'physical': 'Présentiel'
   };
 
   return `
@@ -284,7 +284,7 @@ function createCourseCard(course) {
       <div class="course-thumbnail">
         ${course.thumbnail_url
           ? `<img src="${course.thumbnail_url}" alt="${course.title}">`
-          : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:60px;">🎓</div>'}
+          : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:60px;"></div>'}
         ${course.course_type ? `<div class="course-type-badge">${courseTypeLabel[course.course_type] || course.course_type}</div>` : ''}
       </div>
       <div class="course-info">
@@ -294,8 +294,8 @@ function createCourseCard(course) {
           <span class="badge badge-primary">${levelBadge[course.level] || course.level}</span>
           ${course.duration ? `<span class="badge badge-secondary">⏱️ ${course.duration}</span>` : ''}
           ${course.price > 0
-            ? `<span class="badge badge-success">💰 ${course.price} USD</span>`
-            : '<span class="badge badge-success">✨ Gratuit</span>'}
+            ? `<span class="badge badge-success">${course.price} USD</span>`
+            : '<span class="badge badge-success">Gratuit</span>'}
         </div>
       </div>
       <div class="course-actions">

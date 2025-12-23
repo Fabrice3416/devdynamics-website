@@ -10,6 +10,7 @@ date_default_timezone_set('UTC');
 // Error reporting (disable in production)
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
+ini_set('log_errors', 1);
 
 // CORS Headers
 header('Access-Control-Allow-Origin: *');

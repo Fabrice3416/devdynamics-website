@@ -88,7 +88,7 @@ function renderTestimonials(testimonials) {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen>
             </iframe>`
-          : `<div class="video-placeholder">📹 Vidéo non disponible</div>`
+          : `<div class="video-placeholder"> Vidéo non disponible</div>`
         }
       </div>
       <div class="testimonial-info">

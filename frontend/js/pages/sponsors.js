@@ -70,7 +70,7 @@ function renderSponsors(sponsors) {
           <img src="${sponsor.logo_url}" alt="${sponsor.name}" class="sponsor-logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 200 100%27%3E%3Crect fill=%27%23e0e0e0%27 width=%27200%27 height=%27100%27/%3E%3Ctext x=%27100%27 y=%2755%27 text-anchor=%27middle%27 fill=%27%23999%27 font-size=%2720%27%3E${sponsor.name}%3C/text%3E%3C/svg%3E'">
           <h3 class="sponsor-name">${sponsor.name}</h3>
           ${sponsor.description ? `<p class="sponsor-description">${sponsor.description}</p>` : ''}
-          ${sponsor.website_url ? `<a href="${sponsor.website_url}" target="_blank" rel="noopener noreferrer" class="sponsor-website">🔗 Visiter le site</a>` : ''}
+          ${sponsor.website_url ? `<a href="${sponsor.website_url}" target="_blank" rel="noopener noreferrer" class="sponsor-website">Visiter le site</a>` : ''}
         `;
 
         container.appendChild(card);

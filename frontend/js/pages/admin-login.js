@@ -19,13 +19,13 @@ async function handleLogin(e) {
   const email = this.querySelector('#email').value;
   const password = this.querySelector('#password').value;
 
-  console.log('🔐 Tentative de connexion...', { email, password: '***' });
-  console.log('📡 API URL:', 'http://localhost/api/auth/login');
+  console.log('[AUTH] Tentative de connexion...', { email, password: '***' });
+  console.log('[API] URL:', 'http://localhost/api/auth/login');
 
   try {
-    console.log('⏳ Envoi de la requête...');
+    console.log('[REQUEST] Envoi de la requête...');
     const response = await api.login(email, password);
-    console.log('✅ Réponse reçue:', response);
+    console.log('[SUCCESS] Réponse reçue:', response);
 
     if (response.success) {
       // Extract data from response

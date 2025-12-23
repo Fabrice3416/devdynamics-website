@@ -29,5 +29,5 @@ const CONFIG = {
     ENV: window.location.hostname === 'localhost' ? 'development' : 'production'
 };
 
-console.log('🔧 Configuration API:', CONFIG.API_BASE_URL);
-console.log('🌍 Environnement:', CONFIG.ENV);
+console.log('[Config] API URL:', CONFIG.API_BASE_URL);
+console.log('[Config] Environment:', CONFIG.ENV);

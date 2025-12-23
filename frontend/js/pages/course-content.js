@@ -170,8 +170,8 @@ function renderModulesNav() {
     const publishedLessons = module.lessons.filter(l => l.is_published);
     const isUnlocked = unlockedModules[module.id];
     const isCompleted = completedModuleIds.includes(module.id);
-    const lockIcon = isUnlocked ? '' : '🔒 ';
-    const completedIcon = isCompleted ? '✅ ' : '';
+    const lockIcon = isUnlocked ? '' : '';
+    const completedIcon = isCompleted ? '[SUCCESS] ' : '';
 
     return `
       <div class="module-item ${!isUnlocked ? 'locked' : ''} ${isCompleted ? 'completed' : ''}" data-module-id="${module.id}">
@@ -184,7 +184,7 @@ function renderModulesNav() {
         </div>
         <div class="lessons-list" id="lessons-${module.id}" style="display: none;">
           ${!isUnlocked
-            ? '<p class="empty-lessons">🔒 Ce chapitre est verrouillé. Complétez le chapitre précédent et réussissez le quiz pour y accéder.</p>'
+            ? '<p class="empty-lessons">Ce chapitre est verrouillé. Complétez le chapitre précédent et réussissez le quiz pour y accéder.</p>'
             : publishedLessons.length > 0
               ? publishedLessons.map(lesson => `
                 <div class="lesson-item ${currentLessonId === lesson.id ? 'active' : ''}"
@@ -199,7 +199,7 @@ function renderModulesNav() {
                 </div>
               `).join('') + `
               <div class="module-quiz-link" onclick="showModuleQuiz(${module.id})">
-                <span class="quiz-icon">📝</span>
+                <span class="quiz-icon"></span>
                 <div class="quiz-info">
                   <h4>Quiz du chapitre</h4>
                   <p>${isCompleted ? 'Quiz réussi ✅' : 'Terminez toutes les leçons puis passez le quiz'}</p>
@@ -606,7 +606,7 @@ window.submitQuiz = async function() {
       const { passed, percentage, passing_score } = response.data;
 
       if (passed) {
-        showNotification(`Quiz réussi! Score: ${percentage}% 🎉`, 'success');
+        showNotification(`Quiz réussi! Score: ${percentage}% `, 'success');
         // Reload progress and modules to update UI
         await loadCourseProgress();
         await loadModulesAndLessons();
@@ -673,14 +673,14 @@ function renderFinalQuizNav() {
   container.innerHTML = `
     <div style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; margin: 15px; color: white;">
       <div style="display: flex; align-items: center; margin-bottom: 10px;">
-        <span style="font-size: 24px; margin-right: 10px;">🏆</span>
+        <span style="font-size: 24px; margin-right: 10px;"></span>
         <h3 style="margin: 0;">Quiz Final</h3>
       </div>
       <p style="margin: 10px 0; font-size: 14px; opacity: 0.95;">${finalQuiz.title}</p>
       <div style="display: flex; gap: 10px; margin: 15px 0; font-size: 12px;">
         <span>⏱️ ${finalQuiz.time_limit_minutes} min</span>
         <span>✓ ${finalQuiz.passing_score}%</span>
-        <span>🔄 ${finalQuiz.max_attempts} tentatives</span>
+        <span>${finalQuiz.max_attempts} tentatives</span>
       </div>
       <button onclick="startFinalQuiz()" class="btn btn-primary" style="width: 100%; background: white; color: #667eea; border: none; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer;">
         Passer le quiz final
@@ -729,7 +729,7 @@ window.startFinalQuiz = async function() {
 
 function renderFinalQuizView(questions) {
   // Update quiz header
-  document.getElementById('quiz-title').textContent = `🏆 ${finalQuiz.title}`;
+  document.getElementById('quiz-title').textContent = ` ${finalQuiz.title}`;
   document.getElementById('quiz-description').textContent = finalQuiz.description || '';
   document.getElementById('quiz-questions-count').textContent = questions.length;
   document.getElementById('quiz-time-limit').textContent = finalQuiz.time_limit_minutes;
@@ -795,7 +795,7 @@ window.submitFinalQuiz = async function() {
       const percentage = Math.round((score / total_questions) * 100);
 
       if (passed) {
-        showNotification(`Félicitations! Vous avez réussi le quiz final! Score: ${percentage}% 🎉`, 'success');
+        showNotification(`Félicitations! Vous avez réussi le quiz final! Score: ${percentage}% `, 'success');
 
         // Try to automatically generate the certificate
         try {

@@ -60,8 +60,8 @@ function renderBlogPosts(posts) {
     card.innerHTML = `
       <div class="blog-card-image">
         ${post.featured_image
-          ? `<img src="${post.featured_image}" alt="${post.title}" onerror="this.parentElement.innerHTML='📝'">`
-          : '📝'}
+          ? `<img src="${post.featured_image}" alt="${post.title}" onerror="this.parentElement.innerHTML=''">`
+          : ''}
       </div>
       <div class="blog-card-content">
         ${post.category ? `<span class="badge badge-primary blog-card-category">${post.category}</span>` : ''}

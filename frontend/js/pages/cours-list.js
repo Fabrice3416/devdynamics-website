@@ -50,7 +50,7 @@ function renderCourses(courses) {
     const card = document.createElement('article');
     card.className = 'cours-card';
 
-    const courseTypeLabel = course.course_type === 'online' ? '💻 En ligne' : '📍 Présentiel';
+    const courseTypeLabel = course.course_type === 'online' ? 'En ligne' : 'Présentiel';
     const courseTypeClass = course.course_type === 'online' ? 'online' : 'physical';
 
     card.innerHTML = `
@@ -60,8 +60,8 @@ function renderCourses(courses) {
         <p class="cours-description">${course.description}</p>
         <div class="cours-meta">
           ${course.duration ? `<div class="cours-meta-item">⏱️ ${course.duration}</div>` : ''}
-          ${course.level ? `<div class="cours-meta-item">📊 ${course.level}</div>` : ''}
-          ${course.price && parseFloat(course.price) > 0 ? `<div class="cours-meta-item">💰 ${course.price} HTG</div>` : '<div class="cours-meta-item">🎁 Gratuit</div>'}
+          ${course.level ? `<div class="cours-meta-item">${course.level}</div>` : ''}
+          ${course.price && parseFloat(course.price) > 0 ? `<div class="cours-meta-item">${course.price} HTG</div>` : '<div class="cours-meta-item">Gratuit</div>'}
         </div>
         <div class="cours-footer">
           <span class="text-gray">Inscrivez-vous</span>

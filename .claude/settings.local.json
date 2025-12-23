@@ -5,7 +5,13 @@
       "Bash(cat:*)",
       "Bash(powershell:*)",
       "Bash(curl:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(python:*)",
+      "Bash(php:*)",
+      "Bash(dir \"C:\\\\wamp64\\\\bin\\\\mysql\" /b)",
+      "Bash(\"C:\\\\wamp64\\\\bin\\\\mysql\\\\mysql8.0.27\\\\bin\\\\mysql.exe\" -u root -ptoto -e \"SHOW DATABASES;\")",
+      "Bash(\"C:\\\\wamp64\\\\bin\\\\mysql\\\\mysql8.0.27\\\\bin\\\\mysql.exe\" -u root -e \"SHOW DATABASES;\")",
+      "Bash(\"C:\\\\wamp64\\\\bin\\\\mysql\\\\mysql8.0.27\\\\bin\\\\mysql.exe\" -u root devdynamics_db -e \"SHOW TABLES;\")"
     ]
   }
 }
