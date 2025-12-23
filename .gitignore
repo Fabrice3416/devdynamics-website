@@ -37,3 +37,6 @@ backend/check-*.php
 backend/test-*.php
 backend/*.ps1
 backend/*.bat
+
+#claude
+*.claude
