@@ -18,22 +18,33 @@ class APIClient {
     localStorage.setItem('auth_token', token);
   }
 
-  getHeaders() {
+  getHeaders(method = 'GET') {
     const headers = {
       'Content-Type': 'application/json'
     };
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
+    // Pour les serveurs qui ne supportent pas PUT/DELETE nativement
+    if (method === 'PUT' || method === 'DELETE') {
+      headers['X-HTTP-Method-Override'] = method;
+    }
     return headers;
   }
 
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
+    const method = options.method || 'GET';
+
     const config = {
       ...options,
-      headers: this.getHeaders()
+      headers: this.getHeaders(method)
     };
+
+    // Convertir PUT/DELETE en POST si nécessaire pour compatibilité serveur
+    if (method === 'PUT' || method === 'DELETE') {
+      config.method = 'POST';
+    }
 
     try {
       const response = await fetch(url, config);

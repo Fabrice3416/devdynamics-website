@@ -14,7 +14,7 @@ ini_set('display_errors', 0);
 // CORS Headers
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-HTTP-Method-Override, x-http-method-override');
 header('Content-Type: application/json');
 
 // Handle preflight requests
@@ -50,6 +50,19 @@ $router = Router::getInstance();
 
 // Get request method and URI
 $method = $_SERVER['REQUEST_METHOD'];
+
+// Support PUT and DELETE via POST with _method parameter
+if ($method === 'POST') {
+    $body = json_decode(file_get_contents('php://input'), true);
+    if (isset($body['_method'])) {
+        $method = strtoupper($body['_method']);
+    } elseif (isset($_POST['_method'])) {
+        $method = strtoupper($_POST['_method']);
+    } elseif (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
+        $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
+    }
+}
+
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 // Remove base path if running in subdirectory

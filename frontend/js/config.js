@@ -10,7 +10,8 @@ function getAPIBaseURL() {
 
     // Production
     if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-        return 'https://votredomaine.com/api';
+        // L'API se trouve dans le même domaine, dans le dossier /api
+        return window.location.origin + '/api';
     }
 
     // Local - Backend PHP (WAMP)

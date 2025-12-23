@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -r:*)",
+      "Bash(cat:*)",
+      "Bash(powershell:*)",
+      "Bash(curl:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}
