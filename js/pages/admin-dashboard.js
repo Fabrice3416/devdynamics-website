@@ -17,6 +17,35 @@
 let currentPage = 'dashboard';
 let editingId = null;
 
+// Helper function to generate user avatar with initials
+function updateUserAvatar(fullName) {
+  const userAvatar = document.querySelector('.user-avatar');
+  if (!userAvatar || !fullName) return;
+
+  // Get initials (first letter of first and last name)
+  const names = fullName.trim().split(' ');
+  let initials = '';
+  if (names.length >= 2) {
+    initials = names[0][0] + names[names.length - 1][0];
+  } else {
+    initials = names[0][0];
+  }
+  initials = initials.toUpperCase();
+
+  // Generate random color based on name
+  const colors = ['#008080', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DFE6E9', '#6C5CE7'];
+  let hash = 0;
+  for (let i = 0; i < fullName.length; i++) {
+    hash = fullName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const color = colors[Math.abs(hash) % colors.length];
+
+  // Create SVG avatar
+  const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='${encodeURIComponent(color)}'/%3E%3Ctext x='50' y='67' font-size='40' fill='white' text-anchor='middle' font-family='Arial, sans-serif' font-weight='bold'%3E${initials}%3C/text%3E%3C/svg%3E`;
+
+  userAvatar.src = svg;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Double-check authentication (defensive programming)
   if (!api.token) {
@@ -34,6 +63,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (user) {
     document.getElementById('user-name').textContent = user.full_name;
+    // Generate user avatar with initials
+    updateUserAvatar(user.full_name);
   }
 
   // Initialize

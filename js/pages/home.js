@@ -317,7 +317,7 @@ async function loadSponsors() {
 
       if (sponsorsToShow.length === 0) {
         // Show message when no sponsors
-        container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-2xl);">Aucun sponsor pour le moment. Soutenez notre mission!</p>';
+        container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-2xl);">Aucun partenaire pour le moment. Soutenez notre mission!</p>';
       } else {
         sponsorsToShow.forEach(sponsor => {
           const card = document.createElement('div');
@@ -341,7 +341,7 @@ async function loadSponsors() {
     // Show message on error instead of hiding section
     const container = document.getElementById('sponsors-container');
     if (container) {
-      container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-2xl);">Aucun sponsor pour le moment.</p>';
+      container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-2xl);">Aucun partenaire pour le moment.</p>';
     }
   }
 }
