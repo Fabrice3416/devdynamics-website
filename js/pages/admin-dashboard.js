@@ -20,7 +20,10 @@ let editingId = null;
 // Helper function to generate user avatar with initials
 function updateUserAvatar(fullName) {
   const userAvatar = document.querySelector('.user-avatar');
-  if (!userAvatar || !fullName) return;
+  if (!userAvatar || !fullName) {
+    console.log('Avatar element or name not found:', {userAvatar, fullName});
+    return;
+  }
 
   // Get initials (first letter of first and last name)
   const names = fullName.trim().split(' ');
@@ -40,10 +43,12 @@ function updateUserAvatar(fullName) {
   }
   const color = colors[Math.abs(hash) % colors.length];
 
-  // Create SVG avatar
-  const svg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='${encodeURIComponent(color)}'/%3E%3Ctext x='50' y='67' font-size='40' fill='white' text-anchor='middle' font-family='Arial, sans-serif' font-weight='bold'%3E${initials}%3C/text%3E%3C/svg%3E`;
+  // Create SVG with proper encoding
+  const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="${color}"/><text x="50" y="67" font-size="40" fill="white" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">${initials}</text></svg>`;
+  const encodedSvg = 'data:image/svg+xml;base64,' + btoa(svgContent);
 
-  userAvatar.src = svg;
+  userAvatar.src = encodedSvg;
+  console.log('Avatar updated with initials:', initials, 'color:', color);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
