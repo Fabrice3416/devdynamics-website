@@ -135,10 +135,36 @@ Les tentatives d'envoi sont enregistrées dans les logs PHP:
 
 ## 📚 Fichiers concernés
 
-- `api/utils/Mailer.php` - Classe d'envoi d'emails
+- `api/utils/Mailer.php` - Classe d'envoi d'emails (utilise PHPMailer)
 - `api/routes/contact.php` - Route qui utilise le Mailer
 - `api/.env` - Configuration SMTP (NON commité)
 - `api/.env.example` - Template de configuration
+- `api/vendor/phpmailer/` - Bibliothèque PHPMailer (NON commité)
+
+## 🔧 Installation sur le serveur Hostinger
+
+Après avoir téléchargé votre site sur Hostinger, vous devez installer PHPMailer:
+
+### Option 1: Upload manuel (Recommandé)
+1. Téléchargez le dossier `api/vendor/phpmailer` depuis votre ordinateur
+2. Uploadez-le vers `public_html/api/vendor/phpmailer` sur Hostinger via FTP/File Manager
+
+### Option 2: Via SSH (si disponible)
+```bash
+cd public_html/api/vendor
+wget https://github.com/PHPMailer/PHPMailer/archive/refs/tags/v6.9.1.zip
+unzip v6.9.1.zip
+mv PHPMailer-6.9.1 phpmailer
+rm v6.9.1.zip
+```
+
+### Option 3: Test local
+Pour tester l'envoi d'emails en local avant de déployer:
+1. Ouvrez dans votre navigateur: `http://localhost/api/test-email.php`
+2. Vérifiez les résultats affichés
+3. Consultez votre boîte email `contact@dev-dynamics.org`
+
+⚠️ **Important:** Supprimez `api/test-email.php` après les tests (il est déjà ignoré par Git)
 
 ---
 

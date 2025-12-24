@@ -24,6 +24,7 @@ Thumbs.db
 
 # Dependencies
 backend/vendor/
+api/vendor/
 node_modules/
 
 # Backups

@@ -1,8 +1,17 @@
 <?php
 /**
- * Mailer Utility - Envoi d'emails via SMTP
+ * Mailer Utility - Envoi d'emails via SMTP avec PHPMailer
  * Compatible avec Hostinger
  */
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
+// Charger PHPMailer
+require_once __DIR__ . '/../vendor/phpmailer/src/Exception.php';
+require_once __DIR__ . '/../vendor/phpmailer/src/PHPMailer.php';
+require_once __DIR__ . '/../vendor/phpmailer/src/SMTP.php';
 
 class Mailer {
     private static $config = null;
@@ -41,6 +50,49 @@ class Mailer {
     }
 
     /**
+     * Crée une instance PHPMailer configurée
+     *
+     * @return PHPMailer
+     */
+    private static function createMailer() {
+        $config = self::loadConfig();
+
+        $mail = new PHPMailer(true);
+
+        try {
+            // Configuration du serveur SMTP
+            $mail->isSMTP();
+            $mail->Host       = $config['SMTP_HOST'] ?? 'smtp.hostinger.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = $config['SMTP_USERNAME'] ?? '';
+            $mail->Password   = $config['SMTP_PASSWORD'] ?? '';
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = $config['SMTP_PORT'] ?? 587;
+            $mail->CharSet    = 'UTF-8';
+
+            // Désactiver la vérification SSL en développement (à retirer en production)
+            $mail->SMTPOptions = array(
+                'ssl' => array(
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                )
+            );
+
+            // Expéditeur par défaut
+            $fromEmail = $config['SMTP_FROM_EMAIL'] ?? 'contact@dev-dynamics.org';
+            $fromName = $config['SMTP_FROM_NAME'] ?? 'DevDynamics';
+            $mail->setFrom($fromEmail, $fromName);
+
+            return $mail;
+
+        } catch (Exception $e) {
+            error_log('Erreur configuration PHPMailer: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
      * Envoie un email
      *
      * @param string $to Email du destinataire
@@ -51,39 +103,24 @@ class Mailer {
      */
     public static function send($to, $subject, $message, $replyTo = null) {
         try {
-            $config = self::loadConfig();
+            $mail = self::createMailer();
 
-            // Configuration SMTP
-            $smtpHost = $config['SMTP_HOST'] ?? 'smtp.hostinger.com';
-            $smtpPort = $config['SMTP_PORT'] ?? 587;
-            $smtpUsername = $config['SMTP_USERNAME'] ?? '';
-            $smtpPassword = $config['SMTP_PASSWORD'] ?? '';
-            $fromEmail = $config['SMTP_FROM_EMAIL'] ?? 'contact@dev-dynamics.org';
-            $fromName = $config['SMTP_FROM_NAME'] ?? 'DevDynamics';
+            // Destinataire
+            $mail->addAddress($to);
 
-            // Validation
-            if (empty($smtpUsername) || empty($smtpPassword)) {
-                error_log('SMTP: Configuration manquante');
-                return false;
-            }
-
-            // Headers
-            $headers = [];
-            $headers[] = "MIME-Version: 1.0";
-            $headers[] = "Content-Type: text/html; charset=UTF-8";
-            $headers[] = "From: $fromName <$fromEmail>";
-
+            // Reply-To si fourni
             if ($replyTo) {
-                $headers[] = "Reply-To: $replyTo";
+                $mail->addReplyTo($replyTo);
             }
 
-            // Configuration ini pour SMTP (Hostinger)
-            ini_set('SMTP', $smtpHost);
-            ini_set('smtp_port', $smtpPort);
-            ini_set('sendmail_from', $fromEmail);
+            // Contenu
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body    = $message;
+            $mail->AltBody = strip_tags($message);
 
-            // Tentative d'envoi
-            $result = mail($to, $subject, $message, implode("\r\n", $headers));
+            // Envoi
+            $result = $mail->send();
 
             if ($result) {
                 error_log("Email envoyé avec succès à: $to");
@@ -145,7 +182,7 @@ class Mailer {
                     </div>
                     <div class='field'>
                         <span class='label'>Sujet:</span><br>
-                        " . htmlspecialchars($data['subject']) . "
+                        " . htmlspecialchars($data['subject'] ?? 'Aucun sujet') . "
                     </div>
                     <div class='field'>
                         <span class='label'>Message:</span><br>
