@@ -52,6 +52,14 @@ $router->put('\/organization\/info', function($params) use ($db) {
                 $fields[] = 'mission = ?';
                 $values[] = $data['mission'];
             }
+            if (isset($data['vision'])) {
+                $fields[] = 'vision = ?';
+                $values[] = $data['vision'];
+            }
+            if (isset($data['description'])) {
+                $fields[] = 'description = ?';
+                $values[] = $data['description'];
+            }
             if (isset($data['address'])) {
                 $fields[] = 'address = ?';
                 $values[] = $data['address'];
@@ -64,9 +72,9 @@ $router->put('\/organization\/info', function($params) use ($db) {
                 $fields[] = 'email = ?';
                 $values[] = $data['email'];
             }
-            if (isset($data['whatsapp'])) {
-                $fields[] = 'whatsapp = ?';
-                $values[] = $data['whatsapp'];
+            if (isset($data['whatsapp_number'])) {
+                $fields[] = 'whatsapp_number = ?';
+                $values[] = $data['whatsapp_number'];
             }
             if (isset($data['facebook_url'])) {
                 $fields[] = 'facebook_url = ?';

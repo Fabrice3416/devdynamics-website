@@ -790,6 +790,8 @@ async function loadOrganizationForm() {
       document.getElementById('org-email').value = org.email || '';
       document.getElementById('org-phone').value = org.phone || '';
       document.getElementById('org-whatsapp').value = org.whatsapp_number || '';
+      document.getElementById('org-address').value = org.address || '';
+      document.getElementById('org-description').value = org.description || '';
       document.getElementById('org-mission').value = org.mission || '';
       document.getElementById('org-vision').value = org.vision || '';
     }
