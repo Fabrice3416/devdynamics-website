@@ -15,7 +15,7 @@ class Mailer {
             return self::$config;
         }
 
-        $envFile = __DIR__ . '/../../.env';
+        $envFile = __DIR__ . '/../.env';
         if (!file_exists($envFile)) {
             throw new Exception('Fichier .env introuvable');
         }

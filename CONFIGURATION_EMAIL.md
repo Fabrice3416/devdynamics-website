@@ -18,7 +18,7 @@ Lorsqu'un visiteur envoie un message via le formulaire de contact:
 
 ### Étape 2: Configurer le fichier .env
 
-Ouvrez le fichier `.env` sur votre serveur Hostinger et ajoutez/modifiez:
+Ouvrez le fichier `api/.env` sur votre serveur Hostinger et ajoutez/modifiez:
 
 ```env
 # SMTP Configuration - Hostinger Email
@@ -137,8 +137,8 @@ Les tentatives d'envoi sont enregistrées dans les logs PHP:
 
 - `api/utils/Mailer.php` - Classe d'envoi d'emails
 - `api/routes/contact.php` - Route qui utilise le Mailer
-- `.env` - Configuration SMTP (NON commité)
-- `.env.example` - Template de configuration
+- `api/.env` - Configuration SMTP (NON commité)
+- `api/.env.example` - Template de configuration
 
 ---
 
