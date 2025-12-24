@@ -67,9 +67,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (user) {
-    document.getElementById('user-name').textContent = user.full_name;
+    // API returns 'name' property, not 'full_name'
+    const userName = user.name || user.full_name || 'Utilisateur';
+    document.getElementById('user-name').textContent = userName;
     // Generate user avatar with initials
-    updateUserAvatar(user.full_name);
+    updateUserAvatar(userName);
   }
 
   // Initialize
