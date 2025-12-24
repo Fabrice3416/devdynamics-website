@@ -12,13 +12,9 @@ $db = Database::getInstance();
 $router->post('\/auth/login', function($params) use ($db) {
     $body = Router::getBody();
 
-    // DEBUG: Log request
-    error_log("LOGIN ATTEMPT: " . json_encode($body));
-
     // Validate input
     if (empty($body['email']) || empty($body['password'])) {
-        error_log("LOGIN ERROR: Missing email or password");
-        Response::error('Email and password are required', 400);
+        Response::error('Connexion échouée: Email et mot de passe requis', 400);
     }
 
     try {
@@ -29,22 +25,15 @@ $router->post('\/auth/login', function($params) use ($db) {
         );
 
         if (!$user) {
-            error_log("LOGIN ERROR: User not found - " . $body['email']);
-            Response::error('Invalid credentials', 401);
+            Response::error('Identifiants invalides', 401);
         }
-
-        error_log("LOGIN: User found - ID: " . $user['id']);
 
         // Verify password
         $passwordMatch = password_verify($body['password'], $user['password_hash']);
-        error_log("LOGIN: Password verify result: " . ($passwordMatch ? 'TRUE' : 'FALSE'));
 
         if (!$passwordMatch) {
-            error_log("LOGIN ERROR: Invalid password for " . $body['email']);
-            Response::error('Invalid credentials', 401);
+            Response::error('Identifiants invalides', 401);
         }
-
-        error_log("LOGIN: Password verified successfully");
 
         // Generate JWT token
         $token = JWT::encode([
@@ -52,8 +41,6 @@ $router->post('\/auth/login', function($params) use ($db) {
             'email' => $user['email'],
             'role' => $user['role']
         ]);
-
-        error_log("LOGIN: JWT token generated successfully");
 
         // Return user info and token
         Response::success([
@@ -64,12 +51,10 @@ $router->post('\/auth/login', function($params) use ($db) {
                 'full_name' => $user['full_name'],
                 'role' => $user['role']
             ]
-        ], 'Login successful');
+        ], 'Connexion réussie');
 
     } catch (Exception $e) {
-        error_log("LOGIN EXCEPTION: " . $e->getMessage());
-        error_log("LOGIN EXCEPTION TRACE: " . $e->getTraceAsString());
-        Response::error('Login failed: ' . $e->getMessage(), 500);
+        Response::error('Échec de la connexion', 500);
     }
 });
 

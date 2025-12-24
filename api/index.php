@@ -12,10 +12,25 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
-// CORS Headers
-header('Access-Control-Allow-Origin: *');
+// CORS Headers - Restreint aux domaines autorisés
+$allowed_origins = [
+    'https://dev-dynamics.org',
+    'https://www.dev-dynamics.org',
+    'http://localhost',
+    'http://127.0.0.1'
+];
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (in_array($origin, $allowed_origins)) {
+    header("Access-Control-Allow-Origin: $origin");
+} else {
+    header('Access-Control-Allow-Origin: https://dev-dynamics.org');
+}
+
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-HTTP-Method-Override, x-http-method-override');
+header('Access-Control-Allow-Credentials: true');
 header('Content-Type: application/json');
 
 // Handle preflight requests

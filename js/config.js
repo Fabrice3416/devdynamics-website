@@ -29,5 +29,8 @@ const CONFIG = {
     ENV: window.location.hostname === 'localhost' ? 'development' : 'production'
 };
 
-console.log('[Config] API URL:', CONFIG.API_BASE_URL);
-console.log('[Config] Environment:', CONFIG.ENV);
+// Debug uniquement en développement
+if (CONFIG.ENV === 'development') {
+    console.log('[Config] API URL:', CONFIG.API_BASE_URL);
+    console.log('[Config] Environment:', CONFIG.ENV);
+}

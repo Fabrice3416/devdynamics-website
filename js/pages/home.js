@@ -124,7 +124,6 @@ function renderPrograms(programs) {
 async function loadCourses() {
   try {
     const response = await api.getCourses();
-    console.log('Courses API response:', response);
 
     if (response.success) {
       const container = document.getElementById('courses-container');
@@ -132,7 +131,6 @@ async function loadCourses() {
 
       // Update courses count in stats
       const coursesCount = response.data.length;
-      console.log('Courses count:', coursesCount);
 
       const coursesCountElement = document.getElementById('courses-count');
       if (coursesCountElement) {
@@ -317,7 +315,7 @@ async function loadSponsors() {
 
       if (sponsorsToShow.length === 0) {
         // Show message when no sponsors
-        container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-2xl);">Aucun partenaire pour le moment. Soutenez notre mission!</p>';
+        container.innerHTML = '<p class="empty-state-message">Aucun partenaire pour le moment. Soutenez notre mission!</p>';
       } else {
         sponsorsToShow.forEach(sponsor => {
           const card = document.createElement('div');
@@ -337,11 +335,10 @@ async function loadSponsors() {
       }
     }
   } catch (error) {
-    console.error('Erreur chargement sponsors:', error);
     // Show message on error instead of hiding section
     const container = document.getElementById('sponsors-container');
     if (container) {
-      container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-2xl);">Aucun partenaire pour le moment.</p>';
+      container.innerHTML = '<p class="empty-state-message">Aucun partenaire pour le moment.</p>';
     }
   }
 }
