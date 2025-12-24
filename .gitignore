@@ -3,6 +3,8 @@
 .env.local
 *.env
 !.env.example
+.env.example
+.env.hostinger.example
 
 # Logs
 *.log
@@ -40,3 +42,7 @@ backend/*.bat
 
 #claude
 *.claude
+
+
+#dev
+.dev
