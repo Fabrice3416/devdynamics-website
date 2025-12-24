@@ -7,12 +7,12 @@
  */
 
 // Security token (change this to a random value)
-define('SECURITY_TOKEN', 'CREATE_ADMIN_2024_SECURE_TOKEN');
+define('SECURITY_TOKEN', 'CREATE_ADMIN_2025_SECURE_TOKEN');
 
 // Admin credentials to create
-define('ADMIN_EMAIL', 'admin@devdynamics.com');
-define('ADMIN_PASSWORD', 'ChangeThisPassword123!');
-define('ADMIN_NAME', 'Administrator');
+define('ADMIN_EMAIL', 'contact@dev-dynamics.org');
+define('ADMIN_PASSWORD', 'eNter@adminDynam!c5');
+define('ADMIN_NAME', 'Admin');
 
 require_once __DIR__ . '/config/database.php';
 
