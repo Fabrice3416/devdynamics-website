@@ -40,6 +40,14 @@ backend/test-*.php
 backend/*.ps1
 backend/*.bat
 
+# API maintenance scripts (keep in repo but shouldn't be in production)
+api/create-*.php
+api/init-*.php
+api/check-*.php
+api/reset-*.php
+api/export-*.php
+api/clear-*.php
+
 #claude
 *.claude
 

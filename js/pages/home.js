@@ -74,7 +74,7 @@ async function loadOrganizationInfo() {
       document.getElementById('org-address').textContent = org.address || 'Port-au-Prince, Haïti';
       document.getElementById('org-phone').textContent = org.phone || '+509 XXXX XXXX';
       document.getElementById('org-email').textContent = org.email || 'contact@devdynamics.ht';
-      document.getElementById('org-whatsapp').textContent = org.whatsapp_number || '+509 XXXX XXXX';
+      document.getElementById('org-whatsapp').textContent = org.whatsapp || '+509 XXXX XXXX';
       document.getElementById('mission-text').textContent = org.mission || '';
     }
   } catch (error) {
