@@ -2,11 +2,10 @@
 // API CLIENT
 // ============================================
 
-// Backend PHP (local)
-const API_BASE_URL = 'http://localhost/api';
-
-// Backend Node.js (ancien)
-// const API_BASE_URL = 'http://localhost:5000/api';
+// Détection automatique de l'environnement
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost/api'
+  : window.location.origin + '/api';
 
 class APIClient {
   constructor() {
