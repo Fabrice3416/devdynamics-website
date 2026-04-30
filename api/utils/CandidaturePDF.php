@@ -16,54 +16,57 @@ class CandidaturePDF {
      */
     public static function build($candidatureId, $data) {
         $pdf = new SimplePDF();
+        // Tighter margins than the SimplePDF defaults so a complete
+        // application fits on a single A4 page.
+        $pdf->marginTop = 40;
+        $pdf->marginBottom = 40;
+        $pdf->marginLeft = 45;
+        $pdf->marginRight = 45;
+        // Re-anchor the cursor since margins changed after construction.
+        $pdf->cursorY = $pdf->pageHeight - $pdf->marginTop;
 
-        // -------- Header --------
+        // -------- Header (logo + masthead) --------
         $logoPath = self::ensureLogoJpeg();
         if ($logoPath) {
-            // Source logo is 457x73, so a 160pt-wide rendering is ~25.5pt tall.
-            $pdf->image($logoPath, 160, null, 'left');
-            $pdf->moveDown(6);
+            // Source logo is 457x73 → at 140pt wide it is ~22.4pt tall.
+            $pdf->image($logoPath, 140, null, 'left');
+            // Logo bottom now sits at cursorY; reserve enough room for the
+            // 15pt title's ascent so the next text line does not overlap it.
+            $pdf->moveDown(20);
         }
 
-        $pdf->setFont(16, true);
+        $pdf->setFont(15, true);
         $pdf->text('Académie des Cartographes Populaires');
 
-        $pdf->setFont(11, false);
+        $pdf->setFont(10, false);
         $pdf->text('+509 47 41 8737  |  contact@dev-dynamics.org  |  Rues 15-16 B, Cap-Haïtien');
 
-        $pdf->moveDown(6);
-        $pdf->hr();
-        $pdf->moveDown(8);
-
-        $pdf->setFont(14, true);
-        $pdf->text('Formulaire de Candidature');
         $pdf->moveDown(4);
+        $pdf->hr();
+        $pdf->moveDown(6);
 
-        $pdf->setFont(11, false);
+        // -------- Title block --------
+        $pdf->setFont(13, true);
+        $pdf->text('Formulaire de Candidature');
+        $pdf->moveDown(2);
+
+        $pdf->setFont(10, false);
         $pdf->labelValue('N° de candidature :', $candidatureId);
         $pdf->labelValue('Date de soumission :', date('d/m/Y H:i'));
-        $pdf->moveDown(8);
-        $pdf->hr();
-        $pdf->moveDown(6);
+        $pdf->moveDown(4);
 
         // -------- Section 1 : Identification --------
-        $pdf->heading('1. Identification', 13);
-        $pdf->moveDown(2);
-        $pdf->setFont(11, false);
-
+        self::sectionHeading($pdf, '1. Identification');
         $pdf->labelValue('Prénom(s) :', $data['prenom'] ?? '');
         $pdf->labelValue('Nom de famille :', $data['nom'] ?? '');
         $pdf->labelValue('Date de naissance :', self::formatDate($data['date_naissance'] ?? ''));
         $pdf->labelValue('Sexe :', $data['sexe'] ?? '');
         $pdf->labelValue('Lieu de naissance :', $data['lieu_naissance'] ?? '');
         $pdf->labelValue('N° pièce d\'identité :', $data['piece_identite'] ?? '');
-        $pdf->moveDown(8);
+        $pdf->moveDown(4);
 
         // -------- Section 2 : Coordonnées --------
-        $pdf->heading('2. Coordonnées', 13);
-        $pdf->moveDown(2);
-        $pdf->setFont(11, false);
-
+        self::sectionHeading($pdf, '2. Coordonnées');
         $pdf->labelValue('Adresse :', $data['adresse'] ?? '');
         $pdf->labelValue('Commune :', $data['commune'] ?? '');
         $pdf->labelValue('Département :', $data['departement'] ?? '');
@@ -71,66 +74,71 @@ class CandidaturePDF {
         $pdf->labelValue('WhatsApp :', $data['whatsapp'] ?? '');
         $pdf->labelValue('Email :', $data['email'] ?? '');
         $pdf->labelValue('Source de l\'info :', $data['source'] ?? '');
-        $pdf->moveDown(8);
+        $pdf->moveDown(4);
 
         // -------- Section 3 : Parcours --------
-        $pdf->heading('3. Parcours académique et professionnel', 13);
-        $pdf->moveDown(2);
-        $pdf->setFont(11, false);
-
+        self::sectionHeading($pdf, '3. Parcours académique et professionnel');
         $pdf->labelValue('Niveau d\'études :', $data['niveau_etudes'] ?? '');
         $pdf->labelValue('Établissement :', $data['etablissement'] ?? '');
         $pdf->labelValue('Filière / Spécialité :', $data['filiere'] ?? '');
         $pdf->labelValue('Situation actuelle :', $data['situation'] ?? '');
 
         $pdf->moveDown(2);
-        $pdf->setFont(11, true);
+        $pdf->setFont(10, true);
         $pdf->text('Expérience pertinente (cartographie, SIG, informatique) :');
-        $pdf->setFont(11, false);
+        $pdf->setFont(10, false);
         $pdf->paragraph(self::nonEmpty($data['experience'] ?? '', '—'));
-        $pdf->moveDown(8);
+        $pdf->moveDown(4);
 
         // -------- Section 4 : Motivation --------
-        $pdf->heading('4. Motivation et engagement', 13);
+        self::sectionHeading($pdf, '4. Motivation et engagement');
+
+        $pdf->setFont(10, true);
+        $pdf->text('Pourquoi rejoindre l\'Académie :');
+        $pdf->setFont(10, false);
+        $pdf->paragraph(self::nonEmpty($data['motivation'] ?? '', '—'));
         $pdf->moveDown(2);
 
-        $pdf->setFont(11, true);
-        $pdf->text('Pourquoi rejoindre l\'Académie :');
-        $pdf->setFont(11, false);
-        $pdf->paragraph(self::nonEmpty($data['motivation'] ?? '', '—'));
-        $pdf->moveDown(4);
-
-        $pdf->setFont(11, true);
+        $pdf->setFont(10, true);
         $pdf->text('Usage envisagé des compétences acquises :');
-        $pdf->setFont(11, false);
+        $pdf->setFont(10, false);
         $pdf->paragraph(self::nonEmpty($data['usage_envisage'] ?? '', '—'));
-        $pdf->moveDown(4);
+        $pdf->moveDown(2);
 
         $pdf->labelValue('Disponibilité :', $data['disponibilite'] ?? '');
         if (!empty($data['contraintes'])) {
-            $pdf->setFont(11, true);
+            $pdf->setFont(10, true);
             $pdf->text('Contraintes précisées :');
-            $pdf->setFont(11, false);
+            $pdf->setFont(10, false);
             $pdf->paragraph($data['contraintes']);
         }
-        $pdf->moveDown(8);
+        $pdf->moveDown(4);
 
         // -------- Section 5 : Déclarations --------
-        $pdf->heading('5. Déclarations', 13);
+        self::sectionHeading($pdf, '5. Déclarations');
+        // Bullet (Win-1252 0x95) renders reliably; checkbox glyphs do not.
+        $pdf->paragraph("\xE2\x80\xA2 Le/la candidat(e) s'engage à transmettre une copie de sa pièce d'identité valide (CIN, passeport ou document officiel avec photo) à contact@dev-dynamics.org ou en personne au siège.");
         $pdf->moveDown(2);
-        $pdf->setFont(11, false);
+        $pdf->paragraph("\xE2\x80\xA2 Le/la candidat(e) certifie sur l'honneur l'exactitude des informations fournies et déclare remplir les critères d'éligibilité (18-25 ans, résidence dans l'arrondissement du Cap-Haïtien).");
 
-        $pdf->paragraph('☑ Le/la candidat(e) s\'engage à transmettre une copie de sa pièce d\'identité valide (CIN, passeport ou document officiel avec photo) à contact@dev-dynamics.org ou en personne au siège.');
-        $pdf->moveDown(2);
-        $pdf->paragraph('☑ Le/la candidat(e) certifie sur l\'honneur l\'exactitude des informations fournies et déclare remplir les critères d\'éligibilité (18-25 ans, résidence dans l\'arrondissement du Cap-Haïtien).');
-
-        $pdf->moveDown(12);
+        // -------- Funding notice --------
+        $pdf->moveDown(6);
         $pdf->hr();
-        $pdf->moveDown(4);
-        $pdf->setFont(9, false);
+        $pdf->moveDown(3);
+        $pdf->setFont(8, false);
         $pdf->paragraph('Financé par l\'Union européenne dans le cadre du PAIESC (Contrat N° PAIESC/CS/04-2026/021) — Programme d\'Appui aux Initiatives Émergentes de la Société Civile en Haïti.');
 
         return $pdf->output();
+    }
+
+    /**
+     * Render a section heading with consistent spacing above and below.
+     */
+    private static function sectionHeading($pdf, $title) {
+        $pdf->setFont(12, true);
+        $pdf->text($title);
+        $pdf->moveDown(1);
+        $pdf->setFont(10, false);
     }
 
     private static function formatDate($iso) {
