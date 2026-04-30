@@ -2,11 +2,17 @@
 // API CLIENT
 // ============================================
 
-// Backend PHP (local)
-const API_BASE_URL = 'http://localhost/api';
-
-// Backend Node.js (ancien)
-// const API_BASE_URL = 'http://localhost:5000/api';
+// Détection automatique de l'environnement.
+// En local (localhost / 127.0.0.1) on tape directement WAMP/Apache local.
+// En production on utilise le même origin que la page courante, ce qui
+// évite tout problème de CORS et fonctionne quel que soit le domaine.
+const API_BASE_URL = (() => {
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return 'http://localhost/api';
+  }
+  return window.location.origin + '/api';
+})();
 
 class APIClient {
   constructor() {

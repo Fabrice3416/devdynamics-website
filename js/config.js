@@ -10,7 +10,7 @@ function getAPIBaseURL() {
 
     // Production
     if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-        return 'https://votredomaine.com/api';
+        return 'https://dev-dynamics.org/api';
     }
 
     // Local - Backend PHP (WAMP)
