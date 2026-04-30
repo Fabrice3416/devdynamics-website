@@ -11,6 +11,7 @@
 class SimplePDF {
     private $pages = [];
     private $currentPageIdx = -1;
+    private $images = []; // path => ['info' => [...], 'name' => 'Im1']
 
     private $fontSize = 11;
     private $isBold = false;
@@ -125,6 +126,50 @@ class SimplePDF {
     }
 
     /**
+     * Embed a JPEG image at the current cursor position.
+     * Width is given in points; height defaults to whatever preserves the
+     * source aspect ratio. Cursor advances by the image height.
+     *
+     * Only JPEG is supported — PNGs must be flattened to JPEG by the caller.
+     */
+    public function image($path, $width, $height = null, $align = 'left') {
+        if (!file_exists($path)) return false;
+        if (!isset($this->images[$path])) {
+            $info = self::parseJpegInfo($path);
+            if (!$info) return false;
+            $idx = count($this->images) + 1;
+            $this->images[$path] = ['info' => $info, 'name' => "Im{$idx}"];
+        }
+        $img = $this->images[$path];
+        $info = $img['info'];
+        if ($height === null) {
+            $height = $width * ($info['height'] / max(1, $info['width']));
+        }
+
+        if ($this->cursorY - $height < $this->marginBottom) {
+            $this->addPage();
+        }
+
+        $usable = $this->pageWidth - $this->marginLeft - $this->marginRight;
+        if ($align === 'center') {
+            $x = $this->marginLeft + max(0, ($usable - $width) / 2);
+        } elseif ($align === 'right') {
+            $x = $this->pageWidth - $this->marginRight - $width;
+        } else {
+            $x = $this->marginLeft;
+        }
+        $y = $this->cursorY - $height;
+
+        $w = round($width, 2);
+        $h = round($height, 2);
+        $x = round($x, 2);
+        $y = round($y, 2);
+        $this->appendStream("q {$w} 0 0 {$h} {$x} {$y} cm /{$img['name']} Do Q\n");
+        $this->cursorY -= $height;
+        return true;
+    }
+
+    /**
      * Output the PDF as a binary string.
      */
     public function output() {
@@ -132,17 +177,20 @@ class SimplePDF {
         $offsets = [0];
         $offset = strlen($body);
 
+        $imageCount = count($this->images);
+        $pageStartId = 5 + $imageCount; // images occupy IDs 5..(4+imageCount)
+
         // 1: Catalog
         $offsets[1] = $offset;
         $obj = "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n";
         $body .= $obj;
         $offset += strlen($obj);
 
-        // 2: Pages (will reference page object IDs starting at 5)
+        // 2: Pages (Kids reference page object IDs that come AFTER the images)
         $pageCount = count($this->pages);
         $kidIds = [];
         for ($i = 0; $i < $pageCount; $i++) {
-            $kidIds[] = (5 + $i * 2) . ' 0 R';
+            $kidIds[] = ($pageStartId + $i * 2) . ' 0 R';
         }
         $offsets[2] = $offset;
         $obj = "2 0 obj\n<< /Type /Pages /Kids [" . implode(' ', $kidIds) . "] /Count {$pageCount} >>\nendobj\n";
@@ -161,13 +209,47 @@ class SimplePDF {
         $body .= $obj;
         $offset += strlen($obj);
 
+        // Image XObjects (JPEG with DCTDecode)
+        $imageObjs = []; // name => objId
+        $idx = 5;
+        foreach ($this->images as $path => $img) {
+            $info = $img['info'];
+            $components = $info['components'];
+            $colorSpace = $components === 1 ? '/DeviceGray'
+                        : ($components === 4 ? '/DeviceCMYK' : '/DeviceRGB');
+            $imgData = $info['data'];
+            $imgLen = strlen($imgData);
+
+            $offsets[$idx] = $offset;
+            $obj  = "{$idx} 0 obj\n";
+            $obj .= "<< /Type /XObject /Subtype /Image /Width {$info['width']} /Height {$info['height']}";
+            $obj .= " /ColorSpace {$colorSpace} /BitsPerComponent {$info['bits']} /Filter /DCTDecode /Length {$imgLen} >>\n";
+            $obj .= "stream\n";
+            $obj .= $imgData;
+            $obj .= "\nendstream\nendobj\n";
+            $body .= $obj;
+            $offset += strlen($obj);
+            $imageObjs[$img['name']] = $idx;
+            $idx++;
+        }
+
+        // Pre-build the resources fragment shared by all pages
+        $xObjectEntries = '';
+        foreach ($imageObjs as $name => $objId) {
+            $xObjectEntries .= " /{$name} {$objId} 0 R";
+        }
+        $resources = "/Font << /F1 3 0 R /F2 4 0 R >>";
+        if ($xObjectEntries !== '') {
+            $resources .= " /XObject <<{$xObjectEntries} >>";
+        }
+
         // Page objects + their content streams
         for ($i = 0; $i < $pageCount; $i++) {
-            $pageId = 5 + $i * 2;
+            $pageId = $pageStartId + $i * 2;
             $contentId = $pageId + 1;
 
             $offsets[$pageId] = $offset;
-            $obj = "{$pageId} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {$this->pageWidth} {$this->pageHeight}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents {$contentId} 0 R >>\nendobj\n";
+            $obj = "{$pageId} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {$this->pageWidth} {$this->pageHeight}] /Resources << {$resources} >> /Contents {$contentId} 0 R >>\nendobj\n";
             $body .= $obj;
             $offset += strlen($obj);
 
@@ -179,7 +261,7 @@ class SimplePDF {
             $offset += strlen($obj);
         }
 
-        $totalObjects = 4 + $pageCount * 2;
+        $totalObjects = 4 + $imageCount + $pageCount * 2;
 
         // xref table
         $xrefOffset = $offset;
@@ -256,5 +338,51 @@ class SimplePDF {
         }
         $str = str_replace(['\\', '(', ')', "\r"], ['\\\\', '\\(', '\\)', ''], $str);
         return $str;
+    }
+
+    /**
+     * Parse a JPEG file and return width, height, bits per component,
+     * number of color components, and the raw bytes (suitable for inclusion
+     * as a /DCTDecode XObject stream).
+     */
+    private static function parseJpegInfo($path) {
+        $data = @file_get_contents($path);
+        if ($data === false) return null;
+        $len = strlen($data);
+        if ($len < 4 || substr($data, 0, 2) !== "\xFF\xD8") return null;
+
+        $pos = 2;
+        while ($pos + 4 < $len) {
+            // Skip 0xFF fill bytes
+            while ($pos < $len && $data[$pos] === "\xFF") $pos++;
+            if ($pos >= $len) break;
+            $marker = ord($data[$pos]);
+            $pos++;
+            // Standalone markers without payload
+            if ($marker === 0xD8 || $marker === 0xD9 || $marker === 0x01
+                || ($marker >= 0xD0 && $marker <= 0xD7)) {
+                continue;
+            }
+            if ($pos + 2 > $len) return null;
+            $segLen = (ord($data[$pos]) << 8) | ord($data[$pos + 1]);
+            // SOFn frames carry the size; skip DHT(0xC4), JPG(0xC8), DAC(0xCC)
+            if ($marker >= 0xC0 && $marker <= 0xCF
+                && $marker !== 0xC4 && $marker !== 0xC8 && $marker !== 0xCC) {
+                if ($pos + 7 >= $len) return null;
+                $bits = ord($data[$pos + 2]);
+                $h = (ord($data[$pos + 3]) << 8) | ord($data[$pos + 4]);
+                $w = (ord($data[$pos + 5]) << 8) | ord($data[$pos + 6]);
+                $components = ord($data[$pos + 7]);
+                return [
+                    'width' => $w,
+                    'height' => $h,
+                    'bits' => $bits,
+                    'components' => $components,
+                    'data' => $data,
+                ];
+            }
+            $pos += $segLen;
+        }
+        return null;
     }
 }

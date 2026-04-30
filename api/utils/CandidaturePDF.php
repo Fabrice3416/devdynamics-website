@@ -18,8 +18,15 @@ class CandidaturePDF {
         $pdf = new SimplePDF();
 
         // -------- Header --------
+        $logoPath = self::ensureLogoJpeg();
+        if ($logoPath) {
+            // Source logo is 457x73, so a 160pt-wide rendering is ~25.5pt tall.
+            $pdf->image($logoPath, 160, null, 'left');
+            $pdf->moveDown(6);
+        }
+
         $pdf->setFont(16, true);
-        $pdf->text('DevDynamics — Académie des Cartographes Populaires');
+        $pdf->text('Académie des Cartographes Populaires');
 
         $pdf->setFont(11, false);
         $pdf->text('+509 47 41 8737  |  contact@dev-dynamics.org  |  Rues 15-16 B, Cap-Haïtien');
@@ -135,5 +142,43 @@ class CandidaturePDF {
     private static function nonEmpty($v, $default) {
         $v = trim((string) $v);
         return $v === '' ? $default : $v;
+    }
+
+    /**
+     * Convert the PNG logo to a flattened JPEG (white background) on first
+     * use, cache it under api/storage/cache/, and return its path.
+     * Returns null if GD is unavailable or the source PNG is missing.
+     */
+    private static function ensureLogoJpeg() {
+        $cacheDir = __DIR__ . '/../storage/cache';
+        $cachePath = $cacheDir . '/logo.jpg';
+        $pngPath = __DIR__ . '/../../assets/images/logo_6.png';
+
+        // Reuse the cached JPEG only if it is at least as fresh as the source.
+        if (file_exists($cachePath) && file_exists($pngPath)
+            && filemtime($cachePath) >= filemtime($pngPath)) {
+            return $cachePath;
+        }
+        if (!file_exists($pngPath)) return null;
+        if (!function_exists('imagecreatefrompng')) return null;
+
+        if (!is_dir($cacheDir)) @mkdir($cacheDir, 0775, true);
+
+        $png = @imagecreatefrompng($pngPath);
+        if (!$png) return null;
+        $w = imagesx($png);
+        $h = imagesy($png);
+
+        // Flatten transparency onto a white background so the JPEG has no
+        // alpha channel (PDFs can't render alpha through DCTDecode).
+        $jpg = imagecreatetruecolor($w, $h);
+        $white = imagecolorallocate($jpg, 255, 255, 255);
+        imagefilledrectangle($jpg, 0, 0, $w, $h, $white);
+        imagecopy($jpg, $png, 0, 0, 0, 0, $w, $h);
+
+        $ok = @imagejpeg($jpg, $cachePath, 90);
+        imagedestroy($png);
+        imagedestroy($jpg);
+        return $ok ? $cachePath : null;
     }
 }

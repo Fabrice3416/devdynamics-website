@@ -43,8 +43,9 @@ nav {
 .nav-menu {
   display: flex;
   list-style: none;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-lg);
   align-items: center;
+  flex-wrap: nowrap;
 }
 
 .nav-menu a {
@@ -475,11 +476,15 @@ footer {
 }
 
 /* RESPONSIVE */
-@media (max-width: 768px) {
+
+/* Le menu de l'accueil compte 9 entrées + 2 boutons CTA : sur écrans moyens
+   (tablette paysage, petits laptops), tout ne tient pas en une ligne et les
+   items se chevauchent. On bascule donc en hamburger dès 1024px. */
+@media (max-width: 1024px) {
   .hamburger {
     display: flex;
   }
-  
+
   .nav-menu {
     display: none;
     position: absolute;
@@ -492,11 +497,13 @@ footer {
     gap: var(--spacing-md);
     box-shadow: var(--shadow-lg);
   }
-  
+
   .nav-menu.active {
     display: flex;
   }
-  
+}
+
+@media (max-width: 768px) {
   .hero {
     min-height: 400px;
     padding: var(--spacing-2xl) var(--spacing-lg);
