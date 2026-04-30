@@ -25,7 +25,7 @@ $router->post('\/candidatures', function($params) use ($db) {
     $required = [
         'prenom', 'nom', 'date_naissance', 'sexe', 'lieu_naissance', 'piece_identite',
         'adresse', 'commune', 'departement', 'telephone', 'email',
-        'niveau_etudes', 'situation',
+        'niveau_etudes', 'situation', 'a_ordinateur',
         'motivation', 'usage_envisage', 'disponibilite',
         'confirm_id', 'confirm_eligibility'
     ];
@@ -103,6 +103,7 @@ $router->post('\/candidatures', function($params) use ($db) {
         'etablissement'  => trim($body['etablissement'] ?? ''),
         'filiere'        => trim($body['filiere'] ?? ''),
         'situation'      => $body['situation'],
+        'a_ordinateur'   => $body['a_ordinateur'],
         'experience'     => trim($body['experience'] ?? ''),
         'motivation'     => trim($body['motivation']),
         'usage_envisage' => trim($body['usage_envisage']),
@@ -127,13 +128,13 @@ $router->post('\/candidatures', function($params) use ($db) {
             "INSERT INTO acp_candidatures
                 (candidature_id, prenom, nom, date_naissance, sexe, lieu_naissance, piece_identite,
                  adresse, commune, departement, telephone, whatsapp, email, source,
-                 niveau_etudes, etablissement, filiere, situation, experience,
+                 niveau_etudes, etablissement, filiere, situation, a_ordinateur, experience,
                  motivation, usage_envisage, disponibilite, contraintes,
                  pdf_path, email_sent, status, created_at)
              VALUES
                 (?, ?, ?, ?, ?, ?, ?,
                  ?, ?, ?, ?, ?, ?, ?,
-                 ?, ?, ?, ?, ?,
+                 ?, ?, ?, ?, ?, ?,
                  ?, ?, ?, ?,
                  ?, 0, 'pending', NOW())",
             [
@@ -142,7 +143,7 @@ $router->post('\/candidatures', function($params) use ($db) {
                 $fields['adresse'], $fields['commune'], $fields['departement'],
                 $fields['telephone'], $fields['whatsapp'], $fields['email'], $fields['source'],
                 $fields['niveau_etudes'], $fields['etablissement'], $fields['filiere'],
-                $fields['situation'], $fields['experience'],
+                $fields['situation'], $fields['a_ordinateur'], $fields['experience'],
                 $fields['motivation'], $fields['usage_envisage'], $fields['disponibilite'], $fields['contraintes'],
                 'storage/candidatures/' . $pdfFilename,
             ]

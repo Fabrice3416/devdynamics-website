@@ -82,6 +82,7 @@ class CandidaturePDF {
         $pdf->labelValue('Établissement :', $data['etablissement'] ?? '');
         $pdf->labelValue('Filière / Spécialité :', $data['filiere'] ?? '');
         $pdf->labelValue('Situation actuelle :', $data['situation'] ?? '');
+        $pdf->labelValue('Possède un ordinateur :', $data['a_ordinateur'] ?? '');
 
         $pdf->moveDown(2);
         $pdf->setFont(10, true);

@@ -115,7 +115,7 @@ function validateClient(data) {
   const required = [
     'prenom', 'nom', 'date_naissance', 'sexe', 'lieu_naissance', 'piece_identite',
     'adresse', 'commune', 'departement', 'telephone', 'email',
-    'niveau_etudes', 'situation', 'motivation', 'usage_envisage', 'disponibilite'
+    'niveau_etudes', 'situation', 'a_ordinateur', 'motivation', 'usage_envisage', 'disponibilite'
   ];
   required.forEach(f => {
     if (!data[f] || String(data[f]).trim() === '') errors[f] = 'Champ obligatoire';
