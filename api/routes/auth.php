@@ -14,7 +14,7 @@ $router->post('\/auth/login', function($params) use ($db) {
 
     // Validate input
     if (empty($body['email']) || empty($body['password'])) {
-        Response::error('Connexion échouée: Email et mot de passe requis', 400);
+        Response::error('Email and password are required', 400);
     }
 
     try {
@@ -25,14 +25,12 @@ $router->post('\/auth/login', function($params) use ($db) {
         );
 
         if (!$user) {
-            Response::error('Identifiants invalides', 401);
+            Response::error('Invalid credentials', 401);
         }
 
         // Verify password
-        $passwordMatch = password_verify($body['password'], $user['password_hash']);
-
-        if (!$passwordMatch) {
-            Response::error('Identifiants invalides', 401);
+        if (!password_verify($body['password'], $user['password'])) {
+            Response::error('Invalid credentials', 401);
         }
 
         // Generate JWT token
@@ -48,13 +46,13 @@ $router->post('\/auth/login', function($params) use ($db) {
             'user' => [
                 'id' => $user['id'],
                 'email' => $user['email'],
-                'full_name' => $user['full_name'],
+                'name' => $user['name'],
                 'role' => $user['role']
             ]
-        ], 'Connexion réussie');
+        ], 'Login successful');
 
     } catch (Exception $e) {
-        Response::error('Échec de la connexion', 500);
+        Response::error('Login failed: ' . $e->getMessage(), 500);
     }
 });
 

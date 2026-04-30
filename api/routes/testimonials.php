@@ -19,16 +19,3 @@ $router->get('\/testimonials', function($params) use ($db) {
         Response::error('Failed to fetch testimonials: ' . $e->getMessage(), 500);
     }
 });
-
-// Get featured testimonials
-$router->get('\/testimonials\/featured', function($params) use ($db) {
-    try {
-        $testimonials = $db->fetchAll(
-            "SELECT * FROM testimonials WHERE is_featured = 1 ORDER BY created_at DESC LIMIT 6"
-        );
-
-        Response::success($testimonials);
-    } catch (Exception $e) {
-        Response::error('Failed to fetch featured testimonials: ' . $e->getMessage(), 500);
-    }
-});

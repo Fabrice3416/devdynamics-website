@@ -10,8 +10,7 @@ function getAPIBaseURL() {
 
     // Production
     if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-        // L'API se trouve dans le même domaine, dans le dossier /api
-        return window.location.origin + '/api';
+        return 'https://votredomaine.com/api';
     }
 
     // Local - Backend PHP (WAMP)
@@ -29,8 +28,5 @@ const CONFIG = {
     ENV: window.location.hostname === 'localhost' ? 'development' : 'production'
 };
 
-// Debug uniquement en développement
-if (CONFIG.ENV === 'development') {
-    console.log('[Config] API URL:', CONFIG.API_BASE_URL);
-    console.log('[Config] Environment:', CONFIG.ENV);
-}
+console.log('🔧 Configuration API:', CONFIG.API_BASE_URL);
+console.log('🌍 Environnement:', CONFIG.ENV);

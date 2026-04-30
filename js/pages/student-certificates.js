@@ -49,7 +49,7 @@ function renderCertificates() {
   if (certificates.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon"></div>
+        <div class="empty-icon">🎓</div>
         <h3>Aucun certificat pour le moment</h3>
         <p>Complétez un cours à 100% pour obtenir votre certificat</p>
       </div>
@@ -109,13 +109,13 @@ function createCertificateCard(cert) {
         </div>
         <div class="certificate-actions">
           <button class="btn btn-primary" onclick="viewCertificate(${cert.id})">
-            Voir le certificat
+            📄 Voir le certificat
           </button>
           <button class="btn btn-ghost" onclick="downloadCertificate(${cert.id})">
             ⬇️ Télécharger PDF
           </button>
           <button class="btn btn-ghost btn-sm" onclick="shareCertificate('${cert.verification_code}')">
-            Partager
+            🔗 Partager
           </button>
         </div>
       </div>
@@ -181,7 +181,7 @@ function renderEligibleCourses() {
             <p class="success-text">✓ Vous avez complété ce cours à 100%</p>
           </div>
           <button class="btn btn-success" onclick="generateCertificate(${course.course_id})">
-             Générer mon certificat
+            🎓 Générer mon certificat
           </button>
         </div>
       `).join('')}

@@ -194,24 +194,10 @@
   gap: var(--spacing-md);
 }
 
-#user-name {
-  font-weight: 500;
-  color: var(--color-dark);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 200px;
-}
-
 .user-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--color-border);
-  background: var(--color-light);
-  flex-shrink: 0;
-  display: block;
 }
 
 .admin-content {
@@ -738,5 +724,110 @@ tbody tr:hover {
 
   .lesson-info {
     flex-direction: column;
+  }
+}
+
+/* ============================================
+   CANDIDATURES ACP — admin views
+   ============================================ */
+.candidatures-toolbar {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.candidatures-summary {
+  margin-bottom: var(--spacing-lg);
+}
+
+.stats-grid-compact {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.loading-text,
+.empty-text,
+.error-text {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-gray);
+  font-style: italic;
+}
+
+.error-text { color: var(--color-error); }
+
+.modal-large .modal-content,
+.modal-content.modal-large {
+  max-width: 760px;
+}
+
+.candidature-detail h3 {
+  margin: 0 0 var(--spacing-xs);
+  color: var(--color-primary);
+}
+
+.candidature-detail h4 {
+  margin: var(--spacing-lg) 0 var(--spacing-sm);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 2px solid var(--color-primary-lighter);
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-base);
+}
+
+.detail-header {
+  padding-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px dashed var(--color-light-gray);
+}
+
+.detail-header p {
+  color: var(--color-gray);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--color-lighter-gray);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row-block {
+  grid-template-columns: 1fr;
+}
+
+.detail-row-block .detail-value {
+  margin-top: var(--spacing-xs);
+  background: var(--color-lighter-gray);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  white-space: pre-wrap;
+}
+
+.detail-label {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-dark-gray);
+  font-size: var(--font-size-sm);
+}
+
+.detail-value {
+  color: var(--color-dark);
+  font-size: var(--font-size-sm);
+  word-break: break-word;
+}
+
+.detail-value em {
+  color: var(--color-gray);
+}
+
+@media (max-width: 600px) {
+  .detail-row {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xs);
   }
 }

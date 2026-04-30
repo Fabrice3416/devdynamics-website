@@ -105,7 +105,7 @@ function renderPrograms(programs) {
     card.className = 'card';
     card.innerHTML = `
       <div class="card-image" style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
-        [Course]
+        📚
       </div>
       <div class="card-body">
         <h3 class="card-title">${program.title}</h3>
@@ -124,6 +124,7 @@ function renderPrograms(programs) {
 async function loadCourses() {
   try {
     const response = await api.getCourses();
+    console.log('Courses API response:', response);
 
     if (response.success) {
       const container = document.getElementById('courses-container');
@@ -131,6 +132,7 @@ async function loadCourses() {
 
       // Update courses count in stats
       const coursesCount = response.data.length;
+      console.log('Courses count:', coursesCount);
 
       const coursesCountElement = document.getElementById('courses-count');
       if (coursesCountElement) {
@@ -148,14 +150,14 @@ async function loadCourses() {
         card.className = 'card';
 
         const levelBadge = {
-          'debutant': 'Débutant',
-          'intermediaire': 'Intermédiaire',
-          'avance': 'Avancé'
+          'debutant': '🟢 Débutant',
+          'intermediaire': '🟡 Intermédiaire',
+          'avance': '🔴 Avancé'
         };
 
         card.innerHTML = `
           <div class="card-image" style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
-            
+            🎓
           </div>
           <div class="card-body">
             <h3 class="card-title">${course.title}</h3>
@@ -163,7 +165,7 @@ async function loadCourses() {
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;">
               <span class="badge badge-primary">${levelBadge[course.level] || course.level}</span>
               ${course.duration ? `<span class="badge badge-secondary">⏱️ ${course.duration}</span>` : ''}
-              ${course.price > 0 ? `<span class="badge badge-success">${course.price} USD</span>` : '<span class="badge badge-success">Gratuit</span>'}
+              ${course.price > 0 ? `<span class="badge badge-success">💰 ${course.price} USD</span>` : '<span class="badge badge-success">✨ Gratuit</span>'}
             </div>
           </div>
           <div class="card-footer">
@@ -225,7 +227,7 @@ async function loadTestimonials() {
                   allowfullscreen
                   style="border-radius: var(--radius-md);">
                 </iframe>`
-              : `<div style="width: 100%; height: 250px; background: linear-gradient(135deg, #4a5568, #2d3748); display: flex; align-items: center; justify-content: center; color: white; border-radius: var(--radius-md); font-size: 40px;"></div>`
+              : `<div style="width: 100%; height: 250px; background: linear-gradient(135deg, #4a5568, #2d3748); display: flex; align-items: center; justify-content: center; color: white; border-radius: var(--radius-md); font-size: 40px;">📹</div>`
             }
           </div>
           <div class="testimonial-info-home" style="margin-top: var(--spacing-md); text-align: center;">
@@ -254,7 +256,7 @@ async function loadTeam() {
         const card = document.createElement('div');
         card.className = 'team-member';
         card.innerHTML = `
-          <div class="team-member-image"></div>
+          <div class="team-member-image">👤</div>
           <div class="team-member-content">
             <div class="team-member-name">${member.name}</div>
             <div class="team-member-role">${member.role}</div>
@@ -283,7 +285,7 @@ async function loadBlogPosts() {
         const card = document.createElement('div');
         card.className = 'blog-card';
         card.innerHTML = `
-          <div class="blog-image"></div>
+          <div class="blog-image">📝</div>
           <div class="blog-content">
             ${post.category ? `<span class="badge badge-primary blog-category">${post.category}</span>` : ''}
             <h3 class="blog-title">${post.title}</h3>
@@ -315,7 +317,7 @@ async function loadSponsors() {
 
       if (sponsorsToShow.length === 0) {
         // Show message when no sponsors
-        container.innerHTML = '<p class="empty-state-message">Aucun partenaire pour le moment. Soutenez notre mission!</p>';
+        container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-2xl);">Aucun sponsor pour le moment. Soutenez notre mission!</p>';
       } else {
         sponsorsToShow.forEach(sponsor => {
           const card = document.createElement('div');
@@ -335,10 +337,11 @@ async function loadSponsors() {
       }
     }
   } catch (error) {
+    console.error('Erreur chargement sponsors:', error);
     // Show message on error instead of hiding section
     const container = document.getElementById('sponsors-container');
     if (container) {
-      container.innerHTML = '<p class="empty-state-message">Aucun partenaire pour le moment.</p>';
+      container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-2xl);">Aucun sponsor pour le moment.</p>';
     }
   }
 }

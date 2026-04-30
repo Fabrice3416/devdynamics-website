@@ -2,10 +2,11 @@
 // API CLIENT
 // ============================================
 
-// Détection automatique de l'environnement
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost/api'
-  : window.location.origin + '/api';
+// Backend PHP (local)
+const API_BASE_URL = 'http://localhost/api';
+
+// Backend Node.js (ancien)
+// const API_BASE_URL = 'http://localhost:5000/api';
 
 class APIClient {
   constructor() {
@@ -17,33 +18,22 @@ class APIClient {
     localStorage.setItem('auth_token', token);
   }
 
-  getHeaders(method = 'GET') {
+  getHeaders() {
     const headers = {
       'Content-Type': 'application/json'
     };
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
-    // Pour les serveurs qui ne supportent pas PUT/DELETE nativement
-    if (method === 'PUT' || method === 'DELETE') {
-      headers['X-HTTP-Method-Override'] = method;
-    }
     return headers;
   }
 
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
-    const method = options.method || 'GET';
-
     const config = {
       ...options,
-      headers: this.getHeaders(method)
+      headers: this.getHeaders()
     };
-
-    // Convertir PUT/DELETE en POST si nécessaire pour compatibilité serveur
-    if (method === 'PUT' || method === 'DELETE') {
-      config.method = 'POST';
-    }
 
     try {
       const response = await fetch(url, config);
@@ -268,6 +258,22 @@ class APIClient {
       method: 'PUT',
       body: JSON.stringify({ status })
     });
+  }
+
+  // Candidatures (ACP)
+  async submitCandidature(data) {
+    return this.request('/candidatures', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async getCandidatures() {
+    return this.request('/candidatures');
+  }
+
+  async getCandidature(id) {
+    return this.request(`/candidatures/${id}`);
   }
 
   // Contact

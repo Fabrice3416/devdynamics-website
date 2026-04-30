@@ -15,12 +15,12 @@ $router->get('\/admin/dashboard/stats', function($params) use ($db) {
     try {
         $stats = [
             'donations' => [
-                'total' => $db->fetchOne("SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total FROM donations WHERE status = 'completed'"),
-                'pending' => $db->fetchOne("SELECT COUNT(*) as count FROM donations WHERE status = 'pending'")
+                'total' => $db->fetchOne("SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total FROM donations WHERE payment_status = 'completed'"),
+                'pending' => $db->fetchOne("SELECT COUNT(*) as count FROM donations WHERE payment_status = 'pending'")
             ],
             'contacts' => [
                 'total' => $db->fetchOne("SELECT COUNT(*) as count FROM contact_messages"),
-                'unread' => $db->fetchOne("SELECT COUNT(*) as count FROM contact_messages WHERE status = 'new'")
+                'unread' => $db->fetchOne("SELECT COUNT(*) as count FROM contact_messages WHERE status = 'unread'")
             ],
             'sponsors' => [
                 'total' => $db->fetchOne("SELECT COUNT(*) as count FROM sponsors")
@@ -37,11 +37,11 @@ $router->get('\/admin/dashboard/stats', function($params) use ($db) {
             ],
             'enrollments' => [
                 'total' => $db->fetchOne("SELECT COUNT(*) as count FROM course_enrollments"),
-                'active' => $db->fetchOne("SELECT COUNT(*) as count FROM course_enrollments WHERE status = 'approved'")
+                'active' => $db->fetchOne("SELECT COUNT(*) as count FROM course_enrollments WHERE status = 'enrolled'")
             ],
             'blog' => [
                 'total' => $db->fetchOne("SELECT COUNT(*) as count FROM blog_posts"),
-                'published' => $db->fetchOne("SELECT COUNT(*) as count FROM blog_posts WHERE is_published = 1")
+                'published' => $db->fetchOne("SELECT COUNT(*) as count FROM blog_posts WHERE status = 'published'")
             ]
         ];
 
@@ -55,7 +55,7 @@ $router->get('\/admin/dashboard/stats', function($params) use ($db) {
 $router->get('\/admin/users', function($params) use ($db) {
     try {
         $users = $db->fetchAll(
-            "SELECT id, full_name as name, email, role, created_at FROM users ORDER BY created_at DESC"
+            "SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC"
         );
 
         Response::success($users);

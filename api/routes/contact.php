@@ -27,17 +27,15 @@ $router->get('\/contact', function($params) use ($db) {
 $router->post('\/contact', function($params) use ($db) {
     $body = Router::getBody();
 
-    // Validation
     if (empty($body['name']) || empty($body['email']) || empty($body['message'])) {
-        Response::error('Nom, email et message requis', 400);
+        Response::error('Name, email and message are required', 400);
     }
 
     if (!filter_var($body['email'], FILTER_VALIDATE_EMAIL)) {
-        Response::error('Format d\'email invalide', 400);
+        Response::error('Invalid email format', 400);
     }
 
     try {
-        // Sauvegarder dans la base de données
         $db->query(
             "INSERT INTO contact_messages (name, email, phone, subject, message, status, created_at)
              VALUES (?, ?, ?, ?, ?, 'unread', NOW())",
@@ -52,22 +50,11 @@ $router->post('\/contact', function($params) use ($db) {
 
         $messageId = $db->lastInsertId();
 
-        // Envoyer les emails
-        require_once __DIR__ . '/../utils/Mailer.php';
-
-        // Email de notification à l'admin
-        $emailSent = Mailer::sendContactNotification($body);
-
-        // Email de confirmation au visiteur
-        Mailer::sendContactConfirmation($body);
-
         Response::success([
-            'message_id' => $messageId,
-            'email_sent' => $emailSent
-        ], 'Message envoyé avec succès', 201);
-
+            'message_id' => $messageId
+        ], 'Message sent successfully', 201);
     } catch (Exception $e) {
-        Response::error('Échec de l\'envoi du message: ' . $e->getMessage(), 500);
+        Response::error('Failed to send message: ' . $e->getMessage(), 500);
     }
 });
 

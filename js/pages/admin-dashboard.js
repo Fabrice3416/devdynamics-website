@@ -17,40 +17,6 @@
 let currentPage = 'dashboard';
 let editingId = null;
 
-// Helper function to generate user avatar with initials
-function updateUserAvatar(fullName) {
-  const userAvatar = document.querySelector('.user-avatar');
-  if (!userAvatar || !fullName) {
-    console.log('Avatar element or name not found:', {userAvatar, fullName});
-    return;
-  }
-
-  // Get initials (first letter of first and last name)
-  const names = fullName.trim().split(' ');
-  let initials = '';
-  if (names.length >= 2) {
-    initials = names[0][0] + names[names.length - 1][0];
-  } else {
-    initials = names[0][0];
-  }
-  initials = initials.toUpperCase();
-
-  // Generate random color based on name
-  const colors = ['#008080', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DFE6E9', '#6C5CE7'];
-  let hash = 0;
-  for (let i = 0; i < fullName.length; i++) {
-    hash = fullName.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const color = colors[Math.abs(hash) % colors.length];
-
-  // Create SVG with proper encoding
-  const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="${color}"/><text x="50" y="67" font-size="40" fill="white" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold">${initials}</text></svg>`;
-  const encodedSvg = 'data:image/svg+xml;base64,' + btoa(svgContent);
-
-  userAvatar.src = encodedSvg;
-  console.log('Avatar updated with initials:', initials, 'color:', color);
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
   // Double-check authentication (defensive programming)
   if (!api.token) {
@@ -68,8 +34,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (user) {
     document.getElementById('user-name').textContent = user.full_name;
-    // Generate user avatar with initials
-    updateUserAvatar(user.full_name);
   }
 
   // Initialize
@@ -128,6 +92,7 @@ function switchPage(page) {
     blog: 'Articles de Blog',
     donations: 'Dons',
     contact: 'Messages de Contact',
+    candidatures: 'Candidatures ACP',
     courses: 'Gestion des Cours',
     sponsors: 'Sponsors',
     organization: 'Informations de l\'Organisation',
@@ -160,6 +125,9 @@ async function loadPageData(page) {
       break;
     case 'contact':
       loadContactMessages();
+      break;
+    case 'candidatures':
+      loadCandidatures();
       break;
     case 'courses':
       loadCourses();
@@ -210,6 +178,16 @@ async function loadDashboard() {
     }
   } catch (error) {
     console.error('Erreur chargement stats:', error);
+  }
+
+  // Candidatures ACP — separate fetch (not exposed by getDashboardStats)
+  try {
+    const cand = await api.getCandidatures();
+    if (cand.success && document.getElementById('stat-candidatures')) {
+      document.getElementById('stat-candidatures').textContent = (cand.data || []).length;
+    }
+  } catch (e) {
+    console.error('Erreur stats candidatures:', e);
   }
 }
 
@@ -370,7 +348,7 @@ function getTierBadge(tier) {
     platinum: '<i class="ti ti-diamond"></i> Platine',
     gold: '<i class="ti ti-medal-2"></i> Or',
     silver: '<i class="ti ti-medal"></i> Argent',
-    bronze: 'Bronze'
+    bronze: '🥉 Bronze'
   };
   return badges[tier] || tier;
 }
@@ -595,6 +573,223 @@ async function deleteContactMessage(id) {
   }
 }
 
+// ============================================
+// CANDIDATURES ACP
+// ============================================
+let candidaturesCache = [];
+
+async function loadCandidatures() {
+  const container = document.getElementById('candidatures-list');
+  const summary = document.getElementById('candidatures-summary');
+  if (container) container.innerHTML = '<p class="loading-text">Chargement...</p>';
+
+  try {
+    const response = await api.getCandidatures();
+    if (!response.success) throw new Error(response.message || 'Erreur');
+    candidaturesCache = response.data || [];
+
+    renderCandidaturesSummary(summary, candidaturesCache);
+    renderCandidaturesTable(container, candidaturesCache);
+    bindCandidaturesFilters();
+  } catch (error) {
+    console.error('Erreur chargement candidatures:', error);
+    if (container) container.innerHTML = '<p class="error-text">Erreur de chargement des candidatures.</p>';
+  }
+}
+
+function renderCandidaturesSummary(container, rows) {
+  if (!container) return;
+  const total = rows.length;
+  const women = rows.filter(r => r.sexe === 'Féminin').length;
+  const men = rows.filter(r => r.sexe === 'Masculin').length;
+  const today = new Date().toISOString().slice(0, 10);
+  const todayCount = rows.filter(r => (r.created_at || '').startsWith(today)).length;
+
+  container.innerHTML = `
+    <div class="stats-grid stats-grid-compact">
+      <div class="stat-box"><div class="stat-details"><div class="stat-label">Total</div><div class="stat-value">${total}</div></div></div>
+      <div class="stat-box"><div class="stat-details"><div class="stat-label">Femmes</div><div class="stat-value">${women}</div></div></div>
+      <div class="stat-box"><div class="stat-details"><div class="stat-label">Hommes</div><div class="stat-value">${men}</div></div></div>
+      <div class="stat-box"><div class="stat-details"><div class="stat-label">Aujourd'hui</div><div class="stat-value">${todayCount}</div></div></div>
+    </div>
+  `;
+}
+
+function renderCandidaturesTable(container, rows) {
+  if (!container) return;
+  if (rows.length === 0) {
+    container.innerHTML = '<p class="empty-text">Aucune candidature pour l\'instant.</p>';
+    return;
+  }
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>N°</th>
+          <th>Candidat(e)</th>
+          <th>Sexe</th>
+          <th>Email</th>
+          <th>Téléphone</th>
+          <th>Niveau</th>
+          <th>Reçue le</th>
+          <th>Email envoyé</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(c => `
+          <tr>
+            <td><code>${escapeHtml(c.candidature_id)}</code></td>
+            <td>${escapeHtml(c.prenom)} ${escapeHtml(c.nom)}</td>
+            <td>${escapeHtml(c.sexe)}</td>
+            <td><a href="mailto:${escapeHtml(c.email)}">${escapeHtml(c.email)}</a></td>
+            <td>${escapeHtml(c.telephone || '')}</td>
+            <td>${escapeHtml(c.niveau_etudes || '')}</td>
+            <td>${formatCandidatureDateTime(c.created_at)}</td>
+            <td>${c.email_sent == 1 ? '<span class="badge badge-success">Oui</span>' : '<span class="badge badge-warning">Non</span>'}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn btn-primary btn-sm" onclick="viewCandidature('${escapeAttr(c.candidature_id)}')">Voir</button>
+                <a href="${candidaturePdfUrl(c.candidature_id)}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">PDF</a>
+              </div>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function bindCandidaturesFilters() {
+  const search = document.getElementById('candidatures-search');
+  const sexe = document.getElementById('candidatures-filter-sexe');
+  const apply = () => {
+    const q = (search.value || '').trim().toLowerCase();
+    const s = sexe.value || '';
+    const filtered = candidaturesCache.filter(c => {
+      if (s && c.sexe !== s) return false;
+      if (q) {
+        const hay = [c.candidature_id, c.prenom, c.nom, c.email, c.telephone].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    renderCandidaturesTable(document.getElementById('candidatures-list'), filtered);
+  };
+  if (search && !search.dataset.bound) {
+    search.addEventListener('input', apply);
+    search.dataset.bound = '1';
+  }
+  if (sexe && !sexe.dataset.bound) {
+    sexe.addEventListener('change', apply);
+    sexe.dataset.bound = '1';
+  }
+}
+
+async function viewCandidature(candidatureId) {
+  try {
+    const response = await api.getCandidature(candidatureId);
+    if (!response.success) throw new Error(response.message || 'Erreur');
+    const c = response.data;
+
+    const body = document.getElementById('candidature-detail-body');
+    body.innerHTML = renderCandidatureDetail(c);
+
+    const pdfLink = document.getElementById('candidature-pdf-link');
+    pdfLink.href = candidaturePdfUrl(candidatureId);
+
+    document.getElementById('candidature-modal').classList.add('active');
+  } catch (error) {
+    showNotification('Erreur de chargement: ' + error.message, 'error');
+  }
+}
+
+function renderCandidatureDetail(c) {
+  const row = (label, value) => `
+    <div class="detail-row">
+      <div class="detail-label">${escapeHtml(label)}</div>
+      <div class="detail-value">${value === null || value === '' || value === undefined ? '<em>—</em>' : escapeHtml(String(value))}</div>
+    </div>
+  `;
+  const longRow = (label, value) => `
+    <div class="detail-row detail-row-block">
+      <div class="detail-label">${escapeHtml(label)}</div>
+      <div class="detail-value">${value === null || value === '' || value === undefined ? '<em>—</em>' : escapeHtml(String(value)).replace(/\n/g, '<br>')}</div>
+    </div>
+  `;
+  return `
+    <div class="candidature-detail">
+      <div class="detail-header">
+        <h3>${escapeHtml(c.prenom)} ${escapeHtml(c.nom)}</h3>
+        <p><code>${escapeHtml(c.candidature_id)}</code> · Reçue le ${formatCandidatureDateTime(c.created_at)}</p>
+      </div>
+
+      <h4>1. Identification</h4>
+      ${row('Date de naissance', formatCandidatureDate(c.date_naissance))}
+      ${row('Sexe', c.sexe)}
+      ${row('Lieu de naissance', c.lieu_naissance)}
+      ${row('Pièce d\'identité', c.piece_identite)}
+
+      <h4>2. Coordonnées</h4>
+      ${row('Adresse', c.adresse)}
+      ${row('Commune', c.commune)}
+      ${row('Département', c.departement)}
+      ${row('Téléphone', c.telephone)}
+      ${row('WhatsApp', c.whatsapp)}
+      ${row('Email', c.email)}
+      ${row('Source', c.source)}
+
+      <h4>3. Parcours</h4>
+      ${row('Niveau d\'études', c.niveau_etudes)}
+      ${row('Établissement', c.etablissement)}
+      ${row('Filière', c.filiere)}
+      ${row('Situation actuelle', c.situation)}
+      ${longRow('Expérience pertinente', c.experience)}
+
+      <h4>4. Motivation et engagement</h4>
+      ${longRow('Pourquoi rejoindre l\'Académie', c.motivation)}
+      ${longRow('Usage envisagé', c.usage_envisage)}
+      ${row('Disponibilité', c.disponibilite)}
+      ${c.contraintes ? longRow('Contraintes', c.contraintes) : ''}
+
+      <h4>Suivi</h4>
+      ${row('Statut', c.status)}
+      ${row('Email transmis', c.email_sent == 1 ? 'Oui' : 'Non')}
+    </div>
+  `;
+}
+
+function candidaturePdfUrl(candidatureId) {
+  const token = localStorage.getItem('auth_token') || '';
+  return `${API_BASE_URL}/candidatures/${encodeURIComponent(candidatureId)}/pdf?token=${encodeURIComponent(token)}`;
+}
+
+function formatCandidatureDate(iso) {
+  if (!iso) return '';
+  const ts = new Date(iso);
+  if (isNaN(ts.getTime())) return iso;
+  return ts.toLocaleDateString('fr-FR');
+}
+
+function formatCandidatureDateTime(iso) {
+  if (!iso) return '';
+  const ts = new Date(String(iso).replace(' ', 'T'));
+  if (isNaN(ts.getTime())) return iso;
+  return ts.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function escapeAttr(s) {
+  return escapeHtml(s);
+}
+
 // Courses
 let currentCourseId = null;
 
@@ -619,8 +814,8 @@ async function loadCourses() {
           <tbody>
             ${response.data.map(course => {
               const courseTypeLabel = {
-                'online': 'En ligne',
-                'physical': 'Présentiel'
+                'online': '💻 En ligne',
+                'physical': '📍 Présentiel'
               };
               return `
               <tr>
@@ -826,8 +1021,6 @@ async function loadOrganizationForm() {
       document.getElementById('org-email').value = org.email || '';
       document.getElementById('org-phone').value = org.phone || '';
       document.getElementById('org-whatsapp').value = org.whatsapp_number || '';
-      document.getElementById('org-address').value = org.address || '';
-      document.getElementById('org-description').value = org.description || '';
       document.getElementById('org-mission').value = org.mission || '';
       document.getElementById('org-vision').value = org.vision || '';
     }

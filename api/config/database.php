@@ -91,6 +91,10 @@ class Database {
 
     /**
      * Execute a query
+     * @param string $sql SQL query
+     * @param array $params Query parameters
+     * @return PDOStatement
+     * @throws Exception
      */
     public function query($sql, $params = []) {
         try {
@@ -99,12 +103,16 @@ class Database {
             return $stmt;
         } catch (PDOException $e) {
             error_log("Query Error: " . $e->getMessage());
-            throw new Exception("Database query failed");
+            // Afficher l'erreur détaillée pour le debug
+            throw new Exception("Database query failed: " . $e->getMessage());
         }
     }
 
     /**
      * Execute and fetch all results
+     * @param string $sql SQL query
+     * @param array $params Query parameters
+     * @return array
      */
     public function fetchAll($sql, $params = []) {
         $stmt = $this->query($sql, $params);
@@ -113,6 +121,9 @@ class Database {
 
     /**
      * Execute and fetch single row
+     * @param string $sql SQL query
+     * @param array $params Query parameters
+     * @return array|false
      */
     public function fetchOne($sql, $params = []) {
         $stmt = $this->query($sql, $params);

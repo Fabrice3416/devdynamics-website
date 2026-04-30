@@ -4,10 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - DevDynamics Admin</title>
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
-
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <link rel="stylesheet" href="../css/variables.css">
   <link rel="stylesheet" href="../css/global.css">
@@ -46,11 +42,14 @@
       <a href="#contact" class="menu-item" data-page="contact">
         <i class="ti ti-mail"></i> Messages
       </a>
+      <a href="#candidatures" class="menu-item" data-page="candidatures">
+        <i class="ti ti-clipboard-list"></i> Candidatures ACP
+      </a>
       <a href="#sponsors" class="menu-item" data-page="sponsors">
-        <i class="ti ti-building-skyscraper"></i> Partenaires
+        <i class="ti ti-handshake"></i> Sponsors
       </a>
       <a href="#organization" class="menu-item" data-page="organization">
-        <i class="ti ti-building-community"></i> Organisation
+        <i class="ti ti-settings"></i> Organisation
       </a>
       <a href="#users" class="menu-item" data-page="users">
         <i class="ti ti-users"></i> Utilisateurs
@@ -71,8 +70,8 @@
       </div>
       <div class="header-right">
         <div class="user-info">
-          <span id="user-name">Chargement...</span>
-          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23cccccc'/%3E%3C/svg%3E" alt="User" class="user-avatar">
+          <span id="user-name">Admin</span>
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23008080'/%3E%3Ctext y='70' font-size='50' fill='white' text-anchor='middle'%3EU%3C/text%3E%3C/svg%3E" alt="User" class="user-avatar">
         </div>
       </div>
     </header>
@@ -97,9 +96,9 @@
             </div>
           </div>
           <div class="stat-box">
-            <div class="stat-icon"><i class="ti ti-building-skyscraper"></i></div>
+            <div class="stat-icon"><i class="ti ti-handshake"></i></div>
             <div class="stat-details">
-              <div class="stat-label">Partenaires actifs</div>
+              <div class="stat-label">Sponsors actifs</div>
               <div class="stat-value" id="stat-sponsors">0</div>
             </div>
           </div>
@@ -108,6 +107,13 @@
             <div class="stat-details">
               <div class="stat-label">Programmes actifs</div>
               <div class="stat-value" id="stat-programs">0</div>
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-icon"><i class="ti ti-clipboard-list"></i></div>
+            <div class="stat-details">
+              <div class="stat-label">Candidatures ACP</div>
+              <div class="stat-value" id="stat-candidatures">0</div>
             </div>
           </div>
         </div>
@@ -196,11 +202,32 @@
         </div>
       </section>
 
+      <!-- CANDIDATURES ACP PAGE -->
+      <section id="candidatures-page" class="page-content">
+        <div class="page-header">
+          <h2>Candidatures — Académie des Cartographes Populaires</h2>
+          <div class="candidatures-toolbar">
+            <input type="search" id="candidatures-search" placeholder="Rechercher (nom, email, ID...)" class="form-control" style="width: 280px;">
+            <select id="candidatures-filter-sexe" class="form-control" style="width: 160px;">
+              <option value="">Tous les sexes</option>
+              <option value="Féminin">Féminin</option>
+              <option value="Masculin">Masculin</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="candidatures-summary" id="candidatures-summary"></div>
+
+        <div id="candidatures-list" class="table-container">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
       <!-- SPONSORS PAGE -->
       <section id="sponsors-page" class="page-content">
         <div class="page-header">
-          <h2>Partenaires</h2>
-          <button id="add-sponsor-btn" class="btn btn-primary">+ Ajouter un partenaire</button>
+          <h2>Sponsors</h2>
+          <button id="add-sponsor-btn" class="btn btn-primary">+ Ajouter un sponsor</button>
         </div>
         <div id="sponsors-list" class="table-container">
           <!-- Loaded dynamically -->
@@ -228,14 +255,6 @@
           <div class="form-group">
             <label for="org-whatsapp">WhatsApp</label>
             <input type="tel" id="org-whatsapp" name="whatsapp_number">
-          </div>
-          <div class="form-group">
-            <label for="org-address">Adresse</label>
-            <textarea id="org-address" name="address" rows="2"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="org-description">Description</label>
-            <textarea id="org-description" name="description" rows="3"></textarea>
           </div>
           <div class="form-group">
             <label for="org-mission">Mission</label>
@@ -289,6 +308,25 @@
     </div>
   </div>
 
+  <!-- CANDIDATURE DETAIL MODAL -->
+  <div id="candidature-modal" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 class="modal-title">Détail de la candidature</h2>
+        <button type="button" class="modal-close" onclick="closeModal('candidature-modal')">&times;</button>
+      </div>
+      <div class="modal-body" id="candidature-detail-body">
+        <!-- Filled dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('candidature-modal')">Fermer</button>
+        <a id="candidature-pdf-link" href="#" target="_blank" rel="noopener" class="btn btn-primary">
+          <i class="ti ti-download"></i> Télécharger le PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
   <!-- SPONSOR MODAL -->
   <div id="sponsor-modal" class="modal">
     <div class="modal-content">
@@ -334,10 +372,9 @@
     </div>
   </div>
 
-  <script src="../js/config.js?v=2025"></script>
-  <script src="../js/api.js?v=2025"></script>
-  <script src="../js/utils.js?v=2025"></script>
-  <script src="../js/pages/admin-dashboard.js?v=2025"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/pages/admin-dashboard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
 </body>
 </html>

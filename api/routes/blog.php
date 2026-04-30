@@ -20,12 +20,12 @@ $router->get('\/blog', function($params) use ($db) {
 
         // Get total count
         $total = $db->fetchOne(
-            "SELECT COUNT(*) as count FROM blog_posts WHERE is_published = 1"
+            "SELECT COUNT(*) as count FROM blog_posts WHERE status = 'published'"
         );
 
         // Get posts
         $posts = $db->fetchAll(
-            "SELECT * FROM blog_posts WHERE is_published = 1 ORDER BY published_at DESC LIMIT ? OFFSET ?",
+            "SELECT * FROM blog_posts WHERE status = 'published' ORDER BY published_at DESC LIMIT ? OFFSET ?",
             [$limit, $offset]
         );
 
@@ -47,7 +47,7 @@ $router->get('\/blog', function($params) use ($db) {
 $router->get('\/blog/:slug', function($params) use ($db) {
     try {
         $post = $db->fetchOne(
-            "SELECT * FROM blog_posts WHERE slug = ? AND is_published = 1 LIMIT 1",
+            "SELECT * FROM blog_posts WHERE slug = ? AND status = 'published' LIMIT 1",
             [$params['slug']]
         );
 

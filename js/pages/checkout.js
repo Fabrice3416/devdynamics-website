@@ -72,13 +72,13 @@ function displayCourseSummary(course) {
     <div class="course-thumbnail-small">
       ${course.thumbnail_url
         ? `<img src="${course.thumbnail_url}" alt="${course.title}">`
-        : '<div class="placeholder-thumbnail-small"></div>'}
+        : '<div class="placeholder-thumbnail-small">🎓</div>'}
     </div>
     <div class="course-info-summary">
       <h3>${course.title}</h3>
       <p>${truncate(course.description, 80)}</p>
       <div class="course-meta-small">
-        <span>${course.level}</span>
+        <span>📊 ${course.level}</span>
         <span>⏱️ ${course.duration || 'Non spécifié'}</span>
       </div>
     </div>
