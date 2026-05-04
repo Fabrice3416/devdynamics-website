@@ -282,6 +282,22 @@ class APIClient {
     return this.request(`/candidatures/${id}`);
   }
 
+  // Fiches d'étude — Enseignant(e) ACP
+  async submitFicheEtude(data) {
+    return this.request('/fiches-etude', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async getFichesEtude() {
+    return this.request('/fiches-etude');
+  }
+
+  async getFicheEtude(id) {
+    return this.request(`/fiches-etude/${id}`);
+  }
+
   // Contact
   async getContactMessages() {
     return this.request('/contact');
