@@ -17,15 +17,13 @@ function initNavigation() {
   }
 }
 
-// Restrict the date-of-birth picker to applicants aged 18-25 at the deadline.
+// Restrict the date-of-birth picker to applicants aged 18 or older.
 function initDateConstraints() {
   const dateInput = document.getElementById('date_naissance');
   if (!dateInput) return;
   const today = new Date();
   const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-  const minDate = new Date(today.getFullYear() - 25, today.getMonth(), today.getDate());
   dateInput.max = maxDate.toISOString().split('T')[0];
-  dateInput.min = minDate.toISOString().split('T')[0];
 }
 
 // "Avec contraintes" reveals the contraintes textarea and makes it required.
@@ -129,7 +127,7 @@ function validateClient(data) {
       errors.date_naissance = 'Date invalide';
     } else {
       const age = computeAge(dob);
-      if (age < 18 || age > 25) errors.date_naissance = 'Vous devez avoir entre 18 et 25 ans';
+      if (age < 18) errors.date_naissance = 'Vous devez avoir au moins 18 ans';
     }
   }
 

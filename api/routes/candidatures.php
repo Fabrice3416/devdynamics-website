@@ -48,8 +48,8 @@ $router->post('\/candidatures', function($params) use ($db) {
         } else {
             $age = (int) date('Y', time()) - (int) date('Y', $ts);
             if (date('md', time()) < date('md', $ts)) $age--;
-            if ($age < 18 || $age > 25) {
-                $errors['date_naissance'] = 'Vous devez avoir entre 18 et 25 ans';
+            if ($age < 18) {
+                $errors['date_naissance'] = 'Vous devez avoir au moins 18 ans';
             }
         }
     }
