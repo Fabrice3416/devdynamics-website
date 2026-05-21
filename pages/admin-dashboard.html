@@ -42,9 +42,6 @@
       <a href="#contact" class="menu-item" data-page="contact">
         <i class="ti ti-mail"></i> Messages
       </a>
-      <a href="#candidatures" class="menu-item" data-page="candidatures">
-        <i class="ti ti-clipboard-list"></i> Candidatures ACP
-      </a>
       <a href="#sponsors" class="menu-item" data-page="sponsors">
         <i class="ti ti-handshake"></i> Sponsors
       </a>
@@ -107,13 +104,6 @@
             <div class="stat-details">
               <div class="stat-label">Programmes actifs</div>
               <div class="stat-value" id="stat-programs">0</div>
-            </div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-icon"><i class="ti ti-clipboard-list"></i></div>
-            <div class="stat-details">
-              <div class="stat-label">Candidatures ACP</div>
-              <div class="stat-value" id="stat-candidatures">0</div>
             </div>
           </div>
         </div>
@@ -203,25 +193,6 @@
       </section>
 
       <!-- CANDIDATURES ACP PAGE -->
-      <section id="candidatures-page" class="page-content">
-        <div class="page-header">
-          <h2>Candidatures — Académie des Cartographes Populaires</h2>
-          <div class="candidatures-toolbar">
-            <input type="search" id="candidatures-search" placeholder="Rechercher (nom, email, ID...)" class="form-control" style="width: 280px;">
-            <select id="candidatures-filter-sexe" class="form-control" style="width: 160px;">
-              <option value="">Tous les sexes</option>
-              <option value="Féminin">Féminin</option>
-              <option value="Masculin">Masculin</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="candidatures-summary" id="candidatures-summary"></div>
-
-        <div id="candidatures-list" class="table-container">
-          <!-- Loaded dynamically -->
-        </div>
-      </section>
 
       <!-- SPONSORS PAGE -->
       <section id="sponsors-page" class="page-content">
@@ -308,24 +279,6 @@
     </div>
   </div>
 
-  <!-- CANDIDATURE DETAIL MODAL -->
-  <div id="candidature-modal" class="modal">
-    <div class="modal-content modal-large">
-      <div class="modal-header">
-        <h2 class="modal-title">Détail de la candidature</h2>
-        <button type="button" class="modal-close" onclick="closeModal('candidature-modal')">&times;</button>
-      </div>
-      <div class="modal-body" id="candidature-detail-body">
-        <!-- Filled dynamically -->
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-ghost" onclick="closeModal('candidature-modal')">Fermer</button>
-        <a id="candidature-pdf-link" href="#" target="_blank" rel="noopener" class="btn btn-primary">
-          <i class="ti ti-download"></i> Télécharger le PDF
-        </a>
-      </div>
-    </div>
-  </div>
 
   <!-- SPONSOR MODAL -->
   <div id="sponsor-modal" class="modal">

@@ -3,29 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Fiche d'étude enseignant(e) - Académie des Cartographes Populaires - DevDynamics">
-  <title>Fiche d'étude Enseignant(e) ACP - DevDynamics</title>
-
+  <meta name="description" content="Fiche d'étude Enseignant ACP - DevDynamics">
+  <title>Fiche Enseignant ACP - DevDynamics</title>
   <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
-
-  <link rel="stylesheet" href="../css/variables.css?v=2">
-  <link rel="stylesheet" href="../css/global.css?v=2">
-  <link rel="stylesheet" href="../css/components.css?v=2">
-  <link rel="stylesheet" href="../css/pages/candidature.css?v=2">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .closed-section {
+      min-height: 70vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--spacing-3xl) var(--spacing-lg);
+    }
+    .closed-card {
+      max-width: 540px;
+      background: var(--color-white);
+      border: 1px solid var(--color-light-gray);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-3xl) var(--spacing-2xl);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+    .closed-icon {
+      font-size: 3rem;
+      margin-bottom: var(--spacing-lg);
+    }
+    .closed-card h1 {
+      font-size: var(--font-size-xl);
+      color: var(--color-primary);
+      margin-bottom: var(--spacing-md);
+    }
+    .closed-card p {
+      color: var(--color-gray);
+      line-height: 1.7;
+      margin-bottom: var(--spacing-lg);
+    }
+  </style>
 </head>
 <body>
-  <!-- HEADER -->
   <header>
     <div class="container">
       <nav>
         <div class="logo">
           <img src="../assets/images/logo_6.png" alt="DevDynamics Logo" class="logo-img">
         </div>
-
         <ul class="nav-menu">
           <li><a href="../index.html#accueil" class="nav-link">Accueil</a></li>
           <li><a href="../index.html#programmes" class="nav-link">Programmes</a></li>
-          <li><a href="fiche-etude-enseignant.html" class="nav-link active">Fiche Enseignant ACP</a></li>
           <li><a href="../index.html#cours" class="nav-link">Cours</a></li>
           <li><a href="../index.html#temoignages" class="nav-link">Témoignages</a></li>
           <li><a href="../index.html#equipe" class="nav-link">Équipe</a></li>
@@ -33,505 +59,28 @@
           <li><a href="../index.html#sponsors" class="nav-link">Sponsors</a></li>
           <li><a href="../index.html#contact" class="nav-link">Contact</a></li>
         </ul>
-
         <div class="nav-cta">
           <a href="../index.html#dons" class="btn btn-primary btn-sm">Faire un don</a>
-          <div class="hamburger">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
+          <div class="hamburger"><span></span><span></span><span></span></div>
         </div>
       </nav>
     </div>
   </header>
 
-  <!-- HERO -->
-  <section class="candidature-hero">
-    <div class="container">
-      <span class="acp-tag">FICHE D'ÉTUDE ENSEIGNANT(E)</span>
-      <h1>« Ma carte, mon quartier, mon danger »</h1>
-      <p class="hero-tagline">Sélection des classes participantes — Séance pédagogique de 15 minutes</p>
-
-      <div class="acp-meta">
-        <div class="acp-meta-item">
-          <strong>15 min</strong>
-          <span>Durée d'une séance</span>
-        </div>
-        <div class="acp-meta-item">
-          <strong>Primaire</strong>
-          <span>Public visé</span>
-        </div>
-        <div class="acp-meta-item highlight">
-          <strong>Gratuit</strong>
-          <span>Aucun coût</span>
-        </div>
-        <div class="acp-meta-item">
-          <strong>Cap-Haïtien</strong>
-          <span>Zone d'intervention</span>
-        </div>
-      </div>
+  <section class="closed-section">
+    <div class="closed-card">
+      <div class="closed-icon">&#128274;</div>
+      <h1>Période de soumission terminée</h1>
+      <p>
+        La période de soumission des fiches d'étude enseignant pour l'Académie des Cartographes Populaires (ACP) est désormais clôturée.
+      </p>
+      <p>
+        Restez connecté(e) à nos actualités pour être informé(e) des prochaines sessions.
+      </p>
+      <a href="../index.html" class="btn btn-primary">Retour à l'accueil</a>
     </div>
   </section>
 
-  <!-- INFO -->
-  <section class="acp-info">
-    <div class="container">
-      <div class="info-grid">
-        <div class="info-card">
-          <h3>Objectif de la séance</h3>
-          <ul>
-            <li>Sensibiliser à l'environnement</li>
-            <li>Initier à la géographie locale</li>
-            <li>Découvrir la cartographie participative</li>
-            <li>Associer observation, dessin et réflexion</li>
-          </ul>
-        </div>
-        <div class="info-card">
-          <h3>Pour l'enseignant(e)</h3>
-          <ul>
-            <li>Aucune préparation particulière</li>
-            <li>Animation prise en charge par DEVDYNAMICS</li>
-            <li>Matériel fourni si nécessaire</li>
-            <li>Adaptation au contexte de chaque école</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FORM -->
-  <section class="candidature-form-section">
-    <div class="container">
-      <div class="form-intro">
-        <h2>Fiche d'Étude — Enseignant(e)</h2>
-        <p><strong>Madame, Monsieur,</strong> dans le cadre du projet <em>Académie des Cartographes Populaires</em>, DEVDYNAMICS souhaite animer de courtes séances pédagogiques dans les classes de primaire. Cette fiche nous permettra de sélectionner les classes les mieux adaptées et de personnaliser l'animation au contexte de chaque établissement.</p>
-        <p>Contact : <a href="mailto:contact@dev-dynamics.org">contact@dev-dynamics.org</a> · +509 47 41 8737</p>
-        <p class="required-legend">Les champs marqués d'un <span class="req">*</span> sont obligatoires.</p>
-      </div>
-
-      <form id="fiche-etude-form" class="acp-form" novalidate>
-
-        <!-- 1. IDENTIFICATION -->
-        <fieldset class="form-section">
-          <legend><span class="section-num">1</span> Identification de l'établissement et de l'enseignant(e)</legend>
-
-          <div class="form-group">
-            <label for="etablissement_nom">Nom de l'établissement <span class="req">*</span></label>
-            <input type="text" id="etablissement_nom" name="etablissement_nom" required maxlength="200" class="form-control">
-          </div>
-
-          <div class="form-group">
-            <label for="etablissement_adresse">Adresse complète <span class="req">*</span></label>
-            <input type="text" id="etablissement_adresse" name="etablissement_adresse" required maxlength="300" class="form-control">
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="enseignant_prenom">Prénom de l'enseignant(e) <span class="req">*</span></label>
-              <input type="text" id="enseignant_prenom" name="enseignant_prenom" required maxlength="100" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="enseignant_nom">Nom de l'enseignant(e) <span class="req">*</span></label>
-              <input type="text" id="enseignant_nom" name="enseignant_nom" required maxlength="100" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="telephone">Téléphone <span class="req">*</span></label>
-              <input type="tel" id="telephone" name="telephone" required class="form-control" placeholder="+509 XX XX XXXX">
-            </div>
-            <div class="form-group">
-              <label for="whatsapp">WhatsApp (si différent)</label>
-              <input type="tel" id="whatsapp" name="whatsapp" class="form-control" placeholder="+509 XX XX XXXX">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="email">Adresse courriel <span class="req">*</span></label>
-            <input type="email" id="email" name="email" required class="form-control">
-          </div>
-        </fieldset>
-
-        <!-- 2. DESCRIPTION DE LA CLASSE -->
-        <fieldset class="form-section">
-          <legend><span class="section-num">2</span> Description de la classe proposée</legend>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="niveau_classe">Niveau (classe) <span class="req">*</span></label>
-              <input type="text" id="niveau_classe" name="niveau_classe" required class="form-control" placeholder="Ex. 5e année fondamentale">
-            </div>
-            <div class="form-group">
-              <label for="nombre_eleves">Nombre d'élèves <span class="req">*</span></label>
-              <input type="number" id="nombre_eleves" name="nombre_eleves" required min="1" max="200" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="age_moyen">Âge moyen des élèves <span class="req">*</span></label>
-            <input type="text" id="age_moyen" name="age_moyen" required class="form-control" placeholder="Ex. 9 ans">
-          </div>
-
-          <div class="form-group">
-            <label>Meilleur créneau pour la séance <span class="req">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label"><input type="radio" name="creneau" value="Matin (avant 10h)" required> Matin (avant 10h)</label>
-              <label class="radio-label"><input type="radio" name="creneau" value="Milieu de matinée" required> Milieu de matinée</label>
-              <label class="radio-label"><input type="radio" name="creneau" value="Après le déjeuner" required> Après le déjeuner</label>
-              <label class="radio-label"><input type="radio" name="creneau" value="Après-midi" required> Après-midi</label>
-            </div>
-          </div>
-        </fieldset>
-
-        <!-- 3. CONTEXTE ENVIRONNEMENTAL -->
-        <fieldset class="form-section">
-          <legend><span class="section-num">3</span> Contexte environnemental du quartier</legend>
-
-          <p class="hint">Cette section nous aide à adapter le contenu de la séance à la réalité locale de vos élèves.</p>
-
-          <div class="form-group">
-            <label>Risques environnementaux présents dans le quartier <span class="req">*</span></label>
-            <div class="radio-group radio-group-vertical">
-              <label class="checkbox-label"><input type="checkbox" name="risques[]" value="Inondations / montée des eaux"> <span>Inondations / montée des eaux</span></label>
-              <label class="checkbox-label"><input type="checkbox" name="risques[]" value="Décharges sauvages"> <span>Décharges sauvages</span></label>
-              <label class="checkbox-label"><input type="checkbox" name="risques[]" value="Pollution de la mer ou du littoral"> <span>Pollution de la mer ou du littoral</span></label>
-              <label class="checkbox-label"><input type="checkbox" name="risques[]" value="Canaux bouchés ou débordants"> <span>Canaux bouchés ou débordants</span></label>
-              <label class="checkbox-label"><input type="checkbox" name="risques[]" value="Manque d'eau propre"> <span>Manque d'eau propre</span></label>
-              <label class="checkbox-label"><input type="checkbox" name="risques[]" value="Déforestation / manque de végétation"> <span>Déforestation / manque de végétation</span></label>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="risque_autre">Autre risque (préciser)</label>
-            <input type="text" id="risque_autre" name="risque_autre" class="form-control">
-          </div>
-
-          <div class="form-group">
-            <label>Les élèves ont-ils été directement touchés par un de ces risques ? <span class="req">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label"><input type="radio" name="eleves_touches" value="Oui" required> Oui</label>
-              <label class="radio-label"><input type="radio" name="eleves_touches" value="Non" required> Non</label>
-              <label class="radio-label"><input type="radio" name="eleves_touches" value="Je ne sais pas" required> Je ne sais pas</label>
-            </div>
-          </div>
-
-          <div class="form-group" id="touches-precisions-group" style="display:none;">
-            <label for="eleves_touches_lequel">Si oui, lequel ?</label>
-            <input type="text" id="eleves_touches_lequel" name="eleves_touches_lequel" class="form-control">
-          </div>
-
-          <div class="form-group">
-            <label for="risque_visible">Y a-t-il un risque particulièrement visible depuis l'école ou sur le chemin des élèves ?</label>
-            <textarea id="risque_visible" name="risque_visible" class="form-control" rows="3" placeholder="Décrivez brièvement..."></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>Y a-t-il des zones à éviter ou à ne pas mentionner pour des raisons de sécurité ? <span class="req">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label"><input type="radio" name="zones_a_eviter" value="Non" required> Non</label>
-              <label class="radio-label"><input type="radio" name="zones_a_eviter" value="Oui" required> Oui</label>
-            </div>
-          </div>
-
-          <div class="form-group" id="zones-precisions-group" style="display:none;">
-            <label for="zones_precisions">Préciser <span class="req">*</span></label>
-            <textarea id="zones_precisions" name="zones_precisions" class="form-control" rows="2"></textarea>
-          </div>
-        </fieldset>
-
-        <!-- 4. NIVEAU ET COMPORTEMENT -->
-        <fieldset class="form-section">
-          <legend><span class="section-num">4</span> Niveau et comportement de la classe</legend>
-
-          <div class="form-group">
-            <label>Niveau général en lecture et écriture <span class="req">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label"><input type="radio" name="niveau_lecture" value="1" required> 1</label>
-              <label class="radio-label"><input type="radio" name="niveau_lecture" value="2" required> 2</label>
-              <label class="radio-label"><input type="radio" name="niveau_lecture" value="3" required> 3</label>
-              <label class="radio-label"><input type="radio" name="niveau_lecture" value="4" required> 4</label>
-              <label class="radio-label"><input type="radio" name="niveau_lecture" value="5" required> 5</label>
-            </div>
-            <small class="hint">1 = faible, 5 = excellent</small>
-          </div>
-
-          <div class="form-group">
-            <label>Capacité d'attention de la classe <span class="req">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label"><input type="radio" name="capacite_attention" value="1" required> 1</label>
-              <label class="radio-label"><input type="radio" name="capacite_attention" value="2" required> 2</label>
-              <label class="radio-label"><input type="radio" name="capacite_attention" value="3" required> 3</label>
-              <label class="radio-label"><input type="radio" name="capacite_attention" value="4" required> 4</label>
-              <label class="radio-label"><input type="radio" name="capacite_attention" value="5" required> 5</label>
-            </div>
-            <small class="hint">1 = faible, 5 = excellent</small>
-          </div>
-
-          <div class="form-group">
-            <label>Aisance à l'oral et participation spontanée <span class="req">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label"><input type="radio" name="aisance_oral" value="1" required> 1</label>
-              <label class="radio-label"><input type="radio" name="aisance_oral" value="2" required> 2</label>
-              <label class="radio-label"><input type="radio" name="aisance_oral" value="3" required> 3</label>
-              <label class="radio-label"><input type="radio" name="aisance_oral" value="4" required> 4</label>
-              <label class="radio-label"><input type="radio" name="aisance_oral" value="5" required> 5</label>
-            </div>
-            <small class="hint">1 = faible, 5 = excellent</small>
-          </div>
-
-          <div class="form-group">
-            <label>La classe a-t-elle déjà abordé des notions de géographie ? <span class="req">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label"><input type="radio" name="notions_geo" value="Oui, régulièrement" required> Oui, régulièrement</label>
-              <label class="radio-label"><input type="radio" name="notions_geo" value="Quelques fois" required> Quelques fois</label>
-              <label class="radio-label"><input type="radio" name="notions_geo" value="Jamais" required> Jamais</label>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Les élèves savent-ils dessiner un plan simple (leur chambre, leur quartier) ? <span class="req">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label"><input type="radio" name="plan_simple" value="Oui" required> Oui</label>
-              <label class="radio-label"><input type="radio" name="plan_simple" value="Probablement" required> Probablement</label>
-              <label class="radio-label"><input type="radio" name="plan_simple" value="Non, ce serait une première" required> Non, ce serait une première</label>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Y a-t-il des élèves ayant des besoins particuliers (difficultés motrices, langue) ? <span class="req">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label"><input type="radio" name="besoins_particuliers" value="Non" required> Non</label>
-              <label class="radio-label"><input type="radio" name="besoins_particuliers" value="Oui" required> Oui</label>
-            </div>
-          </div>
-
-          <div class="form-group" id="besoins-precisions-group" style="display:none;">
-            <label for="besoins_precisions">Préciser <span class="req">*</span></label>
-            <textarea id="besoins_precisions" name="besoins_precisions" class="form-control" rows="2"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>Langue d'instruction habituelle <span class="req">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label"><input type="radio" name="langue_instruction" value="Français" required> Français</label>
-              <label class="radio-label"><input type="radio" name="langue_instruction" value="Kreyòl" required> Kreyòl</label>
-              <label class="radio-label"><input type="radio" name="langue_instruction" value="Les deux" required> Les deux</label>
-            </div>
-          </div>
-        </fieldset>
-
-        <!-- 5. LOGISTIQUE -->
-        <fieldset class="form-section">
-          <legend><span class="section-num">5</span> Logistique et disponibilité</legend>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="date_souhaitee_1">Date souhaitée (1er choix) <span class="req">*</span></label>
-              <input type="date" id="date_souhaitee_1" name="date_souhaitee_1" required class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="date_souhaitee_2">Date souhaitée (2e choix)</label>
-              <input type="date" id="date_souhaitee_2" name="date_souhaitee_2" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Vidéoprojecteur ou grand écran ? <span class="req">*</span></label>
-              <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="videoprojecteur" value="Oui" required> Oui</label>
-                <label class="radio-label"><input type="radio" name="videoprojecteur" value="Non" required> Non</label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="videoprojecteur_precision">Précision</label>
-              <input type="text" id="videoprojecteur_precision" name="videoprojecteur_precision" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Imprimante pour les feuilles d'activité ? <span class="req">*</span></label>
-              <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="imprimante" value="Oui" required> Oui</label>
-                <label class="radio-label"><input type="radio" name="imprimante" value="Non" required> Non</label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="imprimante_precision">Précision</label>
-              <input type="text" id="imprimante_precision" name="imprimante_precision" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="nb_feuilles">Nombre de feuilles à imprimer (si DEVDYNAMICS prend en charge)</label>
-            <input type="number" id="nb_feuilles" name="nb_feuilles" min="0" max="500" class="form-control">
-          </div>
-
-          <div class="form-group">
-            <label>Souhaitez-vous que l'activité soit animée en : <span class="req">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label"><input type="radio" name="langue_animation" value="Français" required> Français</label>
-              <label class="radio-label"><input type="radio" name="langue_animation" value="Kreyòl" required> Kreyòl</label>
-              <label class="radio-label"><input type="radio" name="langue_animation" value="Bilingue (les deux)" required> Bilingue (les deux)</label>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Êtes-vous disponible pour participer à la séance et encadrer en soutien ? <span class="req">*</span></label>
-              <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="disponible_encadrer" value="Oui" required> Oui</label>
-                <label class="radio-label"><input type="radio" name="disponible_encadrer" value="Non" required> Non</label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="disponible_precision">Précision</label>
-              <input type="text" id="disponible_precision" name="disponible_precision" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Souhaitez-vous conserver les feuilles d'activité remplies par les élèves ? <span class="req">*</span></label>
-              <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="conserver_feuilles" value="Oui" required> Oui</label>
-                <label class="radio-label"><input type="radio" name="conserver_feuilles" value="Non" required> Non</label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="conserver_precision">Précision</label>
-              <input type="text" id="conserver_precision" name="conserver_precision" class="form-control">
-            </div>
-          </div>
-        </fieldset>
-
-        <!-- 6. MOTIVATION -->
-        <fieldset class="form-section">
-          <legend><span class="section-num">6</span> Motivation et attentes</legend>
-
-          <div class="form-group">
-            <label for="motivation">Pourquoi souhaitez-vous accueillir cette séance dans votre classe ? <span class="req">*</span></label>
-            <textarea id="motivation" name="motivation" required minlength="20" class="form-control" rows="4" placeholder="Partagez vos motivations (minimum 20 caractères)"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="attentes">Qu'espérez-vous que vos élèves retiendront de cette séance ? <span class="req">*</span></label>
-            <textarea id="attentes" name="attentes" required minlength="20" class="form-control" rows="4" placeholder="Décrivez vos attentes (minimum 20 caractères)"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>Êtes-vous intéressé(e) par une collaboration future (autres séances, restitution des cartes) ? <span class="req">*</span></label>
-            <div class="radio-group">
-              <label class="radio-label"><input type="radio" name="collaboration_future" value="Oui, très intéressé(e)" required> Oui, très intéressé(e)</label>
-              <label class="radio-label"><input type="radio" name="collaboration_future" value="Peut-être" required> Peut-être</label>
-              <label class="radio-label"><input type="radio" name="collaboration_future" value="Non" required> Non</label>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="suggestions">Suggestions ou demandes spécifiques pour adapter la séance à votre classe ?</label>
-            <textarea id="suggestions" name="suggestions" class="form-control" rows="3"></textarea>
-          </div>
-        </fieldset>
-
-        <!-- 7. AUTORISATIONS -->
-        <fieldset class="form-section">
-          <legend><span class="section-num">7</span> Autorisations</legend>
-
-          <p>Je soussigné(e), enseignant(e) à l'établissement mentionné ci-dessus, autorise DEVDYNAMICS à :</p>
-
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="auth_animation" name="auth_animation" required>
-              <span>Animer une séance pédagogique dans ma classe à la date convenue. <span class="req">*</span></span>
-            </label>
-          </div>
-
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="auth_photos" name="auth_photos">
-              <span>Photographier les activités des élèves à des fins de documentation du projet (sans publication de photos identifiables d'enfants sans accord parental).</span>
-            </label>
-          </div>
-
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="auth_conservation" name="auth_conservation">
-              <span>Conserver les feuilles d'activité remplies comme données du projet Académie des Cartographes Populaires.</span>
-            </label>
-          </div>
-        </fieldset>
-
-        <div id="form-feedback" class="form-feedback" style="display:none;"></div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
-            Soumettre la fiche
-          </button>
-          <a href="../index.html" class="btn btn-outline btn-lg">Annuler</a>
-        </div>
-
-        <p class="form-note">
-          Pour toute question :
-          <a href="mailto:contact@dev-dynamics.org">contact@dev-dynamics.org</a> · +509 47 41 8737
-        </p>
-      </form>
-
-      <!-- SUCCESS BOX -->
-      <div id="success-message" class="success-box" style="display:none;">
-        <div class="success-icon">✓</div>
-        <h3>Fiche enregistrée avec succès !</h3>
-        <p class="success-id">N° de fiche : <strong id="fiche-id-display">—</strong></p>
-        <p>Conservez ce numéro : il vous servira pour le suivi de votre dossier.</p>
-        <p>La fiche complète a été envoyée à <strong>contact@dev-dynamics.org</strong> au format PDF.</p>
-        <p>Notre équipe vous contactera prochainement pour confirmer la date de la séance.</p>
-        <a href="../index.html" class="btn btn-primary">Retour à l'accueil</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- FUNDING NOTICE -->
-  <section class="funding-notice">
-    <div class="container">
-      <p><em>Financé par l'Union européenne dans le cadre du PAIESC (Contrat N° PAIESC/CS/04-2026/021) — Programme d'Appui aux Initiatives Émergentes de la Société Civile en Haïti.</em></p>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-section">
-          <h4>DevDynamics</h4>
-          <p>Association éducative et technologique à but non lucratif en Haïti</p>
-        </div>
-        <div class="footer-section">
-          <h4>Navigation</h4>
-          <ul>
-            <li><a href="../index.html">Accueil</a></li>
-            <li><a href="../index.html#programmes">Programmes</a></li>
-            <li><a href="fiche-etude-enseignant.html">Fiche Enseignant ACP</a></li>
-            <li><a href="../index.html#contact">Contact</a></li>
-          </ul>
-        </div>
-        <div class="footer-section">
-          <h4>Contact</h4>
-          <p>📍 Rues 15-16 B, Cap-Haïtien</p>
-          <p>📞 +509 47 41 8737</p>
-          <p>📧 contact@dev-dynamics.org</p>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2026 DevDynamics. Tous droits réservés.</p>
-      </div>
-    </div>
-  </footer>
-
-  <script src="../js/api.js?v=2"></script>
-  <script src="../js/utils.js?v=2"></script>
-  <script src="../js/pages/fiche-etude-enseignant.js?v=2"></script>
+  <script src="../js/utils.js"></script>
 </body>
 </html>
