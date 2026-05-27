@@ -1,0 +1,290 @@
+<?php
+/**
+ * Template PDF DOSSIER COMPLET - 5 pieces paginees
+ * Piece 1 : F01 - Piece 2 : F02 - Piece 3 : ASF - Piece 4 : NH - Piece 5 : FRP
+ *
+ * Variables :
+ *   $imputation (F01)
+ *   $f02 (decaissement)
+ *   $asf (attestation_service_fait)
+ *   $nh (note_honoraires) - peut etre null si renflouement PC
+ *   $frp (fiche_reglement)
+ *   $sig_admin_abs, $sig_coord_abs, $sig_presta_nh_abs, $sig_presta_frp_abs
+ */
+$sig_admin_abs       = $sig_admin_abs       ?? null;
+$sig_coord_abs       = $sig_coord_abs       ?? null;
+$sig_presta_nh_abs   = $sig_presta_nh_abs   ?? null;
+$sig_presta_frp_abs  = $sig_presta_frp_abs  ?? null;
+
+$isCps01 = (int)($f02['is_cps01'] ?? 0) === 1;
+$isRenflouement = $imputation['nature_paiement'] === 'renflouement_petite_caisse';
+$isRetroactif = (int)($imputation['is_retroactif'] ?? 0) === 1;
+?>
+<!DOCTYPE html><html><head>
+<meta charset="utf-8"><?php require __DIR__ . '/_base_styles.html'; ?>
+<style>
+.piece-cover {
+    text-align: center;
+    margin: 40mm 0 30mm 0;
+    page-break-after: avoid;
+}
+.piece-num {
+    font-size: 36pt;
+    color: #1F4E79;
+    font-weight: bold;
+}
+.piece-title {
+    font-size: 22pt;
+    color: #1A7A5E;
+    margin-top: 10pt;
+}
+.tampon {
+    color: #b91c1c;
+    border: 3px solid #b91c1c;
+    padding: 8px 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 12pt;
+    transform: rotate(-12deg);
+    display: inline-block;
+    margin-top: 20pt;
+    opacity: 0.7;
+}
+</style></head><body>
+
+<htmlpageheader name="pageHeader">
+<table style="width:100%; border-bottom:1px solid #1F4E79;">
+<tr><td style="width:70%;"><span style="color:#1F4E79; font-size:14pt; font-weight:bold;">DEVDYNAMICS</span><br>
+<span style="font-size:9pt; color:#666;">Academie des Cartographes Populaires - PAIESC/CS/04-2026/021</span></td>
+<td style="width:30%; text-align:right; font-size:9pt; color:#666;">
+Dossier <?= e($imputation['numero']) ?></td></tr></table>
+</htmlpageheader>
+<htmlpagefooter name="pageFooter">
+<table style="width:100%; border-top:1px solid #ddd; font-size:8pt; color:#999;">
+<tr><td style="width:50%;">Genere le <?= e(date('d/m/Y H:i')) ?> - <?= e($imputation['numero']) ?></td>
+<td style="width:50%; text-align:right;">Page {PAGENO} / {nb}</td></tr></table>
+</htmlpagefooter>
+
+<!-- PAGE DE GARDE -->
+<div class="piece-cover">
+    <div class="piece-num">DOSSIER COMPLET</div>
+    <div class="piece-title"><?= e($imputation['numero']) ?></div>
+    <p style="margin-top:30pt; font-size:11pt;">
+        Beneficiaire : <strong><?= e($imputation['prestataire']) ?></strong><br>
+        Contrat : <?= e($imputation['contrat_numero']) ?> (<?= e($imputation['type_contrat']) ?>)<br>
+        Date de la depense : <?= e(date('d/m/Y', strtotime($imputation['date_depense']))) ?><br>
+        Montant : <strong><?= format_htg($f02['total_net_a_verser']) ?></strong>
+    </p>
+    <?php if ($isRetroactif): ?>
+        <div class="tampon">Saisie retroactive</div>
+    <?php endif; ?>
+    <p style="margin-top:50pt; font-size:9pt; color:#666;">
+        5 pieces justificatives PAIESC :<br>
+        1. Fiche d'Imputation (F01) - 2. Bon de Decaissement (F02) - 3. Attestation Service Fait (ASF)<br>
+        4. Note d'Honoraires (NH<?= $isRenflouement ? ' / non applicable' : '' ?>) - 5. Fiche de Reglement (FRP)
+    </p>
+</div>
+
+<!-- PIECE 1 : F01 -->
+<pagebreak>
+<div class="piece-cover" style="margin: 20mm 0;">
+    <div class="piece-num">Piece 1/5</div>
+    <div class="piece-title">FICHE D'IMPUTATION (F01)</div>
+</div>
+
+<table class="kv">
+    <tr><th>N° F01</th><td><?= e($imputation['numero']) ?></td></tr>
+    <tr><th>Date depense</th><td><?= e(date('d/m/Y', strtotime($imputation['date_depense']))) ?></td></tr>
+    <tr><th>Beneficiaire</th><td><?= e($imputation['prestataire']) ?></td></tr>
+    <tr><th>Contrat</th><td><?= e($imputation['contrat_numero']) ?> (<?= e($imputation['type_contrat']) ?>)</td></tr>
+    <tr><th>Ligne budgetaire</th><td><?= e($imputation['ligne_code']) ?> - <?= e($imputation['ligne_libelle']) ?></td></tr>
+    <tr><th>Rubrique</th><td><?= e(ucfirst(str_replace('_',' ', $imputation['rubrique']))) ?></td></tr>
+    <tr><th>Nature paiement</th><td><?= e(ucfirst(str_replace('_',' ', $imputation['nature_paiement']))) ?></td></tr>
+    <tr><th>Description</th><td><?= nl2br(e($imputation['description'])) ?></td></tr>
+    <tr><th>Montant principal</th><td class="font-mono"><?= format_htg($imputation['montant']) ?></td></tr>
+    <?php if ($isCps01 && $imputation['montant_allocation']): ?>
+    <tr><th>+ Allocation deplacements</th><td class="font-mono"><?= format_htg($imputation['montant_allocation']) ?></td></tr>
+    <?php endif; ?>
+</table>
+
+<!-- PIECE 2 : F02 -->
+<pagebreak>
+<div class="piece-cover" style="margin: 20mm 0;">
+    <div class="piece-num">Piece 2/5</div>
+    <div class="piece-title">BON DE DECAISSEMENT (F02)</div>
+</div>
+
+<table class="kv">
+    <tr><th>N° F02</th><td><?= e($f02['numero']) ?></td></tr>
+    <tr><th>Montant brut</th><td class="font-mono"><?= format_htg($f02['montant_brut']) ?></td></tr>
+    <tr><th>DGI 2%</th><td class="font-mono text-danger">- <?= format_htg($f02['dgi_2pct']) ?></td></tr>
+    <tr><th>Net honoraires</th><td class="font-mono"><?= format_htg($f02['net_honoraires']) ?></td></tr>
+    <?php if ($isCps01 && $f02['montant_allocation']): ?>
+    <tr><th>+ Allocation</th><td class="font-mono text-success">+ <?= format_htg($f02['montant_allocation']) ?></td></tr>
+    <?php endif; ?>
+    <tr style="background:#1F4E79;color:white;"><th style="background:#1F4E79;color:white;">TOTAL NET VERSE</th><td class="font-mono"><strong><?= format_htg($f02['total_net_a_verser']) ?></strong></td></tr>
+    <tr><th>Mode</th><td><?= e($f02['mode_paiement']) ?><?= $f02['mode_paiement']==='cheque'?' SOGEBANK':'' ?></td></tr>
+    <?php if ($f02['mode_paiement']==='cheque'): ?>
+        <tr><th>N° cheque<?= $isCps01?' (honoraires)':'' ?></th><td class="font-mono"><?= e($f02['numero_cheque']) ?></td></tr>
+        <?php if ($f02['numero_cheque_allocation']): ?>
+        <tr><th>N° cheque (allocation)</th><td class="font-mono"><?= e($f02['numero_cheque_allocation']) ?></td></tr>
+        <?php endif; ?>
+    <?php else: ?>
+        <tr><th>Justification virement</th><td><?= nl2br(e((string)$f02['justification_virement'])) ?></td></tr>
+    <?php endif; ?>
+</table>
+
+<div class="bloc-signature" style="margin-top:1em;">
+    <p class="signataire">Valide par (Administrateur)</p>
+    <?php if ($sig_admin_abs && is_file($sig_admin_abs)): ?>
+        <img src="<?= e($sig_admin_abs) ?>" alt="Sig">
+    <?php else: ?>
+        <p style="font-style:italic;color:#666;">[Signature electronique]</p>
+    <?php endif; ?>
+    <p style="font-size:9pt; color:#666;">Le <?= $f02['date_validation'] ? e(date('d/m/Y H:i', strtotime($f02['date_validation']))) : '-' ?></p>
+</div>
+
+<?php if ($f02['preuve_paiement_scan'] || $f02['facture_scan']): ?>
+    <p style="font-size:9pt; color:#666; margin-top:1em;">
+        <strong>Annexes Piece 2</strong> :
+        <?php if ($f02['preuve_paiement_scan']): ?>scan preuve de paiement<?php endif; ?>
+        <?php if ($f02['preuve_paiement_scan'] && $f02['facture_scan']): ?>, <?php endif; ?>
+        <?php if ($f02['facture_scan']): ?>scan facture<?php endif; ?>
+        (joints au dossier physique)
+    </p>
+<?php endif; ?>
+
+<!-- PIECE 3 : ASF -->
+<pagebreak>
+<div class="piece-cover" style="margin: 20mm 0;">
+    <div class="piece-num">Piece 3/5</div>
+    <div class="piece-title">ATTESTATION DE SERVICE FAIT (ASF)</div>
+</div>
+
+<?php if ($asf): ?>
+<table class="kv">
+    <tr><th>N° ASF</th><td><?= e($asf['numero']) ?></td></tr>
+    <tr><th>Livrables realises</th><td><?= nl2br(e($asf['livrables_realises'])) ?></td></tr>
+    <tr><th>Statut livrables</th><td><strong><?= e(strtoupper($asf['statut_livrables'])) ?></strong></td></tr>
+    <?php if ($asf['taux_presence'] !== null): ?>
+    <tr><th>Taux de presence</th><td><?= (int)$asf['taux_presence'] ?> %</td></tr>
+    <?php endif; ?>
+    <?php if ($asf['observations']): ?>
+    <tr><th>Observations</th><td><?= nl2br(e((string)$asf['observations'])) ?></td></tr>
+    <?php endif; ?>
+</table>
+
+<div class="bloc-signature" style="margin-top:1em;">
+    <p class="signataire">Certifie par (Coordinateur)</p>
+    <?php if ($sig_coord_abs && is_file($sig_coord_abs)): ?>
+        <img src="<?= e($sig_coord_abs) ?>" alt="Sig">
+    <?php else: ?>
+        <p style="font-style:italic;color:#666;">[Signature electronique]</p>
+    <?php endif; ?>
+    <p style="font-size:9pt; color:#666;">Le <?= $asf['date_certification'] ? e(date('d/m/Y H:i', strtotime($asf['date_certification']))) : '-' ?></p>
+</div>
+<?php else: ?>
+    <p style="color:#666; font-style:italic;">ASF non encore certifie.</p>
+<?php endif; ?>
+
+<!-- PIECE 4 : NH -->
+<pagebreak>
+<div class="piece-cover" style="margin: 20mm 0;">
+    <div class="piece-num">Piece 4/5</div>
+    <div class="piece-title">NOTE D'HONORAIRES (NH)</div>
+</div>
+
+<?php if ($isRenflouement): ?>
+    <div style="border:2px solid #1F4E79; padding:20px; background:#f1f7fc; margin-top:30mm;">
+        <p style="text-align:center; font-size:14pt; color:#1F4E79;"><strong>Non applicable</strong></p>
+        <p style="text-align:center; font-size:11pt;">
+            Operation interne DEVDYNAMICS : renflouement Petite Caisse.<br>
+            Aucune Note d'Honoraires prestataire n'est requise (AJUST-03).
+        </p>
+    </div>
+<?php elseif ($nh): ?>
+<table class="kv">
+    <tr><th>N° NH</th><td><?= e($nh['numero']) ?></td></tr>
+    <tr><th>Description prestation</th><td><?= nl2br(e($nh['description_prestation'])) ?></td></tr>
+    <tr><th>Montant brut certifie</th><td class="font-mono"><?= format_htg($nh['montant_brut']) ?></td></tr>
+    <tr><th>Mode paiement souhaite</th><td><?= e($nh['mode_paiement']) ?></td></tr>
+    <?php if ($nh['coordonnees_bancaires']): ?>
+    <tr><th>Coordonnees bancaires</th><td><?= nl2br(e((string)$nh['coordonnees_bancaires'])) ?></td></tr>
+    <?php endif; ?>
+</table>
+
+<div class="bloc-signature" style="margin-top:1em;">
+    <p class="signataire">Certifie par (Prestataire)</p>
+    <?php if ($sig_presta_nh_abs && is_file($sig_presta_nh_abs)): ?>
+        <img src="<?= e($sig_presta_nh_abs) ?>" alt="Sig">
+    <?php else: ?>
+        <p style="font-style:italic;color:#666;">[Signature electronique via lien tokenise]</p>
+    <?php endif; ?>
+    <p style="font-size:9pt; color:#666;">Le <?= $nh['date_soumission'] ? e(date('d/m/Y H:i', strtotime($nh['date_soumission']))) : '-' ?></p>
+</div>
+<?php else: ?>
+    <p style="color:#666; font-style:italic;">NH non encore soumise.</p>
+<?php endif; ?>
+
+<!-- PIECE 5 : FRP -->
+<pagebreak>
+<div class="piece-cover" style="margin: 20mm 0;">
+    <div class="piece-num">Piece 5/5</div>
+    <div class="piece-title">FICHE DE REGLEMENT (FRP)</div>
+</div>
+
+<?php if ($frp): ?>
+<table class="kv">
+    <tr><th>N° FRP</th><td><?= e($frp['numero']) ?></td></tr>
+    <tr><th>Date paiement</th><td><?= e(date('d/m/Y', strtotime($frp['date_paiement']))) ?></td></tr>
+    <?php if ($frp['numero_cheque']): ?>
+    <tr><th>N° cheque</th><td class="font-mono"><?= e($frp['numero_cheque']) ?></td></tr>
+    <?php endif; ?>
+    <tr><th>Evaluation livrables</th><td><strong><?= e(strtoupper($frp['evaluation_livrables'])) ?></strong></td></tr>
+    <tr><th>Date cloture</th><td><?= $frp['date_cloture'] ? e(date('d/m/Y H:i', strtotime($frp['date_cloture']))) : '<em>En cours</em>' ?></td></tr>
+</table>
+
+<h3 style="margin-top:1em;">Signatures requises<?= $isRenflouement?' (2 pour renflouement)':' (3 pour dossier standard)' ?></h3>
+
+<table style="width:100%;">
+<tr>
+<?php if (!$isRenflouement): ?>
+    <td style="width:33%;" class="bloc-signature">
+        <p class="signataire">Prestataire</p>
+        <p><?= e($frp['prestataire']) ?></p>
+        <?php if ($sig_presta_frp_abs && is_file($sig_presta_frp_abs)): ?>
+            <img src="<?= e($sig_presta_frp_abs) ?>" alt="Sig">
+        <?php elseif ((int)$frp['sig_prestataire'] === 1): ?>
+            <p style="font-style:italic;color:#666;">[Signature electronique]</p>
+        <?php else: ?>
+            <p style="color:#999;">En attente</p>
+        <?php endif; ?>
+    </td>
+<?php endif; ?>
+    <td style="width:<?= $isRenflouement?'50':'33' ?>%;" class="bloc-signature">
+        <p class="signataire">Administrateur</p>
+        <?php if ($sig_admin_abs && is_file($sig_admin_abs) && (int)$frp['sig_administrateur'] === 1): ?>
+            <img src="<?= e($sig_admin_abs) ?>" alt="Sig">
+        <?php elseif ((int)$frp['sig_administrateur'] === 1): ?>
+            <p style="font-style:italic;color:#666;">[Signature electronique]</p>
+        <?php else: ?>
+            <p style="color:#999;">En attente</p>
+        <?php endif; ?>
+    </td>
+    <td style="width:<?= $isRenflouement?'50':'33' ?>%;" class="bloc-signature">
+        <p class="signataire">Coordinateur</p>
+        <?php if ($sig_coord_abs && is_file($sig_coord_abs) && (int)$frp['sig_coordinateur'] === 1): ?>
+            <img src="<?= e($sig_coord_abs) ?>" alt="Sig">
+        <?php elseif ((int)$frp['sig_coordinateur'] === 1): ?>
+            <p style="font-style:italic;color:#666;">[Signature electronique]</p>
+        <?php else: ?>
+            <p style="color:#999;">En attente</p>
+        <?php endif; ?>
+    </td>
+</tr></table>
+
+<?php else: ?>
+    <p style="color:#666; font-style:italic;">FRP non encore creee.</p>
+<?php endif; ?>
+
+</body></html>

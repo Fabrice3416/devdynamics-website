@@ -1,0 +1,111 @@
+<style>
+@page {
+    margin: 20mm 15mm 15mm 15mm;
+    header: html_pageHeader;
+    footer: html_pageFooter;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    color: #212529;
+}
+
+h1, h2, h3 {
+    color: #1F4E79;
+    margin: 0 0 .5em 0;
+    font-weight: bold;
+}
+
+h1 { font-size: 16pt; border-bottom: 2px solid #1F4E79; padding-bottom: 4px; }
+h2 { font-size: 13pt; color: #1A7A5E; margin-top: 1em; }
+h3 { font-size: 11pt; }
+
+table { width: 100%; border-collapse: collapse; margin: .5em 0; }
+table.data th, table.data td {
+    border: 1px solid #ccc;
+    padding: 6px 8px;
+    vertical-align: top;
+}
+table.data th {
+    background: #1F4E79;
+    color: white;
+    text-align: left;
+    font-weight: normal;
+}
+table.kv th {
+    width: 35%;
+    background: #f1f3f5;
+    text-align: left;
+    padding: 4px 6px;
+    border: 1px solid #e9ecef;
+}
+table.kv td {
+    padding: 4px 6px;
+    border: 1px solid #e9ecef;
+}
+
+.text-end { text-align: right; }
+.text-center { text-align: center; }
+.font-mono { font-family: Courier, monospace; }
+.text-muted { color: #6c757d; }
+.text-danger { color: #b91c1c; }
+.text-success { color: #166534; }
+
+.entete {
+    border-bottom: 3px solid #1F4E79;
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+}
+.entete .titre {
+    color: #1F4E79;
+    font-size: 18pt;
+    font-weight: bold;
+}
+.entete .sous-titre {
+    color: #1A7A5E;
+    font-size: 10pt;
+    font-style: italic;
+}
+
+.tampon-retroactif {
+    color: #b91c1c;
+    border: 3px solid #b91c1c;
+    padding: 8px 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 14pt;
+    transform: rotate(-15deg);
+    position: absolute;
+    top: 30mm;
+    right: 20mm;
+    opacity: 0.7;
+}
+
+.bloc-signature {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 8px 0;
+    background: #fafbfc;
+}
+.bloc-signature .signataire {
+    font-weight: bold;
+    color: #1F4E79;
+}
+.bloc-signature img {
+    max-height: 50px;
+    max-width: 200px;
+}
+
+.totaux-box {
+    border: 2px solid #1F4E79;
+    padding: 10px;
+    background: #f1f7fc;
+    margin: 1em 0;
+}
+.totaux-box .total-net {
+    font-size: 14pt;
+    font-weight: bold;
+    color: #1A7A5E;
+}
+</style>

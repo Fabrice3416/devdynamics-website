@@ -1,0 +1,104 @@
+<?php
+/**
+ * Template PDF RFM - Rapport Financier Mensuel
+ * Variables : $rfm = ['mois','annee','mois_nom','stats','lignes','journal','rapprochement','caisse_mois','budget_total']
+ */
+?>
+<!DOCTYPE html><html><head><meta charset="utf-8"><?php require __DIR__ . '/_base_styles.html'; ?></head><body>
+
+<htmlpageheader name="pageHeader">
+<table style="width:100%;border-bottom:1px solid #1F4E79;">
+<tr><td style="width:70%;"><span style="color:#1F4E79;font-size:14pt;font-weight:bold;">DEVDYNAMICS</span><br>
+<span style="font-size:9pt;color:#666;">Academie des Cartographes Populaires - PAIESC/CS/04-2026/021</span></td>
+<td style="width:30%;text-align:right;font-size:9pt;color:#666;">RFM - <?= e($rfm['mois_nom']) ?> <?= (int)$rfm['annee'] ?></td></tr></table>
+</htmlpageheader>
+<htmlpagefooter name="pageFooter">
+<table style="width:100%;border-top:1px solid #ddd;font-size:8pt;color:#999;">
+<tr><td style="width:50%;">Genere le <?= e(date('d/m/Y H:i')) ?></td>
+<td style="width:50%;text-align:right;">Page {PAGENO} / {nb}</td></tr></table>
+</htmlpagefooter>
+
+<div class="entete">
+    <div class="titre">RAPPORT FINANCIER MENSUEL</div>
+    <div class="sous-titre"><?= e($rfm['mois_nom']) ?> <?= (int)$rfm['annee'] ?></div>
+</div>
+
+<h2>1. Resume executif</h2>
+<table class="kv">
+    <tr><th>Periode</th><td><?= e($rfm['mois_nom']) ?> <?= (int)$rfm['annee'] ?></td></tr>
+    <tr><th>Nb dossiers traites</th><td><?= (int)$rfm['stats']['nb'] ?></td></tr>
+    <tr><th>Total net verse</th><td class="font-mono"><?= format_htg($rfm['stats']['total']) ?></td></tr>
+    <tr><th>Budget total projet</th><td class="font-mono"><?= format_htg($rfm['budget_total']) ?></td></tr>
+</table>
+
+<h2>2. Prevu vs Realise par ligne budgetaire</h2>
+<table class="data">
+    <thead><tr><th>Code</th><th>Libelle</th><th class="text-end">Prevu (mois)</th><th class="text-end">Realise (mois)</th><th class="text-end">Realise cumule</th><th class="text-end">% execution</th></tr></thead>
+    <tbody>
+    <?php foreach ($rfm['lignes'] as $l):
+        $pct = (float)$l['budget_initial_htg'] > 0 ? ((float)$l['realise_cumul'] / (float)$l['budget_initial_htg']) * 100 : 0;
+    ?>
+        <tr>
+            <td><?= e($l['code']) ?></td>
+            <td><?= e($l['libelle']) ?></td>
+            <td class="text-end font-mono"><?= format_htg($l['previsionnel']) ?></td>
+            <td class="text-end font-mono"><?= format_htg($l['realise_mois']) ?></td>
+            <td class="text-end font-mono"><?= format_htg($l['realise_cumul']) ?></td>
+            <td class="text-end"><?= number_format($pct, 1) ?>%</td>
+        </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+
+<h2>3. Journal des depenses du mois</h2>
+<table class="data" style="font-size:9pt;">
+    <thead><tr><th>N°</th><th>Date</th><th>Beneficiaire</th><th>Ligne</th><th class="text-end">Brut</th><th class="text-end">DGI</th><th class="text-end">Net</th><th>Cheque</th></tr></thead>
+    <tbody>
+    <?php foreach ($rfm['journal'] as $j): ?>
+        <tr>
+            <td><small><?= e($j['numero_ecriture']) ?></small></td>
+            <td><small><?= e(date('d/m', strtotime($j['date_depense']))) ?></small></td>
+            <td><small><?= e($j['beneficiaire']) ?></small></td>
+            <td><small><?= e($j['ligne_budgetaire']) ?></small></td>
+            <td class="text-end font-mono"><small><?= format_htg($j['montant_brut']) ?></small></td>
+            <td class="text-end font-mono text-danger"><small><?= format_htg($j['dgi_2pct']) ?></small></td>
+            <td class="text-end font-mono"><small><?= format_htg($j['total_net_a_verser']) ?></small></td>
+            <td><small><?= e($j['numero_cheque'] ?? '') ?></small></td>
+        </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+
+<h2>4. Petite Caisse</h2>
+<table class="kv">
+    <tr><th>Nb transactions du mois</th><td><?= (int)$rfm['caisse_mois']['nb'] ?></td></tr>
+    <tr><th>Total depense PC du mois</th><td class="font-mono"><?= format_htg($rfm['caisse_mois']['total']) ?></td></tr>
+</table>
+
+<h2>5. Rapprochement bancaire</h2>
+<?php if ($rfm['rapprochement']): ?>
+<table class="kv">
+    <tr><th>Solde releve SOGEBANK</th><td class="font-mono"><?= format_htg($rfm['rapprochement']['solde_releve_sogebank']) ?></td></tr>
+    <tr><th>Total paiements app</th><td class="font-mono"><?= format_htg($rfm['rapprochement']['total_paiements_app']) ?></td></tr>
+    <tr><th>Ecart</th><td class="font-mono <?= abs((float)$rfm['rapprochement']['ecart'])>0.01?'text-danger':'text-success' ?>"><?= format_htg($rfm['rapprochement']['ecart']) ?></td></tr>
+</table>
+<?php else: ?>
+<p style="color:#b91c1c;font-style:italic;">Rapprochement bancaire non encore effectue pour cette periode.</p>
+<?php endif; ?>
+
+<div style="margin-top: 2em;">
+    <table style="width:100%;"><tr>
+        <td style="width:50%;" class="bloc-signature">
+            <p class="signataire">Coordinateur</p>
+            <p style="font-style:italic;color:#666;">[Signature]</p>
+            <p style="font-size:9pt;color:#666;">Le <?= e(date('d/m/Y')) ?></p>
+        </td>
+        <td style="width:50%;" class="bloc-signature">
+            <p class="signataire">Administrateur</p>
+            <p style="font-style:italic;color:#666;">[Signature]</p>
+            <p style="font-size:9pt;color:#666;">Le <?= e(date('d/m/Y')) ?></p>
+        </td>
+    </tr></table>
+</div>
+
+</body></html>

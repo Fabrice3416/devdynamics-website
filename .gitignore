@@ -55,3 +55,25 @@ api/clear-*.php
 
 #dev
 .dev
+
+# Portail DEVDYNAMICS / ACP
+/portail/includes/config.php
+/portail/storage/dossiers/*
+/portail/storage/contrats/*
+/portail/storage/bons_commande/*
+/portail/storage/bons_reception/*
+/portail/storage/preuves_paiement/*
+/portail/storage/factures/*
+/portail/storage/devis/*
+/portail/storage/rapprochements/*
+/portail/storage/asf/*
+/portail/storage/fecp/*
+/portail/storage/caisse/recus/*
+/portail/storage/caisse/renflouements/*
+/portail/storage/retroactif/*
+/portail/storage/signatures/*
+/portail/storage/rapports/*
+!/portail/storage/**/.gitkeep
+/portail/lib/mpdf/*
+/portail/lib/phpmailer/*
+!/portail/lib/**/.gitkeep

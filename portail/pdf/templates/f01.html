@@ -1,0 +1,118 @@
+<?php
+/**
+ * Template PDF F01 - Fiche d'Imputation
+ * Variables attendues :
+ *   $imputation : ligne complete d ImputationModel::find($id)
+ */
+?>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<?php require __DIR__ . '/_base_styles.html'; ?>
+</head>
+<body>
+
+<htmlpageheader name="pageHeader">
+<table style="width:100%; border-bottom:1px solid #1F4E79;">
+    <tr>
+        <td style="width:70%;">
+            <span style="color:#1F4E79; font-size:14pt; font-weight:bold;">DEVDYNAMICS</span><br>
+            <span style="font-size:9pt; color:#666;">Academie des Cartographes Populaires - PAIESC/CS/04-2026/021</span>
+        </td>
+        <td style="width:30%; text-align:right; font-size:9pt; color:#666;">
+            F01 - Fiche d'Imputation
+        </td>
+    </tr>
+</table>
+</htmlpageheader>
+
+<htmlpagefooter name="pageFooter">
+<table style="width:100%; border-top:1px solid #ddd; font-size:8pt; color:#999;">
+    <tr>
+        <td style="width:50%;">Genere le <?= e(date('d/m/Y H:i')) ?></td>
+        <td style="width:50%; text-align:right;">Page {PAGENO} / {nb}</td>
+    </tr>
+</table>
+</htmlpagefooter>
+
+<?php if ((int)$imputation['is_retroactif'] === 1): ?>
+    <div class="tampon-retroactif">
+        Saisie retroactive<br>
+        <span style="font-size:9pt;"><?= e(date('d/m/Y', strtotime($imputation['date_saisie_reelle'] ?? 'now'))) ?></span>
+    </div>
+<?php endif; ?>
+
+<div class="entete">
+    <div class="titre">FICHE D'IMPUTATION (F01)</div>
+    <div class="sous-titre">N° <?= e($imputation['numero']) ?> - <?= e(date('d F Y', strtotime($imputation['date_depense']))) ?></div>
+</div>
+
+<h2>Identification</h2>
+<table class="kv">
+    <tr><th>Date de la depense</th><td><?= e(date('d/m/Y', strtotime($imputation['date_depense']))) ?></td></tr>
+    <tr><th>Contrat</th><td><?= e($imputation['contrat_numero']) ?> (<?= e($imputation['type_contrat']) ?>)</td></tr>
+    <tr><th>Beneficiaire</th><td><?= e($imputation['prestataire']) ?></td></tr>
+    <tr><th>Ligne budgetaire</th><td><?= e($imputation['ligne_code']) ?> - <?= e($imputation['ligne_libelle']) ?></td></tr>
+    <tr><th>Rubrique</th><td><?= e(ucfirst(str_replace('_',' ', $imputation['rubrique']))) ?></td></tr>
+    <tr><th>Nature du paiement</th><td><?= e(ucfirst(str_replace('_',' ', $imputation['nature_paiement']))) ?></td></tr>
+</table>
+
+<h2>Description de la depense</h2>
+<p style="border:1px solid #ccc; padding:10px; background:#fafbfc;">
+    <?= nl2br(e($imputation['description'])) ?>
+</p>
+
+<h2>Montant impute</h2>
+<div class="totaux-box">
+    <table>
+        <tr>
+            <td style="width:60%;">Montant principal (soumis DGI 2%)</td>
+            <td class="text-end font-mono"><?= format_htg($imputation['montant']) ?></td>
+        </tr>
+        <?php if ((int)$imputation['is_cps01'] === 1 && $imputation['montant_allocation']): ?>
+        <tr>
+            <td>+ Allocation deplacements (hors DGI)</td>
+            <td class="text-end font-mono text-success"><?= format_htg($imputation['montant_allocation']) ?></td>
+        </tr>
+        <tr style="border-top: 2px solid #1F4E79;">
+            <td><strong>Total impute</strong></td>
+            <td class="text-end font-mono total-net">
+                <?= format_htg((float)$imputation['montant'] + (float)$imputation['montant_allocation']) ?>
+            </td>
+        </tr>
+        <?php endif; ?>
+    </table>
+</div>
+
+<?php if ((int)$imputation['is_cps01'] === 1): ?>
+<p style="font-size:9pt; color:#1A7A5E; font-style:italic;">
+    Note : Contrat CPS-ACP-01 (Coordinateur). Deux cheques seront emis au F02 :
+    un pour les honoraires (apres prelevement DGI 2%) et un pour l'allocation deplacements.
+</p>
+<?php endif; ?>
+
+<div style="margin-top: 2em;">
+    <table style="width:100%;">
+        <tr>
+            <td style="width:50%;" class="bloc-signature">
+                <p class="signataire">Soumis par</p>
+                <p><?= e($imputation['soumis_par_nom']) ?></p>
+                <p style="font-size:9pt; color:#666;">
+                    <?= $imputation['date_soumission']
+                        ? 'Le ' . e(date('d/m/Y H:i', strtotime($imputation['date_soumission'])))
+                        : 'Brouillon' ?>
+                </p>
+            </td>
+            <td style="width:50%;" class="bloc-signature">
+                <p class="signataire">Statut</p>
+                <p style="font-size:14pt; font-weight:bold;">
+                    <?= e(strtoupper($imputation['statut'])) ?>
+                </p>
+            </td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

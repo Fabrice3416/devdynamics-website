@@ -1,0 +1,82 @@
+<?php
+/**
+ * Template PDF ASF - Attestation de Service Fait
+ * Variables : $asf, $sig_coord_abs
+ */
+$sig_coord_abs = $sig_coord_abs ?? null;
+?>
+<!DOCTYPE html><html><head>
+<meta charset="utf-8">
+<?php require __DIR__ . '/_base_styles.html'; ?>
+</head><body>
+
+<htmlpageheader name="pageHeader">
+<table style="width:100%; border-bottom:1px solid #1F4E79;">
+<tr><td style="width:70%;"><span style="color:#1F4E79; font-size:14pt; font-weight:bold;">DEVDYNAMICS</span><br>
+<span style="font-size:9pt; color:#666;">Academie des Cartographes Populaires - PAIESC/CS/04-2026/021</span></td>
+<td style="width:30%; text-align:right; font-size:9pt; color:#666;">ASF - Attestation de Service Fait</td></tr></table>
+</htmlpageheader>
+<htmlpagefooter name="pageFooter">
+<table style="width:100%; border-top:1px solid #ddd; font-size:8pt; color:#999;">
+<tr><td style="width:50%;">Genere le <?= e(date('d/m/Y H:i')) ?></td>
+<td style="width:50%; text-align:right;">Page {PAGENO} / {nb}</td></tr></table>
+</htmlpagefooter>
+
+<div class="entete">
+    <div class="titre">ATTESTATION DE SERVICE FAIT (ASF)</div>
+    <div class="sous-titre">N° <?= e($asf['numero']) ?> - F01 source : <?= e($asf['imputation_numero']) ?></div>
+</div>
+
+<p style="margin: 1em 0;">
+Je soussigne, <strong><?= e($asf['certifie_par_nom'] ?? '-') ?></strong>, en qualite de Coordinateur,
+atteste que le service decrit ci-dessous a ete effectivement realise par le prestataire
+<strong><?= e($asf['prestataire']) ?></strong> dans le cadre du contrat <strong><?= e($asf['contrat_numero']) ?></strong>
+(<?= e($asf['type_contrat']) ?>).
+</p>
+
+<h2>Description du service</h2>
+<p style="border:1px solid #ccc; padding:10px; background:#fafbfc;">
+    <?= e($asf['imputation_description']) ?>
+</p>
+
+<h2>Livrables realises</h2>
+<p style="border:1px solid #ccc; padding:10px; background:#fafbfc;">
+    <?= nl2br(e($asf['livrables_realises'])) ?>
+</p>
+
+<h2>Evaluation</h2>
+<table class="kv">
+    <tr><th>Statut des livrables</th><td><strong><?= e(strtoupper($asf['statut_livrables'])) ?></strong></td></tr>
+    <?php if ($asf['taux_presence'] !== null): ?>
+    <tr><th>Taux de presence</th><td><?= (int)$asf['taux_presence'] ?> %</td></tr>
+    <?php endif; ?>
+    <?php if ($asf['observations']): ?>
+    <tr><th>Observations</th><td><?= nl2br(e((string)$asf['observations'])) ?></td></tr>
+    <?php endif; ?>
+</table>
+
+<?php
+$pieces = $asf['pieces_jointes_json'] ? json_decode($asf['pieces_jointes_json'], true) : [];
+if ($pieces): ?>
+<h2>Pieces jointes</h2>
+<ul>
+<?php foreach ($pieces as $p): ?>
+    <li><?= e($p['type']) ?></li>
+<?php endforeach; ?>
+</ul>
+<?php endif; ?>
+
+<div style="margin-top: 2em;">
+    <div class="bloc-signature" style="width:50%;">
+        <p class="signataire">Certification Coordinateur</p>
+        <p><?= e($asf['certifie_par_nom'] ?? '') ?></p>
+        <?php if ($sig_coord_abs && is_file($sig_coord_abs)): ?>
+            <img src="<?= e($sig_coord_abs) ?>" alt="Signature">
+        <?php else: ?>
+            <p style="font-style:italic;color:#666;">[Signe electroniquement par <?= e($asf['certifie_par_nom'] ?? '') ?>]</p>
+        <?php endif; ?>
+        <p style="font-size:9pt; color:#666;">Le <?= $asf['date_certification'] ? e(date('d/m/Y H:i', strtotime($asf['date_certification']))) : '-' ?></p>
+    </div>
+</div>
+
+</body></html>
