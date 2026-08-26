@@ -71,8 +71,20 @@ if (!preg_match('/^[0-9a-f]{64}$/i', $cle)) {
 }
 
 // ---------------------------------------------------------------- Base de donnees
+// La connexion est etablie ici, et non via db(), qui interrompt le script en cas d'echec :
+// le diagnostic doit rester lisible quand la base est justement injoignable.
+$dbOk = false;
+$d = $cfg['db'] ?? [];
+$dsn = !empty($d['socket'])
+    ? sprintf('mysql:unix_socket=%s;dbname=%s;charset=%s', $d['socket'], $d['name'] ?? '', $d['charset'] ?? 'utf8mb4')
+    : sprintf('mysql:host=%s;dbname=%s;charset=%s', $d['host'] ?? 'localhost', $d['name'] ?? '', $d['charset'] ?? 'utf8mb4');
 try {
-    $pdo = db();
+    $pdo = new PDO($dsn, (string)($d['user'] ?? ''), (string)($d['pass'] ?? ''), [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ]);
+    $dbOk = true;
     $version = (string)$pdo->query('SELECT VERSION()')->fetchColumn();
     $base    = (string)$pdo->query('SELECT DATABASE()')->fetchColumn();
     verifier('Base de données', 'ok', 'Connexion', $base . ' · ' . $version);
@@ -120,7 +132,15 @@ try {
     $collation = (string)$pdo->query('SELECT @@collation_database')->fetchColumn();
     verifier('Base de données', str_starts_with($collation, 'utf8mb4') ? 'ok' : 'avertissement', 'Interclassement', $collation);
 } catch (Throwable $e) {
-    verifier('Base de données', 'erreur', 'Connexion', $e->getMessage());
+    $msg = $e->getMessage();
+    $piste = str_contains($msg, 'Access denied')
+        ? 'identifiant ou mot de passe refusé : vérifier db.user et db.pass dans config.php, et que cet utilisateur a bien des droits sur la base'
+        : (str_contains($msg, 'Unknown database')
+            ? 'la base nommée dans config.php n\'existe pas sous ce nom : vérifier db.name dans hPanel'
+            : 'vérifier db.host, db.name, db.user et db.pass dans config.php');
+    verifier('Base de données', 'erreur', 'Connexion',
+        'base « ' . ($d['name'] ?? '?') . ' », utilisateur « ' . ($d['user'] ?? '?') . ' » — ' . $piste);
+    verifier('Base de données', 'erreur', 'Message du serveur', $msg);
 }
 
 // ---------------------------------------------------------------- Stockage
@@ -147,7 +167,10 @@ if (!is_file($autoload)) {
     verifier('Documents', 'erreur', 'Bibliothèque mPDF', 'absente : déposer vendor/mpdf dans bousol/lib/mpdf/');
 } else {
     verifier('Documents', 'ok', 'Bibliothèque mPDF', 'présente');
-    try {
+    if (!$dbOk) {
+        // L'en-tete des documents lit le nom du projet et le numero de contrat en base.
+        verifier('Documents', 'avertissement', 'Rendu d\'un PDF', 'non testé : la connexion à la base doit d\'abord fonctionner');
+    } else try {
         require_once __DIR__ . '/pdf/generate.php';
         $svc = new PdfService();
         $bin = $svc->rendre_binaire('acte_depot', [
@@ -173,10 +196,13 @@ function rendre(array $resultats, bool $cli): void
     // Hors CLI : libre en mode installation, sinon reserve au Coordinateur.
     if (!$cli) {
         $installation = true;
-        try {
-            $installation = (int)db()->query('SELECT COUNT(*) FROM utilisateurs WHERE derniere_connexion IS NOT NULL')->fetchColumn() === 0;
-        } catch (Throwable) {
-            // Base injoignable : c'est precisement le cas ou le diagnostic doit rester accessible.
+        global $pdo, $dbOk;
+        if (!empty($dbOk)) {
+            try {
+                $installation = (int)$pdo->query('SELECT COUNT(*) FROM utilisateurs WHERE derniere_connexion IS NOT NULL')->fetchColumn() === 0;
+            } catch (Throwable) {
+                // Tables absentes : l'installation n'est pas terminee, le diagnostic reste accessible.
+            }
         }
         if (!$installation) {
             require_once __DIR__ . '/includes/auth.php';
