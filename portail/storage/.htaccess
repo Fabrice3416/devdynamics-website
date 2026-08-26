@@ -1,5 +1,0 @@
-# Aucun acces direct aux fichiers stockes
-# Tous les acces passent par pdf/serve.php ou reporting/serve_rapport.php
-# qui verifient la session ou un token avant de streamer le fichier.
-Order deny,allow
-Deny from all
