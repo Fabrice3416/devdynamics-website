@@ -1,0 +1,57 @@
+/* Bousol - direction visuelle : sobre, organique, un seul accent olive */
+:root {
+  --bsl-ink: #2a2a28;
+  --bsl-gris: #6b6a66;
+  --bsl-olive: #4c5a47;
+  --bsl-olive-fonce: #3c4838;
+  --bsl-pierre: #efede8;
+  --bsl-pierre-claire: #faf8f3;
+  --bsl-papier: #f7f6f2;
+  --bsl-filet: #c9c4ba;
+  --bsl-serif: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  --bsl-sans: Candara, "Segoe UI", Optima, Verdana, sans-serif;
+}
+body.bousol-app { background: var(--bsl-papier); color: var(--bsl-ink); font-family: var(--bsl-sans); min-height: 100vh; display: flex; flex-direction: column; }
+body.bousol-login { background: var(--bsl-papier); min-height: 100vh; font-family: var(--bsl-sans); color: var(--bsl-ink); }
+h1, h2, h3, h4, h5, .card-header.fw-semibold { font-family: var(--bsl-serif); color: var(--bsl-olive-fonce); }
+
+.bousol-nav { background: var(--bsl-olive); }
+.bousol-nav .navbar-brand { font-family: var(--bsl-serif); }
+.bousol-nav .nav-link { color: rgba(255,255,255,.82); }
+.bousol-nav .nav-link:hover { color: #fff; }
+.bousol-nav .nav-link.active { color: #fff; border-bottom: 2px solid var(--bsl-pierre); }
+.bousol-phase { background: var(--bsl-pierre); color: var(--bsl-ink); font-weight: 600; }
+
+.bousol-main { flex: 1; }
+.bousol-footer { border-top: 1px solid var(--bsl-filet); background: var(--bsl-pierre-claire); color: var(--bsl-gris); }
+
+.card { border: 1px solid var(--bsl-filet); border-radius: 2px; box-shadow: none; }
+.card.border-0 { border: 1px solid var(--bsl-filet) !important; }
+.card.shadow-sm, .card.shadow-lg { box-shadow: none !important; }
+.card-header.bg-white { background: var(--bsl-pierre) !important; border-bottom: 1px solid var(--bsl-filet); }
+
+.card-indicateur .valeur { font-size: 1.45rem; font-weight: 700; color: var(--bsl-olive-fonce); font-family: var(--bsl-serif); }
+.card-indicateur .libelle { font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--bsl-gris); }
+
+.btn-primary { background: var(--bsl-olive); border-color: var(--bsl-olive); }
+.btn-primary:hover, .btn-primary:focus { background: var(--bsl-olive-fonce); border-color: var(--bsl-olive-fonce); }
+.btn-outline-primary { color: var(--bsl-olive); border-color: var(--bsl-olive); }
+.btn-outline-primary:hover { background: var(--bsl-olive); border-color: var(--bsl-olive); }
+a { color: var(--bsl-olive-fonce); }
+.text-primary { color: var(--bsl-olive) !important; }
+
+.table { --bs-table-striped-bg: var(--bsl-pierre-claire); }
+.table thead th, .table-sm th { background: var(--bsl-pierre); border-bottom: 1px solid var(--bsl-filet); font-size: .82rem; }
+.table td, .table th { border-color: var(--bsl-filet); vertical-align: middle; }
+.montant, td.montant { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+.badge-module-actif { background: var(--bsl-olive); }
+.badge-module-maintenance { background: #8a5a44; }
+.badge.text-bg-secondary { background: var(--bsl-gris) !important; }
+.badge-a-definir { background: var(--bsl-pierre); color: #8a5a44; border: 1px solid var(--bsl-filet); }
+
+.form-control:focus, .form-select:focus { border-color: var(--bsl-olive); box-shadow: 0 0 0 .2rem rgba(76,90,71,.15); }
+.alert-info { background: var(--bsl-pierre-claire); border-color: var(--bsl-filet); color: var(--bsl-ink); }
+
+.signature-pad-box { border: 1px dashed var(--bsl-filet); background: #fff; border-radius: 2px; }
+.code-verification { font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing: .12em; font-size: 1.2rem; color: var(--bsl-olive-fonce); }
