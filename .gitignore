@@ -62,6 +62,7 @@ api/clear-*.php
 !/bousol/storage/*/
 /bousol/storage/*/*
 !/bousol/storage/**/.gitkeep
+!/bousol/storage/.htaccess
 /bousol/lib/mpdf/*
 !/bousol/lib/.gitkeep
 

@@ -1,0 +1,9 @@
+# Aucun acces direct au stockage : tout passe par bousol/pdf/serve.php,
+# qui verifie les droits et dechiffre le coffre si besoin.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>
