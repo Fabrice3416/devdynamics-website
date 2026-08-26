@@ -85,12 +85,32 @@ cd ~/public_html && git pull origin main
 
 ## 4. Configuration (jamais committée)
 
+Le fichier vit **hors de la racine web**, un cran au-dessus de `public_html`, comme l'exige
+le cahier des charges (§ 7.4). Aucune URL ne peut l'atteindre, et les remises à plat de
+permissions que pratiquent les hébergements mutualisés (retour périodique à 644) n'ont alors
+plus d'incidence. Bousòl le cherche dans cet ordre : la variable d'environnement
+`BOUSOL_CONFIG`, puis `../bousol-config.php` au-dessus de la racine web, puis
+`bousol/includes/config.php` par compatibilité.
+
+Depuis `public_html` :
+
 ```bash
-cp bousol/includes/config.example.php bousol/includes/config.php
-php -r 'echo bin2hex(random_bytes(32)), PHP_EOL;'   # valeur de coffre_key_hex
-nano bousol/includes/config.php                       # db.*, coffre_key_hex
-chmod 600 bousol/includes/config.php
-chmod -R 750 bousol/storage
+cp bousol/includes/config.example.php ../bousol-config.php
+```
+
+```bash
+php -r '$f="../bousol-config.php"; $s=file_get_contents($f); file_put_contents($f, str_replace("REMPLACER_PAR_64_CARACTERES_HEX", bin2hex(random_bytes(32)), $s)); echo "clé du coffre insérée\n";'
+```
+
+La clé n'est jamais affichée : elle passe directement dans le fichier, sans transiter par
+l'écran ni par l'historique du shell.
+
+```bash
+nano ../bousol-config.php          # renseigner db.pass
+```
+
+```bash
+chmod 600 ../bousol-config.php && chmod -R 750 bousol/storage
 ```
 
 La clé du coffre doit être conservée hors du serveur (gestionnaire de mots de passe de la direction) :

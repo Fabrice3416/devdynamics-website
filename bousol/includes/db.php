@@ -40,14 +40,53 @@ function db(): PDO
     return Db::getInstance();
 }
 
+/**
+ * Emplacement du fichier de configuration, par ordre de preference.
+ *
+ * Le cahier des charges (7.4) le veut hors depot ET hors racine web : sous la racine,
+ * il ne serait protege que par le .htaccess, et un hebergement mutualise reinitialise
+ * periodiquement les permissions des fichiers servis. Place un cran au-dessus de
+ * public_html, il n'est atteignable par aucune URL, quelles que soient ses permissions.
+ */
+function config_path(): ?string
+{
+    static $trouve = false;
+    static $chemin = null;
+    if ($trouve) {
+        return $chemin;
+    }
+    $trouve = true;
+    $candidats = [];
+    if ($env = getenv('BOUSOL_CONFIG')) {
+        $candidats[] = $env;
+    }
+    $candidats[] = dirname(root_dir(), 2) . '/bousol-config.php';  // hors racine web
+    $candidats[] = __DIR__ . '/config.php';                        // repli historique
+    foreach ($candidats as $c) {
+        if (is_file($c) && is_readable($c)) {
+            $chemin = $c;
+            return $chemin;
+        }
+    }
+    return null;
+}
+
+/** Le fichier de configuration est-il hors de la racine web ? */
+function config_hors_racine_web(): bool
+{
+    $c = config_path();
+    return $c !== null && !str_starts_with(realpath($c) ?: $c, realpath(root_dir()) ?: root_dir());
+}
+
 function config(): array
 {
     static $cfg = null;
     if ($cfg === null) {
-        $file = __DIR__ . '/config.php';
-        if (!is_file($file)) {
+        $file = config_path();
+        if ($file === null) {
             http_response_code(500);
-            exit('Configuration manquante : bousol/includes/config.php (copier depuis config.example.php)');
+            exit('Configuration manquante : copier includes/config.example.php vers '
+               . dirname(root_dir(), 2) . '/bousol-config.php');
         }
         $cfg = require $file;
         date_default_timezone_set($cfg['app']['timezone'] ?? 'America/Port-au-Prince');

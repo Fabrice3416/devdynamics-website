@@ -79,6 +79,10 @@ remplissages pierre `#EFEDE8` / `#FAF8F3`, filets `#C9C4BA`. Les formulaires de 
 
 ## Sécurité (socle)
 
+Le fichier de configuration (mot de passe de la base, clé du coffre) vit hors de la racine web,
+en `../bousol-config.php` au-dessus de `public_html` : aucune URL ne l'atteint, et une remise à
+plat des permissions par l'hébergeur reste sans conséquence.
+
 HTTPS forcé, session dédiée `BOUSOL_SID` (60 min, `regenerate_id`), CSRF sur tout POST,
 rate limiting login (5 / 5 min / IP), bcrypt coût 12, PDO sans émulation, uploads vérifiés
 (extension + MIME réel + renommage aléatoire), `storage/` interdit (accès via `pdf/serve.php`),

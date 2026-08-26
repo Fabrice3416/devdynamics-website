@@ -37,19 +37,30 @@ verifier('Environnement', $archive ? 'ok' : 'erreur', 'Création d\'archives',
     $archive ? 'via ' . $archive : 'ni zip ni phar : l\'export de sauvegarde est impossible');
 
 // ---------------------------------------------------------------- Configuration
-$configFile = __DIR__ . '/includes/config.php';
-if (!is_file($configFile)) {
-    verifier('Configuration', 'erreur', 'Fichier includes/config.php', 'absent : le copier depuis config.example.php');
-    rendre($resultats, $cli);
-}
-verifier('Configuration', 'ok', 'Fichier includes/config.php', 'présent');
-
-$perms = substr(sprintf('%o', fileperms($configFile)), -3);
-verifier('Configuration', $perms === '600' ? 'ok' : 'avertissement', 'Permissions de config.php',
-    $perms === '600' ? '600' : $perms . ' — viser 600 (chmod 600), le fichier contient le mot de passe de la base et la clé du coffre');
-
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/functions.php';
+
+$configFile = config_path();
+if ($configFile === null) {
+    verifier('Configuration', 'erreur', 'Fichier de configuration',
+        'absent : copier includes/config.example.php vers ' . dirname(root_dir(), 2) . '/bousol-config.php');
+    rendre($resultats, $cli);
+}
+$horsRacine = config_hors_racine_web();
+verifier('Configuration', $horsRacine ? 'ok' : 'avertissement', 'Emplacement du fichier de configuration',
+    $horsRacine
+        ? 'hors de la racine web, inatteignable par URL'
+        : 'sous la racine web (' . str_replace(dirname(root_dir()) . '/', '', $configFile) . ') : le déplacer dans '
+          . dirname(root_dir(), 2) . '/bousol-config.php, où ses permissions n\'ont plus d\'incidence');
+
+$perms = substr(sprintf('%o', fileperms($configFile)), -3);
+$permsOk = $perms === '600' || ($horsRacine && in_array($perms, ['600', '640', '644'], true));
+verifier('Configuration', $permsOk ? 'ok' : 'avertissement', 'Permissions du fichier de configuration',
+    $perms . ($perms === '600'
+        ? ''
+        : ($horsRacine
+            ? ' — acceptable hors racine web, 600 reste préférable'
+            : ' — viser 600 : le fichier contient le mot de passe de la base et la clé du coffre')));
 
 $cfg = config();
 verifier('Configuration', ($cfg['app']['env'] ?? '') === 'production' ? 'ok' : 'avertissement', 'Environnement déclaré',
