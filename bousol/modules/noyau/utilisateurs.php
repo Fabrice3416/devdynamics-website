@@ -97,6 +97,8 @@ $users = db()->query(
 $nbMandataires = (int)db()->query('SELECT COUNT(*) FROM tiers t JOIN utilisateurs u ON u.tiers_id = t.id WHERE t.est_mandataire = 1 AND u.actif = 1')->fetchColumn();
 
 page_start('Personnes et accès', 'administration');
+$ongletOutil = 'utilisateurs';
+require __DIR__ . '/_nav_outil.php';
 ?>
 <div class="mb-4">
     <h1 class="h4 mb-1">Personnes et accès</h1>

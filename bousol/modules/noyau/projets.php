@@ -133,7 +133,9 @@ $affectations = db()->query(
        JOIN projets p ON p.id = a.projet_id ORDER BY p.code, t.nom'
 )->fetchAll();
 
-page_start('Administration de l\'outil', 'administration');
+page_start('Projets et affectations', 'administration');
+$ongletOutil = 'projets';
+require __DIR__ . '/_nav_outil.php';
 ?>
 <div class="mb-4">
     <h1 class="h4 mb-1">Administration de l'outil</h1>
@@ -247,7 +249,13 @@ page_start('Administration de l\'outil', 'administration');
                     <div class="mb-2"><label class="form-label">Personne</label>
                         <select name="utilisateur_id" class="form-select" required>
                             <?php foreach ($utilisateurs as $u): ?><option value="<?= (int)$u['id'] ?>"><?= e($u['nom']) ?> — <?= e($u['email']) ?></option><?php endforeach; ?>
-                        </select></div>
+                        </select>
+                        <div class="form-text">
+                            La personne n'est pas dans la liste ?
+                            <a href="<?= e(base_path('modules/noyau/utilisateurs.php')) ?>">Créer son accès</a>,
+                            puis revenir l'affecter.
+                        </div>
+                    </div>
                     <div class="mb-2"><label class="form-label">Rôle</label>
                         <select name="role" class="form-select">
                             <?php foreach (ROLES_LIBELLES as $k => $l): ?><option value="<?= e($k) ?>"><?= e($l) ?></option><?php endforeach; ?>
