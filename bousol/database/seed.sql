@@ -8,8 +8,8 @@ SET NAMES utf8mb4;
 INSERT INTO module_etats (module, libelle, version, critique) VALUES
 ('noyau',        'Noyau',        '1.0.0', 1),
 ('signature',    'Signature',    '1.0.0', 0),
-('tiers',        'Tiers',        '0.1.0', 0),
-('budget',       'Budget',       '0.1.0', 1),
+('tiers',        'Tiers',        '1.0.0', 0),
+('budget',       'Budget',       '1.0.0', 1),
 ('comptes',      'Comptes',      '0.1.0', 0),
 ('activites',    'Activités',    '0.1.0', 0),
 ('depenses',     'Dépenses',     '0.1.0', 0),
@@ -103,7 +103,15 @@ INSERT INTO parametres (projet_id, cle, valeur, date_effet, motif, auteur_id) VA
 (2, 'granularite_variation', 'ligne', '2026-01-01', 'Lecture la plus restrictive : 25 % entre lignes', 1),
 (2, 'regime_provision', 'ligne_mixte', '2026-01-01', 'Imputable pour les seuls frais bancaires', 1),
 (2, 'exemplaires_mention', 'Organisation|FOKAL|Union européenne', '2026-01-01', 'Un organisation, deux FOKAL dont un UE', 1),
-(2, 'avances_honoraires', '1', '2026-01-01', 'Autorisees pour les remunerations non recurrentes', 1);
+(2, 'avances_honoraires', '1', '2026-01-01', 'Autorisees pour les remunerations non recurrentes', 1),
+-- Quelle ligne porte la provision et quelle ligne porte les couts indirects : sans cela,
+-- sommer les lignes 7 a 11 de l'annexe A compterait trois fois le meme argent, et le
+-- controle du plafond contractuel (CDC 2.3) serait faux. Le code differe d'un bailleur
+-- a l'autre, c'est donc un parametre du projet et non une constante de l'outil.
+(1, 'ligne_provision_code', '10', '2026-01-01', 'Annexe A, provision pour imprevus', 1),
+(1, 'ligne_couts_indirects_code', '8', '2026-01-01', 'Annexe A, couts indirects 7 %', 1),
+(2, 'ligne_provision_code', '5.1', '2026-01-01', 'Ligne mixte imprevus et frais bancaires', 1),
+(2, 'ligne_couts_indirects_code', '6', '2026-01-01', 'Frais administratifs, 7 % des couts directs', 1);
 
 -- 7. Nomenclature budgetaire de KesKle (annexe A) - 31 lignes, budget contractuel fige
 INSERT INTO lignes_budgetaires (projet_id, code, parent_code, rubrique, niveau, nature, libelle, unite, quantite, valeur_unitaire, montant, ordre) VALUES

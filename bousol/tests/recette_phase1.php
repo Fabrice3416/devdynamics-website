@@ -11,14 +11,13 @@ declare(strict_types=1);
  * Chaque cas "doit echouer" est verifie comme tel. Sortie 1 au premier ecart.
  */
 
-if (PHP_SAPI !== 'cli') {
-    exit("CLI seulement\n");
-}
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/calendrier.php';
 require_once __DIR__ . '/../includes/signature.php';
 require_once __DIR__ . '/../pdf/generate.php';
+require_once __DIR__ . '/_garde.php';
 
+recette_garde('Recette de la phase 1 - socle, Noyau, Signature, cloisonnement');
 $pdo = db();
 $ok = 0; $ko = 0;
 

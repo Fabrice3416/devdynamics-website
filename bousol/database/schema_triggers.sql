@@ -19,6 +19,8 @@ DROP TRIGGER IF EXISTS trg_appositions_no_update;
 DROP TRIGGER IF EXISTS trg_appositions_no_delete;
 DROP TRIGGER IF EXISTS trg_fichiers_no_delete;
 DROP TRIGGER IF EXISTS trg_imputations_ligne;
+DROP TRIGGER IF EXISTS trg_tiers_nif_insert;
+DROP TRIGGER IF EXISTS trg_tiers_nif_update;
 
 DELIMITER $$
 CREATE TRIGGER trg_audit_no_update BEFORE UPDATE ON journal_audit
@@ -64,6 +66,26 @@ FOR EACH ROW BEGIN
   -- Cloisonnement : une depense ne s'impute jamais sur la ligne d'un autre projet.
   IF p <> NEW.projet_id THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ligne budgetaire appartenant a un autre projet';
+  END IF;
+END$$
+-- Le NIF est unique dans le referentiel (CDC 8.2) : un meme tiers saisi deux fois
+-- casserait la detection des doublons comme l'etat recapitulatif des acomptes.
+-- Le NIF reste facultatif, un fournisseur de detail n'en ayant pas toujours ;
+-- l'unicite ne porte donc que sur les valeurs renseignees.
+CREATE TRIGGER trg_tiers_nif_insert BEFORE INSERT ON tiers
+FOR EACH ROW BEGIN
+  IF NEW.nif IS NOT NULL AND NEW.nif <> '' THEN
+    IF EXISTS (SELECT 1 FROM tiers WHERE nif = NEW.nif) THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'NIF deja enregistre dans le referentiel des tiers';
+    END IF;
+  END IF;
+END$$
+CREATE TRIGGER trg_tiers_nif_update BEFORE UPDATE ON tiers
+FOR EACH ROW BEGIN
+  IF NEW.nif IS NOT NULL AND NEW.nif <> '' AND NOT (NEW.nif <=> OLD.nif) THEN
+    IF EXISTS (SELECT 1 FROM tiers WHERE nif = NEW.nif AND id <> NEW.id) THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'NIF deja enregistre dans le referentiel des tiers';
+    END IF;
   END IF;
 END$$
 DELIMITER ;

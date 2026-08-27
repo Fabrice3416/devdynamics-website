@@ -45,6 +45,34 @@ const QUALITES_SIGNATURE = [
 
 const UNITES = ['mois' => 'mois', 'jour' => 'jour', 'unite' => 'unité', 'personne' => 'personne', 'forfait' => 'forfait'];
 
+/** Les quatre qualites que couvre la table unique des tiers (CDC 8.2). */
+const TYPES_TIERS = [
+    'personne'       => 'Personne',
+    'fournisseur'    => 'Fournisseur',
+    'organisation'   => 'Organisation',
+    'administration' => 'Administration',
+];
+
+/** Avancement d'une organisation beneficiaire, de son identification a son suivi. */
+const STATUTS_AVANCEMENT = [
+    'identifiee' => 'Identifiée', 'confirmee' => 'Confirmée', 'formee' => 'Formée',
+    'equipee'    => 'Équipée',    'active'    => 'Active',    'inactive' => 'Inactive',
+];
+
+/** Le modele de rapport d'activites exige les beneficiaires ventiles par sexe et par jeunesse (CDC 3.2). */
+const SEXES = ['F' => 'Féminin', 'M' => 'Masculin', 'autre' => 'Autre'];
+const TRANCHES_AGE = [
+    'moins_18' => 'Moins de 18 ans', '18_24' => '18 à 24 ans', '25_35' => '25 à 35 ans',
+    '36_50'    => '36 à 50 ans',     'plus_50' => 'Plus de 50 ans',
+];
+
+/** Le contrat couvre aussi la convention d'un partenaire non remunere (CDC 3.4). */
+const TYPES_CONTRAT = [
+    'service'               => 'Contrat de service',
+    'travail'               => 'Contrat de travail',
+    'convention_partenariat' => 'Convention de partenariat',
+];
+
 /**
  * Annexe D - listes de pieces par type de dossier.
  * moment : 'avant' = exigee avant le reglement ; 'apres' = attendue apres.
@@ -206,6 +234,8 @@ const PARAMETRES_REGISTRE = [
     'seuil_blocage_variation_pct'   => ['Seuil de blocage de variation (%)',          'int',     null, false],
     'granularite_variation'         => ['Granularité du contrôle de variation',       'choix',   ['rubrique' => 'Rubrique principale', 'ligne' => 'Ligne budgétaire'], true],
     'regime_provision'              => ['Régime de la provision pour imprévus',       'choix',   ['ligne_dediee' => 'Ligne dédiée, mobilisable', 'ligne_mixte' => 'Ligne mixte, frais bancaires seuls', 'aucune' => 'Aucune provision'], true],
+    'ligne_provision_code'          => ['Code de la ligne portant la provision',      'texte',   null, true],
+    'ligne_couts_indirects_code'    => ['Code de la ligne des coûts indirects',       'texte',   null, true],
     'taux_acompte_defaut_pct'       => ['Taux d\'acompte par défaut (%)',             'decimal', null, true],
     'avances_honoraires'            => ['Avances sur honoraires',                     'choix',   ['0' => 'Interdites', '1' => 'Autorisées, rémunérations non récurrentes'], true],
     'mode_reglement_defaut'         => ['Mode de règlement par défaut',               'choix',   ['virement' => 'Virement', 'cheque' => 'Chèque'], true],
@@ -239,6 +269,8 @@ const PARAMETRES_INITIAUX = [
     'seuil_blocage_variation_pct'   => '25',
     'granularite_variation'         => 'rubrique',
     'regime_provision'              => 'ligne_dediee',
+    'ligne_provision_code'          => null,
+    'ligne_couts_indirects_code'    => null,
     'taux_acompte_defaut_pct'       => '2',
     'avances_honoraires'            => '0',
     'mode_reglement_defaut'         => 'virement',

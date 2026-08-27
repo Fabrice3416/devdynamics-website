@@ -339,6 +339,8 @@ function integrite_triggers(): array
         'trg_appositions_no_delete' => 'Apposition de signature non supprimable',
         'trg_fichiers_no_delete'    => 'Fichier remplacé, jamais supprimé',
         'trg_imputations_ligne'     => 'Imputation refusée sur une ligne non imputable',
+        'trg_tiers_nif_insert'      => 'NIF unique dans le référentiel des tiers',
+        'trg_tiers_nif_update'      => 'NIF unique dans le référentiel des tiers (modification)',
     ];
     try {
         $presents = db()->query(

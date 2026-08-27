@@ -1,0 +1,205 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * Recette de la phase 2 : modules Tiers et Budget.
+ * Reprend les cas de l'annexe G qui relevent de ces deux modules, plus les cas
+ * "qui doivent reussir" correspondants - un outil qui refuserait tout passerait
+ * autrement la recette integralement.
+ *
+ * Usage (CLI, sur une base de TEST chargee avec schema.sql, schema_triggers.sql
+ * et seed.sql) :
+ *   php bousol/tests/recette_phase2.php
+ *
+ * La base est laissee dans l'etat ou la recette l'a mise : elle n'est pas
+ * rejouable sur la meme base sans rechargement du seed.
+ */
+
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/budget.php';
+require_once __DIR__ . '/_garde.php';
+
+recette_garde('Recette de la phase 2 - Tiers et Budget');
+$pdo = db();
+$ok = 0; $ko = 0;
+
+function cas(string $lib, bool $reussi, string $detail = ''): void
+{
+    global $ok, $ko;
+    $reussi ? $ok++ : $ko++;
+    echo ($reussi ? '  OK  ' : ' ECHEC') . ' ' . $lib . ($detail !== '' ? '  [' . mb_substr($detail, 0, 95) . ']' : '') . PHP_EOL;
+}
+
+function doit_echouer(string $lib, callable $f): void
+{
+    try {
+        $f();
+        cas($lib, false, 'aucune erreur levee');
+    } catch (Throwable $e) {
+        cas($lib, true, $e->getMessage());
+    }
+}
+
+/** Un refus attendu, exprime par sa regle : budget_controle_* rend une liste. */
+function refuse(array $refus, string $regle): bool
+{
+    foreach ($refus as $r) {
+        if (($r['regle'] ?? '') === $regle) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function messages(array $refus): string
+{
+    return implode(' | ', array_column($refus, 'message'));
+}
+
+// Session simulee : coordinateur de KesKle.
+$_SESSION['user_id'] = 1; $_SESSION['user_nom'] = 'Recette'; $_SESSION['tiers_id'] = 1;
+$_SESSION['admin_outil'] = true; $_SESSION['projet_id'] = 1;
+$_SESSION['projet_code'] = 'KESKLE'; $_SESSION['role_projet'] = 'coordinateur';
+param_oublier();
+
+echo "== Tiers : unicite du NIF\n";
+$pdo->exec("INSERT INTO tiers (type, nom, nif) VALUES ('fournisseur', 'Fournisseur Recette', '001-234-567-8')");
+$tiersA = (int)$pdo->lastInsertId();
+cas('Creer un tiers avec un NIF neuf', $tiersA > 0);
+doit_echouer('Creer un second tiers portant un NIF deja enregistre', function () use ($pdo) {
+    $pdo->exec("INSERT INTO tiers (type, nom, nif) VALUES ('fournisseur', 'Doublon Recette', '001-234-567-8')");
+});
+$pdo->exec("INSERT INTO tiers (type, nom) VALUES ('fournisseur', 'Sans NIF 1')");
+$sansNif = (int)$pdo->lastInsertId();
+doit_echouer('Donner a un tiers existant un NIF deja pris', function () use ($pdo, $sansNif) {
+    $pdo->exec("UPDATE tiers SET nif = '001-234-567-8' WHERE id = $sansNif");
+});
+$avant = (int)$pdo->query("SELECT COUNT(*) FROM tiers WHERE nif IS NULL")->fetchColumn();
+$pdo->exec("INSERT INTO tiers (type, nom) VALUES ('fournisseur', 'Sans NIF 2')");
+$apres = (int)$pdo->query("SELECT COUNT(*) FROM tiers WHERE nif IS NULL")->fetchColumn();
+cas('Plusieurs tiers sans NIF cohabitent', $apres === $avant + 1);
+
+echo "\n== Budget : arithmetique de la nomenclature\n";
+cas('Couts directs contractuels de KesKle', abs(budget_couts_directs_contractuels(1) - 4984325.00) < 0.01,
+    (string)budget_couts_directs_contractuels(1));
+cas('Total contractuel de KesKle (lignes + indirects + provision)',
+    abs(budget_total_contractuel(1) - 5599889.14) < 0.01, (string)budget_total_contractuel(1));
+cas('Total sous le plafond contractuel', budget_total_contractuel(1) <= (float)plafond_contractuel(),
+    'plafond ' . plafond_contractuel());
+cas('Taux des couts indirects deduit du contrat', abs(budget_taux_indirect(1) - 0.07) < 0.0001,
+    (string)budget_taux_indirect(1));
+cas('Part des ressources humaines a 24,29 %', abs((float)budget_part_rh(1) - 24.29) < 0.01,
+    (string)budget_part_rh(1));
+cas('Detail de KesKle complet, detail de Koule Ki Pale a saisir',
+    budget_detail_manquant(1) === [] && budget_detail_manquant(2) !== [],
+    count(budget_detail_manquant(2)) . ' rubrique(s) KKP non ventilees');
+
+echo "\n== Budget : controles a l'imputation\n";
+$l11 = budget_ligne('1.1');          // Coordonnateur, 8 mois x 120 000
+$l22 = budget_ligne('2.2');          // Compte Google Play, forfait 3 325
+$l10 = budget_ligne('10');           // Provision pour imprevus
+
+// Huit mois deja consommes, pour pouvoir refuser le neuvieme.
+$pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC2-0001', 'honoraires', 1, 'recette', 1)");
+$d1 = (int)$pdo->lastInsertId();
+$pdo->prepare("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
+               VALUES (1, ?, ?, 'mois', 8, 120000, 960000, CURDATE())")->execute([$d1, (int)$l11['id']]);
+
+$r = budget_controle_imputation((int)$l11['id'], 120000.0, 1.0);
+cas('Imputer un neuvieme mois sur une ligne budgetee a huit mois est refuse',
+    refuse($r, 'quantite') || refuse($r, 'montant'), messages($r));
+$r = budget_controle_imputation((int)$l11['id'], 0.0, 1.0, true);
+cas('La derogation du Coordinateur leve le seul controle de quantite',
+    !refuse($r, 'quantite'), messages($r));
+
+$r = budget_controle_imputation((int)$l10['id'], 1000.0, 1.0);
+cas('Imputer directement sur la provision pour imprevus est refuse',
+    refuse($r, 'provision') || refuse($r, 'nature'), messages($r));
+
+// Ligne au forfait : un reglement en deux temps, avance puis solde, doit passer.
+$pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC2-0002', 'achat_service', 1, 'recette forfait', 1)");
+$d2 = (int)$pdo->lastInsertId();
+$pdo->prepare("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
+               VALUES (1, ?, ?, 'forfait', 1, 2000, 2000, CURDATE())")->execute([$d2, (int)$l22['id']]);
+$r = budget_controle_imputation((int)$l22['id'], 1325.0, 1.0);
+cas('Second versement sur une ligne au forfait dont l\'enveloppe reste disponible : accepte',
+    $r === [], messages($r));
+$r = budget_controle_imputation((int)$l22['id'], 5000.0, 1.0);
+cas('Depassement en montant sur la meme ligne au forfait : refuse',
+    refuse($r, 'montant'), messages($r));
+
+echo "\n== Budget : controles a la reallocation\n";
+// Plancher : 960 000 sont consommes sur 1.1
+$r = budget_controle_reallocation(['1.1' => -100000.0, '1.2' => 100000.0]);
+cas('Reallouer une ligne en dessous de son montant deja consomme est refuse',
+    refuse($r['refus'], 'plancher'), messages($r['refus']));
+
+// Variation : la rubrique 2 pese 83 325 ; +30 000 font +36 %, au-dela du blocage a 25 %.
+$r = budget_controle_reallocation(['2.1' => 30000.0, '1.2' => -30000.0]);
+cas('Reallouer au-dela de 25 % sans autorisation televersee est refuse',
+    refuse($r['refus'], 'variation'), messages($r['refus']));
+$r = budget_controle_reallocation(['2.1' => 30000.0, '1.2' => -30000.0], [], ['variation' => 1]);
+cas('Le meme mouvement passe avec l\'autorisation televersee',
+    !refuse($r['refus'], 'variation'), messages($r['refus']));
+
+// Plafond : le budget de gestion est deja a 5 599 889,14 pour un plafond de 5 600 000.
+$r = budget_controle_reallocation(['3.3' => 5000.0]);
+cas('Reallouer au-dela du plafond contractuel du projet est refuse',
+    refuse($r['refus'], 'plafond'), messages($r['refus']));
+$r = budget_controle_reallocation(['3.3' => 100.0]);
+cas('Une hausse qui reste sous le plafond passe',
+    !refuse($r['refus'], 'plafond'), messages($r['refus']));
+
+// Provision : mobilisation vers une ligne de la rubrique 3 (334 000).
+$r = budget_controle_reallocation(['10' => -50000.0, '3.1' => 50000.0]);
+cas('Mobiliser la provision sans autorisation est refuse',
+    refuse($r['refus'], 'provision'), messages($r['refus']));
+$r = budget_controle_reallocation(['10' => -50000.0, '3.1' => 50000.0], [], ['provision' => 1]);
+cas('Mobilisation sous le seuil de variation : la seule autorisation de mobilisation suffit',
+    $r['refus'] === [], messages($r['refus']));
+
+// Au-dela du seuil : +120 000 sur la rubrique 3 font +35,9 %, blocage a 25 %.
+$r = budget_controle_reallocation(['10' => -120000.0, '3.1' => 120000.0], [], ['provision' => 1]);
+cas('Mobiliser la provision au-dela du seuil de variation avec une seule autorisation est refuse',
+    refuse($r['refus'], 'variation'), messages($r['refus']));
+$r = budget_controle_reallocation(['10' => -120000.0, '3.1' => 120000.0], [], ['provision' => 1, 'variation' => 2]);
+cas('Les deux autorisations separees debloquent la mobilisation',
+    $r['refus'] === [], messages($r['refus']));
+
+echo "\n== Budget : une reallocation qui aboutit\n";
+$avant = budget_ligne('3.1');
+budget_appliquer_reallocation(['3.2' => -20000.0, '3.1' => 20000.0], [], 'Recette phase 2');
+$apres = budget_ligne('3.1');
+cas('Le budget de gestion a bouge',
+    abs((float)$apres['montant_gestion'] - (float)$avant['montant_gestion'] - 20000.0) < 0.01,
+    $avant['montant_gestion'] . ' -> ' . $apres['montant_gestion']);
+cas('Le budget contractuel n\'a pas bouge', (float)$apres['montant'] === (float)$avant['montant']);
+cas('Le total du budget de gestion est inchange', abs(budget_total_gestion(1) - 5599889.14) < 0.01,
+    (string)budget_total_gestion(1));
+$trace = (int)$pdo->query("SELECT COUNT(*) FROM journal_audit WHERE module = 'budget' AND action = 'budget_realloue'")->fetchColumn();
+cas('La reallocation a laisse sa trace au journal d\'audit', $trace > 0, $trace . ' entree(s)');
+
+echo "\n== Budget : couts indirects recalcules\n";
+$ind = budget_couts_indirects_constates(1);
+cas('Sept pour cent des couts directs constates',
+    abs($ind['enveloppe'] - round($ind['directs_constates'] * 0.07, 2)) < 0.01,
+    $ind['directs_constates'] . ' x 7 % = ' . $ind['enveloppe']);
+cas('La provision et les couts indirects sont hors assiette',
+    $ind['directs_constates'] > 0 && $ind['directs_constates'] <= 4984325.00,
+    (string)$ind['directs_constates']);
+
+echo "\n== Cloisonnement\n";
+$_SESSION['projet_id'] = 2; $_SESSION['projet_code'] = 'KKP'; param_oublier();
+cas('Koule Ki Pale mesure la variation entre lignes, pas entre rubriques',
+    param('granularite_variation') === 'ligne', (string)param('granularite_variation'));
+cas('Sa provision est la ligne mixte 5.1, imputable',
+    (budget_ligne_provision()['code'] ?? '') === '5.1' && (budget_ligne_provision()['nature'] ?? '') === 'imputable');
+$r = budget_controle_imputation((int)budget_ligne_provision()['id'], 1000.0, 1.0);
+cas('Sur une ligne mixte, les frais bancaires s\'imputent sans autorisation',
+    !refuse($r, 'provision'), messages($r));
+$ligneKeskle = budget_ligne('1.1', 1);
+$r = budget_controle_imputation((int)$ligneKeskle['id'], 1000.0, 1.0);
+cas('Imputer sur la ligne d\'un autre projet est refuse', refuse($r, 'cloisonnement'), messages($r));
+
+echo "\n$ok OK, $ko ECHEC\n";
+exit($ko > 0 ? 1 : 0);

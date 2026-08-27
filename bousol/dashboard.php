@@ -23,6 +23,8 @@ $aDefinir = [];
 foreach (['plafond_contractuel' => 'Plafond contractuel du projet', 'plafond_petite_caisse' => 'Plafond de la petite caisse',
           'plafond_depense_especes' => 'Plafond de dépense en espèces', 'seuil_proformas' => 'Seuil déclenchant trois proformas',
           'delai_alerte_sauvegarde_jours' => 'Délai d\'alerte d\'absence de sauvegarde',
+          'ligne_provision_code' => 'Ligne portant la provision pour imprévus',
+          'ligne_couts_indirects_code' => 'Ligne des coûts indirects',
           'representant_legal' => 'Représentant légal'] as $k => $lib) {
     if (param($k) === null) {
         $aDefinir[] = $lib;

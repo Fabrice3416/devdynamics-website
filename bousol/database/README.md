@@ -1,6 +1,6 @@
 # Base de donnees Bousol
 
-52 tables sur 10 modules (CDC version 2.0, section 8 et annexe C), 8 triggers.
+52 tables sur 10 modules (CDC version 2.0, section 8 et annexe C), 10 triggers.
 
 Le projet est une dimension de toute donnée d'exécution : les tables d'exécution portent un `projet_id`
 obligatoire. Restent partagés le socle (fichiers, documents, appositions, spécimens, journal
@@ -22,7 +22,7 @@ Verifications :
 
 ```sql
 SELECT COUNT(*) FROM information_schema.tables   WHERE table_schema = DATABASE();  -- 52
-SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = DATABASE(); -- 8
+SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = DATABASE(); -- 10
 SELECT COUNT(*) FROM lignes_budgetaires;                                            -- 31
 SELECT montant FROM lignes_budgetaires WHERE code = '11';                           -- 5599889.14
 ```
@@ -36,6 +36,7 @@ SELECT montant FROM lignes_budgetaires WHERE code = '11';                       
 | Apposition immuable (1.8) | Triggers SIGNAL |
 | Fichier jamais supprime (5.3) | Trigger SIGNAL sur DELETE, colonne `remplace_id` |
 | Provision non imputable (2.3) | Trigger `trg_imputations_ligne` : seules les lignes `imputable` acceptent une imputation |
+| NIF unique au referentiel (8.2) | Triggers `trg_tiers_nif_insert` / `trg_tiers_nif_update` |
 | Un dossier = une ligne (4.1) | `imputations.dossier_id` UNIQUE |
 | Un reglement = une ecriture (8.3) | `ecritures.reglement_id` UNIQUE |
 | Frontieres de modules (7.2) | Cles etrangeres uniquement vers Noyau, Tiers, Budget ; sinon colonnes `*_ref` en valeur |

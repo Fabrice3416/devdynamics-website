@@ -22,6 +22,8 @@ DROP TRIGGER IF EXISTS trg_appositions_no_update;
 DROP TRIGGER IF EXISTS trg_appositions_no_delete;
 DROP TRIGGER IF EXISTS trg_fichiers_no_delete;
 DROP TRIGGER IF EXISTS trg_imputations_ligne;
+DROP TRIGGER IF EXISTS trg_tiers_nif_insert;
+DROP TRIGGER IF EXISTS trg_tiers_nif_update;
 
 DROP TABLE IF EXISTS activites;
 DROP TABLE IF EXISTS affectations;
