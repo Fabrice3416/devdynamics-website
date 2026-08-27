@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../includes/layout.php';
 require_once __DIR__ . '/../../includes/signature.php';
-require_login();
+require_projet();
 require_module('signature');
 
 $verif = null; $codeSaisi = trim((string)($_GET['code'] ?? ''));

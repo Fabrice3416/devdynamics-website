@@ -14,6 +14,7 @@ function page_start(string $titre, string $menuActif = ''): void
 {
     $phase = phase_code();
     $moisCourant = mois_projet();
+    $projets = projets_accessibles();
     ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -31,13 +32,31 @@ function page_start(string $titre, string $menuActif = ''): void
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="<?= e(base_path('dashboard.php')) ?>">
             <i class="bi bi-compass"></i> Bousòl
-            <small class="fw-normal opacity-75 ms-2">KèsKlè</small>
         </a>
+        <?php if (projet_id() !== null): ?>
+        <div class="dropdown me-lg-3">
+            <button class="btn btn-sm bousol-projet dropdown-toggle" data-bs-toggle="dropdown" title="Projet courant">
+                <?= e(projet_code()) ?> · <?= e(projet_intitule()) ?>
+            </button>
+            <ul class="dropdown-menu">
+                <li><h6 class="dropdown-header">Changer de projet</h6></li>
+                <?php foreach ($projets as $pr): ?>
+                <li><a class="dropdown-item <?= (int)$pr['id'] === projet_id() ? 'active' : '' ?>"
+                       href="<?= e(base_path('projets.php?id=' . (int)$pr['id'])) ?>">
+                    <?= e($pr['code']) ?> — <?= e($pr['intitule']) ?>
+                    <?php if (!empty($pr['role'])): ?><small class="opacity-75">· <?= e(ROLES_LIBELLES[$pr['role']] ?? $pr['role']) ?></small><?php endif; ?>
+                </a></li>
+                <?php endforeach; ?>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="<?= e(base_path('projets.php')) ?>">Tous les projets</a></li>
+            </ul>
+        </div>
+        <?php endif; ?>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain"><span class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse" id="navMain">
             <ul class="navbar-nav me-auto">
                 <?php
-                $menus = [
+                $menus = projet_id() === null ? [] : [
                     'dashboard'    => ['Tableau de bord', 'dashboard.php', 'bi-speedometer2'],
                     'depenses'     => ['Dépenses',        'modules/depenses/', 'bi-receipt'],
                     'comptes'      => ['Comptes',         'modules/comptes/', 'bi-bank'],
@@ -56,7 +75,7 @@ function page_start(string $titre, string $menuActif = ''): void
                 <?php endforeach; ?>
             </ul>
             <ul class="navbar-nav align-items-lg-center">
-                <li class="nav-item me-lg-3">
+                <li class="nav-item me-lg-3<?= projet_id() === null ? ' d-none' : '' ?>">
                     <span class="badge bousol-phase" title="Phase courante">
                         <?= e(match ($phase) { 'projet_actif' => 'Projet actif', 'regularisation' => 'Régularisation', 'post_cloture' => 'Suivi post-clôture', default => 'Non initialisé' }) ?>
                         <?= $moisCourant ? ' · M' . str_pad((string)$moisCourant, 2, '0', STR_PAD_LEFT) : '' ?>
@@ -67,10 +86,15 @@ function page_start(string $titre, string $menuActif = ''): void
                     <a class="nav-link <?= $menuActif === 'noyau' ? 'active' : '' ?>" href="<?= e(base_path('modules/noyau/')) ?>"><i class="bi bi-gear"></i> Paramétrage</a>
                 </li>
                 <?php endif; ?>
+                <?php if (user_est_admin_outil()): ?>
+                <li class="nav-item">
+                    <a class="nav-link <?= $menuActif === 'administration' ? 'active' : '' ?>" href="<?= e(base_path('modules/noyau/projets.php')) ?>"><i class="bi bi-diagram-2"></i> Administration</a>
+                </li>
+                <?php endif; ?>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle"></i> <?= e(user_nom()) ?>
-                        <small class="opacity-75">(<?= e(ROLES_LIBELLES[user_role()] ?? user_role()) ?>)</small>
+                        <small class="opacity-75">(<?= e(user_role() ? (ROLES_LIBELLES[user_role()] ?? user_role()) : (user_est_admin_outil() ? ADMIN_OUTIL_LIBELLE : 'sans rôle')) ?>)</small>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="<?= e(base_path('profil.php')) ?>"><i class="bi bi-person"></i> Profil et spécimen</a></li>
@@ -99,8 +123,11 @@ function page_end(): void
 </main>
 <footer class="bousol-footer text-center py-3 text-muted">
     <small>
-        &copy; <?= date('Y') ?> DÉVELOPPEMENT ET DYNAMISME &middot; Projet KèsKlè &middot; PAIESC / Union européenne
-        <?php if ($n = param('numero_contrat')): ?> &middot; Contrat <?= e($n) ?><?php endif; ?>
+        &copy; <?= date('Y') ?> DÉVELOPPEMENT ET DYNAMISME
+        <?php if (projet_id() !== null): ?>
+            &middot; <?= e(projet_intitule()) ?>
+            <?php if ($n = param('numero_contrat')): ?> &middot; Convention <?= e($n) ?><?php endif; ?>
+        <?php endif; ?>
         &middot; Session expire dans <span id="session-countdown" data-ttl="<?= (int)(config()['app']['session_ttl'] ?? 3600) ?>">--:--</span>
     </small>
 </footer>

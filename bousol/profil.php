@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'mdp')
         $_SESSION['doit_changer_mdp'] = false;
         audit('noyau', 'mot_de_passe_change', 'utilisateur', user_id());
         flash_set('success', 'Mot de passe mis à jour.');
-        redirect(base_path('dashboard.php'));
+        redirect(base_path(projet_id() === null ? 'projets.php' : 'dashboard.php'));
     }
 }
 
@@ -49,7 +49,12 @@ page_start('Profil', 'profil');
             <div class="card-body p-4">
                 <h1 class="h5 mb-3"><i class="bi bi-person-circle"></i> <?= e(user_nom()) ?></h1>
                 <dl class="row mb-0 small">
-                    <dt class="col-sm-4">Rôle applicatif</dt><dd class="col-sm-8"><?= e(ROLES_LIBELLES[user_role()] ?? '') ?></dd>
+                    <dt class="col-sm-4">Rôle</dt><dd class="col-sm-8">
+                        <?php if (user_est_admin_outil()): ?><?= e(ADMIN_OUTIL_LIBELLE) ?><br><small class="text-muted">crée les projets, n'y saisit rien</small><br><?php endif; ?>
+                        <?php foreach (projets_accessibles() as $pr): if (empty($pr['role'])) continue; ?>
+                            <?= e(ROLES_LIBELLES[$pr['role']] ?? $pr['role']) ?> <small class="text-muted">sur <?= e($pr['intitule']) ?></small><br>
+                        <?php endforeach; ?>
+                    </dd>
                     <dt class="col-sm-4">Qualité de mandataire</dt><dd class="col-sm-8"><?= user_est_mandataire() ? 'Oui — signataire du compte bancaire' : 'Non' ?></dd>
                     <dt class="col-sm-4">Email</dt><dd class="col-sm-8"><?= e($_SESSION['user_email'] ?? '') ?></dd>
                 </dl>

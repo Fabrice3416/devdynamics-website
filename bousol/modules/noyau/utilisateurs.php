@@ -1,11 +1,17 @@
 <?php
 declare(strict_types=1);
 
-/** Noyau - comptes utilisateurs (un acces par personne du referentiel des tiers). Coordinateur seulement. */
+/**
+ * Noyau - comptes utilisateurs, partages entre tous les projets.
+ *
+ * Une meme personne intervient sur plusieurs projets sans changer d'identite (CDC 1.4),
+ * la creation d'un acces est donc un acte d'administration de l'outil et non de projet.
+ * Le role, lui, n'est pas ici : il se donne par affectation, projet par projet, sur
+ * presentation d'un acte de delegation.
+ */
 
 require_once __DIR__ . '/../../includes/layout.php';
-require_role(['coordinateur']);
-require_module('noyau');
+require_admin_outil();
 
 $erreur = null;
 
@@ -17,12 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nom = trim((string)($_POST['nom'] ?? ''));
         $fonction = trim((string)($_POST['fonction'] ?? ''));
         $email = strtolower(trim((string)($_POST['email'] ?? '')));
-        $role = (string)($_POST['role'] ?? '');
         $mandataire = !empty($_POST['est_mandataire']) ? 1 : 0;
         $telephone = trim((string)($_POST['telephone'] ?? ''));
 
-        if ($nom === '' || $fonction === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || !in_array($role, ROLES, true)) {
-            $erreur = 'Nom, fonction, email valide et rôle sont obligatoires.';
+        if ($nom === '' || $fonction === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $erreur = 'Nom, fonction et email valide sont obligatoires.';
         } else {
             $st = db()->prepare('SELECT COUNT(*) FROM utilisateurs WHERE email = ?');
             $st->execute([$email]);
@@ -36,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo->prepare('INSERT INTO tiers (type, nom, fonction, est_mandataire, telephone, email) VALUES (\'personne\',?,?,?,?,?)')
                         ->execute([$nom, $fonction, $mandataire, $telephone ?: null, $email]);
                     $tiersId = (int)$pdo->lastInsertId();
-                    $pdo->prepare('INSERT INTO utilisateurs (tiers_id, email, mot_de_passe, role, doit_changer_mdp) VALUES (?,?,?,?,1)')
-                        ->execute([$tiersId, $email, hash_password($temp), $role]);
+                    $pdo->prepare('INSERT INTO utilisateurs (tiers_id, email, mot_de_passe, doit_changer_mdp) VALUES (?,?,?,1)')
+                        ->execute([$tiersId, $email, hash_password($temp)]);
                     $uid = (int)$pdo->lastInsertId();
                     $pdo->commit();
                 } catch (Throwable $e) {
@@ -46,8 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $erreur = 'Création impossible.';
                 }
                 if ($erreur === null) {
-                    audit('noyau', 'utilisateur_cree', 'utilisateur', $uid, $email . ' · rôle ' . $role . ($mandataire ? ' · mandataire' : ''));
-                    flash_set('success', "Accès créé pour $nom. Mot de passe temporaire à transmettre en main propre : $temp (changement imposé à la première connexion).");
+                    audit('noyau', 'utilisateur_cree', 'utilisateur', $uid, $email . ($mandataire ? ' · mandataire du compte' : ''));
+                    flash_set('success', "Accès créé pour $nom. Mot de passe temporaire à transmettre en main propre : $temp (changement imposé à la première connexion). Il faut maintenant l'affecter à un projet.");
                     redirect(base_path('modules/noyau/utilisateurs.php'));
                 }
             }
@@ -81,16 +86,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $users = db()->query(
-    'SELECT u.*, t.nom, t.fonction, t.est_mandataire, t.telephone,
-            (SELECT COUNT(*) FROM specimens s WHERE s.titulaire_id = u.id AND s.date_revocation IS NULL) AS specimen
-       FROM utilisateurs u JOIN tiers t ON t.id = u.tiers_id ORDER BY u.actif DESC, t.nom'
+    "SELECT u.*, t.nom, t.fonction, t.est_mandataire, t.telephone,
+            (SELECT COUNT(*) FROM specimens s WHERE s.titulaire_id = u.id AND s.date_revocation IS NULL) AS specimen,
+            (SELECT GROUP_CONCAT(CONCAT(p.code, ' : ', a.role) ORDER BY p.code SEPARATOR ' · ')
+               FROM affectations a JOIN projets p ON p.id = a.projet_id
+              WHERE a.utilisateur_id = u.id
+                AND a.date_debut <= CURDATE() AND (a.date_fin IS NULL OR a.date_fin >= CURDATE())) AS affectations
+       FROM utilisateurs u JOIN tiers t ON t.id = u.tiers_id ORDER BY u.actif DESC, t.nom"
 )->fetchAll();
 $nbMandataires = (int)db()->query('SELECT COUNT(*) FROM tiers t JOIN utilisateurs u ON u.tiers_id = t.id WHERE t.est_mandataire = 1 AND u.actif = 1')->fetchColumn();
 
-page_start('Utilisateurs', 'noyau');
-$ongletActif = 'utilisateurs';
-require __DIR__ . '/_nav.php';
+page_start('Personnes et accès', 'administration');
 ?>
+<div class="mb-4">
+    <h1 class="h4 mb-1">Personnes et accès</h1>
+    <p class="text-muted small mb-0">Le référentiel des personnes est partagé : une même personne intervient sur plusieurs projets sans changer d'identité.</p>
+</div>
 <div class="row g-4">
     <div class="col-lg-8">
         <?php if ($nbMandataires < 3): ?>
@@ -100,13 +111,13 @@ require __DIR__ . '/_nav.php';
             <div class="card-header bg-white fw-semibold">Accès</div>
             <div class="table-responsive">
             <table class="table table-sm table-striped mb-0 align-middle">
-                <thead><tr><th>Personne</th><th>Email</th><th>Rôle</th><th>Mandataire</th><th>Spécimen</th><th>Dernière connexion</th><th></th></tr></thead>
+                <thead><tr><th>Personne</th><th>Email</th><th>Affectations</th><th>Mandataire</th><th>Spécimen</th><th>Dernière connexion</th><th></th></tr></thead>
                 <tbody>
                 <?php foreach ($users as $u): ?>
                 <tr class="<?= $u['actif'] ? '' : 'text-muted' ?>">
                     <td><?= e($u['nom']) ?><br><small class="text-muted"><?= e($u['fonction']) ?></small></td>
                     <td class="small"><?= e($u['email']) ?></td>
-                    <td><?= e(ROLES_LIBELLES[$u['role']] ?? $u['role']) ?></td>
+                    <td class="small"><?php if ($u['admin_outil']): ?><span class="badge badge-a-definir">outil</span><br><?php endif; ?><?= e($u['affectations'] ?? '') ?: '<span class="text-muted">aucune</span>' ?></td>
                     <td>
                         <form method="post" class="d-inline"><?= csrf_field() ?><input type="hidden" name="action" value="mandataire"><input type="hidden" name="tiers_id" value="<?= (int)$u['tiers_id'] ?>"><input type="hidden" name="valeur" value="<?= $u['est_mandataire'] ? 0 : 1 ?>">
                             <button class="btn btn-sm <?= $u['est_mandataire'] ? 'btn-primary' : 'btn-outline-secondary' ?>" title="Basculer la qualité de mandataire"><?= $u['est_mandataire'] ? 'Oui' : 'Non' ?></button>
@@ -141,11 +152,10 @@ require __DIR__ . '/_nav.php';
                     <div class="mb-2"><label class="form-label">Fonction contractuelle</label><input name="fonction" class="form-control" required maxlength="120" placeholder="ex. Responsable Administratif et Financier"></div>
                     <div class="mb-2"><label class="form-label">Email (identifiant)</label><input type="email" name="email" class="form-control" required maxlength="120"></div>
                     <div class="mb-2"><label class="form-label">Téléphone</label><input name="telephone" class="form-control" maxlength="40"></div>
-                    <div class="mb-2"><label class="form-label">Rôle applicatif</label>
-                        <select name="role" class="form-select">
-                            <?php foreach (ROLES_LIBELLES as $k => $l): ?><option value="<?= e($k) ?>"><?= e($l) ?></option><?php endforeach; ?>
-                        </select>
-                        <div class="form-text">Le rôle donne les droits ; la qualité de mandataire (ci-dessous) donne le pouvoir d'engagement.</div>
+                    <div class="alert alert-info py-2 small">
+                        Le rôle ne se donne pas ici. Une fois l'accès créé, affectez la personne à un projet
+                        depuis <a href="<?= e(base_path('modules/noyau/projets.php')) ?>">l'administration</a>,
+                        sur présentation de son acte de délégation.
                     </div>
                     <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="est_mandataire" id="mand" value="1"><label class="form-check-label" for="mand">Mandataire du compte bancaire</label></div>
                     <button class="btn btn-primary">Créer l'accès</button>

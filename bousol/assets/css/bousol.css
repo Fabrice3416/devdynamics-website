@@ -55,3 +55,8 @@ a { color: var(--bsl-olive-fonce); }
 
 .signature-pad-box { border: 1px dashed var(--bsl-filet); background: #fff; border-radius: 2px; }
 .code-verification { font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing: .12em; font-size: 1.2rem; color: var(--bsl-olive-fonce); }
+
+.bousol-projet { background: var(--bsl-pierre); color: var(--bsl-ink); border: 1px solid var(--bsl-filet); font-weight: 600; }
+.bousol-projet:hover { background: #fff; }
+.dropdown-item.active, .dropdown-item:active { background: var(--bsl-olive); }
+.bousol-sans-projet { max-width: 46rem; margin: 3rem auto; }

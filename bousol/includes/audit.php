@@ -26,12 +26,13 @@ function audit(
         $nom = $utilisateurNom ?? ($_SESSION['user_nom'] ?? null);
         $stmt = db()->prepare(
             'INSERT INTO journal_audit
-               (module, action, objet_type, objet_id, detail, utilisateur_id, utilisateur_nom,
+               (module, action, objet_type, objet_id, projet_code, detail, utilisateur_id, utilisateur_nom,
                 ip, agent, empreinte_avant, empreinte_apres)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
         );
         $stmt->execute([
             $module, $action, $objetType, $objetId === null ? null : (string)$objetId,
+            $_SESSION['projet_code'] ?? null,
             $detail, $uid, $nom, client_ip(), client_agent(), $empreinteAvant, $empreinteApres,
         ]);
     } catch (Throwable $e) {

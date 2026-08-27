@@ -103,7 +103,7 @@ try {
     $st = $pdo->prepare('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ?');
     $st->execute([$base]);
     $nbTables = (int)$st->fetchColumn();
-    verifier('Base de données', $nbTables === 49 ? 'ok' : 'erreur', 'Tables', $nbTables . ' / 49');
+    verifier('Base de données', $nbTables === 52 ? 'ok' : 'erreur', 'Tables', $nbTables . ' / 52');
 
     require_once __DIR__ . '/includes/calendrier.php';
     $integrite = integrite_triggers();
@@ -133,12 +133,17 @@ try {
     verifier('Base de données', $jsonOk ? 'ok' : 'avertissement', 'Support JSON',
         'colonne rapports.contenu_json de type ' . ($typeJson ?: 'inconnu') . ($jsonOk ? ', fonctions JSON disponibles' : ', JSON_VALID indisponible'));
 
-    $total = $pdo->query("SELECT montant FROM lignes_budgetaires WHERE code = '11'")->fetchColumn();
-    verifier('Base de données', (string)$total === '5599889.14' ? 'ok' : 'erreur', 'Nomenclature budgétaire',
-        'total des coûts éligibles : ' . htg($total));
+    $projets = $pdo->query('SELECT p.code, p.intitule,
+            (SELECT COUNT(*) FROM lignes_budgetaires l WHERE l.projet_id = p.id) lignes,
+            (SELECT COUNT(DISTINCT cle) FROM parametres x WHERE x.projet_id = p.id) params
+        FROM projets p ORDER BY p.code')->fetchAll();
+    verifier('Base de données', $projets ? 'ok' : 'avertissement', 'Projets',
+        $projets ? implode(' · ', array_map(fn($p) => $p['code'] . ' (' . $p['lignes'] . ' lignes, ' . $p['params'] . ' paramètres)', $projets))
+                 : 'aucun projet : l\'administrateur de l\'outil doit en créer un');
 
-    $nbParam = (int)$pdo->query('SELECT COUNT(DISTINCT cle) FROM parametres')->fetchColumn();
-    verifier('Base de données', $nbParam >= 23 ? 'ok' : 'avertissement', 'Paramètres (annexe F)', $nbParam . ' clés');
+    $orphelines = (int)$pdo->query('SELECT COUNT(*) FROM parametres WHERE projet_id IS NULL')->fetchColumn();
+    verifier('Base de données', $orphelines === 0 ? 'ok' : 'erreur', 'Cloisonnement des paramètres',
+        $orphelines === 0 ? 'aucun paramètre global, comme l\'exige le cahier des charges' : $orphelines . ' paramètre(s) sans projet');
 
     $collation = (string)$pdo->query('SELECT @@collation_database')->fetchColumn();
     verifier('Base de données', str_starts_with($collation, 'utf8mb4') ? 'ok' : 'avertissement', 'Interclassement', $collation);

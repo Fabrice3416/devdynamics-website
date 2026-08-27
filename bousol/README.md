@@ -32,6 +32,7 @@ Identifiant initial : `admin@dev-dynamics.org` / `Bousol!2026` (changement forc�
 ```
 bousol/
   index.php login.php logout.php dashboard.php profil.php
+  projets.php           choix du projet courant, à la connexion et à tout moment
   diagnostic.php        contrôle d'installation (navigateur ou CLI)
   includes/
     config.example.php  db.php  functions.php
@@ -60,7 +61,8 @@ bousol/
 | Phase | Contenu | Statut |
 |---|---|---|
 | 0 | Retrait du portail, squelette, socle, schéma complet, seed | **Livrée** |
-| 1 | Noyau (paramétrage annexe F, calendrier relatif, périodes, utilisateurs, interrupteurs de modules, audit, sauvegardes) + Signature (spécimens, actes de dépôt, file de signature, appositions, codes de vérification) | **Livrée** |
+| 1 | Noyau (paramétrage, calendrier relatif, périodes, comptes, interrupteurs de modules, audit, sauvegardes) + Signature (spécimens, actes de dépôt, file de signature, appositions, codes de vérification) | **Livrée** |
+| 1 bis | Cloisonnement par projet : création de projet et affectations sur acte de délégation par l'administrateur de l'outil, sélecteur de projet permanent, droits par affectation, paramètres et calendrier lus par projet, préfixe de projet sur les fichiers | **Livrée** |
 | 2 | Tiers + Budget (double budget, six contrôles) | À faire |
 | 3 | Comptes (partie double, règlements à double signature, rapprochement, caisse) | À faire |
 | 4 | Dépenses (checklists annexe D) + Rémunération (prestations, DGI) | À faire |
@@ -69,7 +71,23 @@ bousol/
 | 7 | Hors ligne, bascule phase 2, registres post-clôture, archive | À faire |
 
 Chaque phase est recettée sur ses cas d'échec de l'annexe G avant mise en service :
-`php bousol/tests/recette_phase1.php` sur une base de test (20 cas, Noyau + Signature).
+`php bousol/tests/recette_phase1.php` sur une base de test — 23 cas couvrant le Noyau,
+la Signature, le cloisonnement par projet et l'habilitation.
+
+## Le projet, dimension de toute donnée
+
+Un utilisateur travaille toujours à l'intérieur d'un projet, choisi à la connexion et affiché
+en permanence. Les soldes, les listes, les files d'attente et les rapports ne montrent que le
+projet courant : la contrainte n'est pas ergonomique mais comptable.
+
+Le rôle n'est pas un attribut de l'utilisateur mais une **affectation** — un lien entre une
+personne, un projet et un rôle — et aucune affectation n'existe sans acte de délégation
+téléversé. L'**administrateur de l'outil** crée les projets, y désigne les coordinateurs et
+n'y saisit rien ; à ne pas confondre avec l'Administrateur des budgets, qui est le RAF.
+
+Un troisième projet se crée entièrement par l'interface : il naît avec ses trois phases, son
+registre de paramètres aux valeurs initiales de l'annexe F et son plan de comptes, puis son
+coordinateur charge la nomenclature et la date d'ancrage.
 
 ## Direction visuelle
 

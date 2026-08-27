@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'expor
     if (!is_dir($dir)) {
         mkdir($dir, 0750, true);
     }
-    $nom = 'bousol-export-' . date('Ymd-His') . '.zip';
+    $nom = 'bousol-' . strtolower((string)projet_code()) . '-export-' . date('Ymd-His') . '.zip';
     $abs = $dir . '/' . $nom;
     // ZipArchive (extension zip) ou, a defaut, PharData (extension phar) : les deux produisent un ZIP standard.
     $zip = null;

@@ -102,7 +102,7 @@ function revoquer_specimen(int $userId, string $motif): bool
 /** Roles du catalogue (annexe E) que l'utilisateur courant peut couvrir. */
 function qualites_catalogue_utilisateur(): array
 {
-    $q = [user_role()];
+    $q = user_role() === null ? [] : [user_role()];
     if (user_role() === 'coordinateur') {
         $q[] = 'representant_legal';
         $q[] = 'coordinateur|assemblee';
@@ -127,15 +127,16 @@ function documents_a_signer(): array
         return [];
     }
     $in = implode(',', array_fill(0, count($types), '?'));
+    // La file ne montre que le projet courant : les documents portent le projet en valeur.
     $stmt = db()->prepare(
         "SELECT d.*, f.nom_genere, f.empreinte,
                 (SELECT COUNT(*) FROM appositions a WHERE a.document_id = d.id) AS nb_appositions
            FROM documents d LEFT JOIN fichiers f ON f.id = d.fichier_id
-          WHERE d.statut = 'a_signer' AND d.type IN ($in)
+          WHERE d.statut = 'a_signer' AND d.type IN ($in) AND d.projet_code = ?
             AND NOT EXISTS (SELECT 1 FROM appositions a WHERE a.document_id = d.id AND a.signataire_id = ?)
           ORDER BY d.created_at"
     );
-    $stmt->execute([...$types, user_id()]);
+    $stmt->execute([...$types, projet_code(), user_id()]);
     return $stmt->fetchAll();
 }
 

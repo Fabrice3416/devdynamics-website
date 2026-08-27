@@ -26,7 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $u = find_user_by_email($emailFld);
                 if ($u && password_verify($password, $u['mot_de_passe'])) {
                     login_user($u);
-                    redirect(base_path(!empty($u['doit_changer_mdp']) ? 'profil.php?mdp=1' : 'dashboard.php'));
+                    // Le projet courant se choisit juste apres : aucune donnee d'execution hors projet.
+                    redirect(base_path(!empty($u['doit_changer_mdp']) ? 'profil.php?mdp=1' : 'projets.php'));
                 }
                 log_failed_login($emailFld);
                 $error = 'Identifiants incorrects.';

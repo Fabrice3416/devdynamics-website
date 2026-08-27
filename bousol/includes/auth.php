@@ -2,10 +2,18 @@
 declare(strict_types=1);
 
 /**
- * Sessions, authentification, CSRF, roles, reauthentification pour signature.
+ * Sessions, authentification, projet courant, droits, reauthentification.
  *
- * Roles applicatifs (CDC 1.6) : coordinateur | raf | mandataire
- * La qualite de mandataire est un attribut du TIERS (personne), pas du role.
+ * Le role n'est pas un attribut de l'utilisateur mais une AFFECTATION, lien entre
+ * une personne, un projet et un role (CDC 2.0, 1.8). Un utilisateur ne voit que les
+ * projets auxquels il est affecte, et travaille toujours a l'interieur d'un seul.
+ *
+ * L'administrateur de l'outil est unique et exterieur aux projets : il les cree et
+ * n'y saisit rien. A ne pas confondre avec l'Administrateur des budgets, qui est le
+ * Responsable Administratif et Financier.
+ *
+ * La qualite de mandataire est un attribut du TIERS (la personne), attachee au compte
+ * bancaire et non au projet.
  */
 
 require_once __DIR__ . '/db.php';
@@ -57,12 +65,88 @@ function destroy_session(): void
     }
 }
 
-function user_id(): ?int     { return isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null; }
-function user_role(): ?string { return $_SESSION['user_role'] ?? null; }
-function user_nom(): ?string  { return $_SESSION['user_nom'] ?? null; }
+function user_id(): ?int      { return isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null; }
+function user_nom(): ?string   { return $_SESSION['user_nom'] ?? null; }
 function user_tiers_id(): ?int { return isset($_SESSION['tiers_id']) ? (int)$_SESSION['tiers_id'] : null; }
 function user_est_mandataire(): bool { return !empty($_SESSION['est_mandataire']); }
-function is_logged_in(): bool { return user_id() !== null; }
+function user_est_admin_outil(): bool { return !empty($_SESSION['admin_outil']); }
+function is_logged_in(): bool  { return user_id() !== null; }
+
+/** Projet courant, et role que l'utilisateur y tient. */
+function projet_id(): ?int     { return isset($_SESSION['projet_id']) ? (int)$_SESSION['projet_id'] : null; }
+function projet_code(): ?string { return $_SESSION['projet_code'] ?? null; }
+function projet_intitule(): ?string { return $_SESSION['projet_intitule'] ?? null; }
+function user_role(): ?string  { return $_SESSION['role_projet'] ?? null; }
+
+/**
+ * Projets auxquels l'utilisateur est affecte aujourd'hui.
+ * L'administrateur de l'outil les voit tous, sans role a l'interieur.
+ */
+function projets_accessibles(): array
+{
+    if (!is_logged_in()) {
+        return [];
+    }
+    if (user_est_admin_outil()) {
+        return db()->query("SELECT p.*, NULL AS role FROM projets p WHERE p.statut <> 'archive' ORDER BY p.intitule")->fetchAll();
+    }
+    $stmt = db()->prepare(
+        "SELECT p.*, a.role
+           FROM affectations a JOIN projets p ON p.id = a.projet_id
+          WHERE a.utilisateur_id = ? AND p.statut <> 'archive'
+            AND a.date_debut <= CURDATE() AND (a.date_fin IS NULL OR a.date_fin >= CURDATE())
+          ORDER BY p.intitule"
+    );
+    $stmt->execute([user_id()]);
+    return $stmt->fetchAll();
+}
+
+/** Role tenu par l'utilisateur dans un projet donne, ou null s'il n'y est pas affecte. */
+function role_dans_projet(int $projetId, ?int $userId = null): ?string
+{
+    $stmt = db()->prepare(
+        'SELECT role FROM affectations
+          WHERE utilisateur_id = ? AND projet_id = ?
+            AND date_debut <= CURDATE() AND (date_fin IS NULL OR date_fin >= CURDATE())
+          ORDER BY FIELD(role, \'coordinateur\', \'raf\', \'mandataire\') LIMIT 1'
+    );
+    $stmt->execute([$userId ?? user_id(), $projetId]);
+    $r = $stmt->fetchColumn();
+    return $r === false ? null : (string)$r;
+}
+
+/**
+ * Selectionne le projet courant. Refuse si l'utilisateur n'y est pas affecte :
+ * l'absence d'affectation vaut absence d'acces, y compris en lecture (CDC 1.8).
+ */
+function choisir_projet(int $projetId): bool
+{
+    $stmt = db()->prepare("SELECT * FROM projets WHERE id = ? AND statut <> 'archive'");
+    $stmt->execute([$projetId]);
+    $p = $stmt->fetch();
+    if (!$p) {
+        return false;
+    }
+    $role = role_dans_projet($projetId);
+    if ($role === null && !user_est_admin_outil()) {
+        audit('noyau', 'acces_projet_refuse', 'projet', $projetId, 'Aucune affectation en cours');
+        return false;
+    }
+    $_SESSION['projet_id']       = (int)$p['id'];
+    $_SESSION['projet_code']     = $p['code'];
+    $_SESSION['projet_intitule'] = $p['intitule'];
+    $_SESSION['role_projet']     = $role;
+    return true;
+}
+
+/** Aucune donnee d'execution ne se consulte hors d'un projet. */
+function require_projet(): void
+{
+    require_login();
+    if (projet_id() === null) {
+        redirect(base_path('projets.php'));
+    }
+}
 
 function require_login(): void
 {
@@ -75,13 +159,25 @@ function require_login(): void
 }
 
 /** @param string[] $roles */
+/** Droit a l'interieur du projet courant. La matrice de l'annexe B ne joue jamais transversalement. */
 function require_role(array $roles): void
 {
-    require_login();
+    require_projet();
     if (!in_array(user_role(), $roles, true)) {
-        audit('noyau', 'acces_refuse', null, null, 'URI: ' . ($_SERVER['REQUEST_URI'] ?? ''));
+        audit('noyau', 'acces_refuse', 'projet', projet_id(), 'Rôle ' . (user_role() ?? 'aucun') . ' · URI: ' . ($_SERVER['REQUEST_URI'] ?? ''));
         http_response_code(403);
         exit('403 - Acces refuse');
+    }
+}
+
+/** Creer un projet, y designer un coordinateur, prononcer la cloture : l'administrateur de l'outil seul. */
+function require_admin_outil(): void
+{
+    require_login();
+    if (!user_est_admin_outil()) {
+        audit('noyau', 'acces_refuse', null, null, 'Administration de l\'outil · URI: ' . ($_SERVER['REQUEST_URI'] ?? ''));
+        http_response_code(403);
+        exit('403 - Reserve a l\'administrateur de l\'outil');
     }
 }
 
@@ -123,7 +219,7 @@ function login_user(array $u): void
 {
     session_regenerate_id(true);
     $_SESSION['user_id']         = (int)$u['id'];
-    $_SESSION['user_role']       = $u['role'];
+    $_SESSION['admin_outil']     = (int)$u['admin_outil'] === 1;
     $_SESSION['user_nom']        = $u['tiers_nom'];
     $_SESSION['user_email']      = $u['email'];
     $_SESSION['tiers_id']        = (int)$u['tiers_id'];

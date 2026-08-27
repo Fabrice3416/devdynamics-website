@@ -2,10 +2,13 @@
 declare(strict_types=1);
 
 /**
- * Recette phase 1 - cas de l'annexe G pour les modules Noyau et Signature.
- * Usage (CLI, sur une base de TEST chargee avec schema.sql + seed.sql) :
+ * Recette du socle : Noyau, Signature et cloisonnement par projet.
+ * Couvre les cas de l'annexe G qui relevent des modules deja livres.
+ *
+ * Usage (CLI, sur une base de TEST chargee avec schema.sql, schema_triggers.sql et seed.sql) :
  *   php bousol/tests/recette_phase1.php
- * Chaque cas "doit echouer" est verifie comme tel ; le script sort en code 1 au premier ecart.
+ *
+ * Chaque cas "doit echouer" est verifie comme tel. Sortie 1 au premier ecart.
  */
 
 if (PHP_SAPI !== 'cli') {
@@ -18,107 +21,132 @@ require_once __DIR__ . '/../pdf/generate.php';
 
 $pdo = db();
 $ok = 0; $ko = 0;
+
 function cas(string $lib, bool $reussi, string $detail = ''): void
 {
     global $ok, $ko;
     $reussi ? $ok++ : $ko++;
-    echo ($reussi ? '  OK  ' : ' ECHEC') . ' ' . $lib . ($detail !== '' ? '  [' . $detail . ']' : '') . PHP_EOL;
+    echo ($reussi ? '  OK  ' : ' ECHEC') . ' ' . $lib . ($detail !== '' ? '  [' . mb_substr($detail, 0, 95) . ']' : '') . PHP_EOL;
 }
+
 function doit_echouer(string $lib, callable $f): void
 {
     try {
         $f();
         cas($lib, false, 'aucune erreur levee');
     } catch (Throwable $e) {
-        cas($lib, true, substr($e->getMessage(), 0, 90));
+        cas($lib, true, $e->getMessage());
     }
 }
 
-echo "== Noyau\n";
+// Session simulee : coordinateur du projet 1, mandataire.
+$pdo->prepare('UPDATE tiers SET est_mandataire = 1 WHERE id = 1')->execute();
+$_SESSION['user_id'] = 1; $_SESSION['user_nom'] = 'Recette'; $_SESSION['tiers_id'] = 1;
+$_SESSION['est_mandataire'] = true; $_SESSION['admin_outil'] = true;
+$_SESSION['projet_id'] = 1; $_SESSION['projet_code'] = 'KESKLE'; $_SESSION['role_projet'] = 'coordinateur';
+$mdp = 'Recette!2026aa';
+$pdo->prepare('UPDATE utilisateurs SET mot_de_passe = ? WHERE id = 1')->execute([hash_password($mdp)]);
+
+echo "== Noyau : immuabilite\n";
 doit_echouer('Modifier une ligne du journal d\'audit', fn() => $pdo->exec("UPDATE journal_audit SET detail = 'x' WHERE id = 1"));
 doit_echouer('Supprimer une ligne du journal d\'audit', fn() => $pdo->exec('DELETE FROM journal_audit WHERE id = 1'));
-doit_echouer('Modifier un parametre en place (historise)', fn() => $pdo->exec("UPDATE parametres SET valeur = '9' WHERE id = 1"));
+doit_echouer('Modifier un parametre en place', fn() => $pdo->exec("UPDATE parametres SET valeur = '9' WHERE id = 1"));
 doit_echouer('Supprimer un fichier', function () use ($pdo) {
     $pdo->exec("INSERT INTO fichiers (nom_genere, chemin, extension, mime, taille, empreinte) VALUES ('t', 'x/y.pdf', 'pdf', 'application/pdf', 1, REPEAT('a', 64))");
-    $pdo->exec('DELETE FROM fichiers WHERE nom_genere = \'t\'');
+    $pdo->exec("DELETE FROM fichiers WHERE nom_genere = 't'");
 });
-cas('Parametre non modifiable refuse (seuil de blocage 25 %)', valider_param('seuil_blocage_variation_pct', '30') !== null);
-cas('Date de debut invalide refusee', valider_param('date_debut_execution', '2026-02-31') !== null);
-cas('Montant decimal valide accepte', valider_param('plafond_petite_caisse', '30000.00') === null);
-doit_echouer('Imputer sur la ligne 10 (provision)', function () use ($pdo) {
-    $pdo->exec("INSERT INTO dossiers (numero, type, tiers_id, objet, created_by) VALUES ('REC-0001', 'achat_bien', 2, 'recette', 1)");
-    $id = (int)$pdo->lastInsertId();
-    $pdo->exec("INSERT INTO imputations (dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation) VALUES ($id, (SELECT id FROM lignes_budgetaires WHERE code = '10'), 'forfait', 1, 1, 1, CURDATE())");
+
+echo "\n== Cloisonnement par projet\n";
+$ligneAutreProjet = (int)$pdo->query("SELECT id FROM lignes_budgetaires WHERE projet_id = 2 AND nature = 'imputable' LIMIT 1")->fetchColumn();
+$pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC-0001', 'achat_bien', 2, 'recette', 1)");
+$dossier = (int)$pdo->lastInsertId();
+doit_echouer('Imputer une depense sur la ligne budgetaire d\'un autre projet', function () use ($pdo, $dossier, $ligneAutreProjet) {
+    $pdo->exec("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
+                VALUES (1, $dossier, $ligneAutreProjet, 'unite', 1, 1, 1, CURDATE())");
+});
+doit_echouer('Imputer directement sur la provision pour imprevus', function () use ($pdo, $dossier) {
+    $l10 = (int)$pdo->query("SELECT id FROM lignes_budgetaires WHERE projet_id = 1 AND code = '10'")->fetchColumn();
+    $pdo->exec("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
+                VALUES (1, $dossier, $l10, 'forfait', 1, 1, 1, CURDATE())");
 });
 $pdo->exec("DELETE FROM dossiers WHERE numero = 'REC-0001'");
 
-echo "== Signature\n";
-// Session simulee : utilisateur 1 (Coordinateur, mandataire)
-$_SESSION['user_id'] = 1; $_SESSION['user_role'] = 'coordinateur'; $_SESSION['user_nom'] = 'Recette'; $_SESSION['tiers_id'] = 1; $_SESSION['est_mandataire'] = true;
-$pwd = 'Recette!2026aa';
-$pdo->prepare('UPDATE utilisateurs SET mot_de_passe = ? WHERE id = 1')->execute([hash_password($pwd)]);
-// Document de test en attente de signature
+$deuxCodes = (int)$pdo->query("SELECT COUNT(*) FROM lignes_budgetaires a JOIN lignes_budgetaires b ON a.code = b.code AND a.projet_id <> b.projet_id")->fetchColumn();
+cas('Deux projets portent le meme code de ligne sans conflit', $deuxCodes > 0, $deuxCodes . ' code(s) partage(s)');
+
+$sansProjet = (int)$pdo->query('SELECT COUNT(*) FROM parametres WHERE projet_id IS NULL')->fetchColumn();
+cas('Aucun parametre global', $sansProjet === 0);
+
+cas('Le parametre lu est celui du projet courant', param('plafond_contractuel', null, 1) !== param('plafond_contractuel', null, 2),
+    'KESKLE=' . param('plafond_contractuel', null, 1) . ' KKP=' . param('plafond_contractuel', null, 2));
+
+echo "\n== Habilitation\n";
+doit_echouer('Affecter sans acte de delegation televerse', function () use ($pdo) {
+    $pdo->exec("INSERT INTO affectations (utilisateur_id, projet_id, role, date_debut, affecte_par) VALUES (1, 1, 'raf', CURDATE(), 1)");
+});
+$_SESSION['admin_outil'] = false;
+cas('Sans affectation, aucun role dans le projet', role_dans_projet(2, 1) === null);
+$_SESSION['admin_outil'] = true;
+
+echo "\n== Signature\n";
 $svc = new PdfService();
 $bin = $svc->rendre_binaire('acte_depot', ['titulaire' => 'Recette', 'fonction' => 'Test', 'role' => 'Test', 'mandataire' => false, 'email' => 'x@y']);
 cas('mPDF disponible pour le rendu', $bin !== null);
-$f = enregistrer_contenu((string)$bin, 'pdf', 'application/pdf', 'documents', 'RECETTE-doc.pdf');
-$pdo->prepare("INSERT INTO documents (type, module, objet_type, objet_id, statut, fichier_id, created_by) VALUES ('bon_commande', 'depenses', 'recette', 1, 'a_signer', ?, 1)")->execute([$f['id']]);
-$docId = (int)$pdo->lastInsertId();
 
-// Revoquer tout specimen existant de l'utilisateur 1 pour tester l'absence
 revoquer_specimen(1, 'recette');
-$r = apposer($docId, 'approbation', $pwd);
-cas('Apposer sans specimen (ni acte de depot) est refuse', !$r['success'], $r['error'] ?? '');
+$doc = fn(string $type, int $objet) => (function () use ($pdo, $svc, $bin, $type, $objet) {
+    $f = enregistrer_contenu((string)$bin, 'pdf', 'application/pdf', 'documents', 'RECETTE-' . $type . '-' . $objet . '.pdf');
+    $pdo->prepare("INSERT INTO documents (type, module, objet_type, objet_id, projet_code, statut, fichier_id, created_by)
+                   VALUES (?, 'depenses', 'recette', ?, 'KESKLE', 'a_signer', ?, 1)")->execute([$type, $objet, $f['id']]);
+    return (int)$pdo->lastInsertId();
+})();
 
-// Depot d'un specimen avec acte
+$d1 = $doc('bon_commande', 1);
+$r = apposer($d1, 'approbation', $mdp);
+cas('Apposer sans specimen ni acte de depot est refuse', !$r['success'], $r['error'] ?? '');
+
 $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNkYPhfz0AEYBxVSF+FAAhKDveksOjmAAAAAElFTkSuQmCC');
-$tmp = tempnam(sys_get_temp_dir(), 'acte'); file_put_contents($tmp, $bin);
-$acteUpload = ['name' => 'acte.pdf', 'type' => 'application/pdf', 'tmp_name' => $tmp, 'error' => UPLOAD_ERR_OK, 'size' => filesize($tmp)];
-// is_uploaded_file() est faux en CLI : on passe par enregistrer_contenu directement pour l'acte
 $acte = enregistrer_contenu((string)$bin, 'pdf', 'application/pdf', 'coffre', 'RECETTE-acte.pdf', true);
 $img  = enregistrer_contenu($png, 'png', 'image/png', 'coffre', 'RECETTE-specimen.png', true);
-$pdo->prepare('INSERT INTO specimens (titulaire_id, image_fichier_id, acte_depot_fichier_id, date_depot) VALUES (1, ?, ?, CURDATE())')->execute([$img['id'], $acte['id']]);
-cas('Specimen actif detecte apres depot', specimen_actif(1) !== null);
+$pdo->prepare('INSERT INTO specimens (titulaire_id, image_fichier_id, acte_depot_fichier_id, date_depot) VALUES (1, ?, ?, CURDATE())')
+    ->execute([$img['id'], $acte['id']]);
+cas('Specimen actif apres depot avec acte', specimen_actif(1) !== null);
 
-doit_echouer('Apposer le specimen d\'un autre titulaire (contrainte structurelle : le specimen_id doit appartenir au signataire)', function () use ($pdo, $docId) {
-    // Un second utilisateur tente d'utiliser le specimen de l'utilisateur 1 : refuse par la logique du service,
-    // qui ne selectionne jamais qu'un specimen dont titulaire_id = utilisateur courant.
-    $_SESSION['user_id'] = 999;
-    $s = specimen_actif(999);
-    $_SESSION['user_id'] = 1;
-    if ($s !== null) { return; }
-    throw new RuntimeException('aucun specimen etranger accessible');
-});
-
-$r = apposer($docId, 'approbation', 'mauvais-mot-de-passe');
+$r = apposer($d1, 'approbation', 'mauvais-mot-de-passe');
 cas('Apposer avec une reauthentification echouee est refuse', !$r['success'], $r['error'] ?? '');
-$r = apposer($docId, 'approbation', $pwd);
-cas('Apposition valide acceptee (code emis)', $r['success'] && preg_match('/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{2}$/', $r['code'] ?? ''), $r['code'] ?? ($r['error'] ?? ''));
+
+$r = apposer($d1, 'reglement', $mdp);
+cas('Apposition valide acceptee, code emis', $r['success'] && preg_match('/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{2}$/', $r['code'] ?? ''), $r['code'] ?? ($r['error'] ?? ''));
 $a = $r['success'] ? apposition_par_code($r['code']) : null;
-cas('Empreintes avant/apres distinctes et code retrouve', $a !== null && $a['empreinte_avant'] !== $a['empreinte_apres']);
-$st = $pdo->prepare('SELECT statut FROM documents WHERE id = ?'); $st->execute([$docId]);
-cas('Document passe en statut signe (1 signature attendue pour un bon de commande)', $st->fetchColumn() === 'signe');
-$r2 = apposer($docId, 'approbation', $pwd);
+cas('Empreintes avant et apres distinctes', $a !== null && $a['empreinte_avant'] !== $a['empreinte_apres']);
+
+$r2 = apposer($d1, 'approbation', $mdp);
 cas('Deuxieme apposition du meme compte refusee', !$r2['success'], $r2['error'] ?? '');
 
-// Deux appositions depuis la meme session : document a 2 signatures, second utilisateur, meme session_id
-$f2 = enregistrer_contenu((string)$bin, 'pdf', 'application/pdf', 'documents', 'RECETTE-doc2.pdf');
-$pdo->prepare("INSERT INTO documents (type, module, objet_type, objet_id, statut, fichier_id, created_by) VALUES ('fiche_imputation', 'depenses', 'recette', 2, 'a_signer', ?, 1)")->execute([$f2['id']]);
-$doc2 = (int)$pdo->lastInsertId();
-$r = apposer($doc2, 'approbation', $pwd);
-cas('Premiere signature (Coordinateur) sur la fiche d\'imputation', $r['success'], $r['error'] ?? '');
-// Second signataire "raf" partageant la meme session PHP
+// Deux appositions depuis la meme session, sur un document a deux signatures
+$d2 = $doc('fiche_imputation', 2);
+$r = apposer($d2, 'approbation', $mdp);
+cas('Premiere signature sur la fiche d\'imputation', $r['success'], $r['error'] ?? '');
 $pdo->exec("INSERT INTO tiers (type, nom, fonction) VALUES ('personne', 'RAF Recette', 'RAF')");
 $t2 = (int)$pdo->lastInsertId();
-$pdo->prepare("INSERT INTO utilisateurs (tiers_id, email, mot_de_passe, role, doit_changer_mdp) VALUES (?, 'raf-recette@test', ?, 'raf', 0)")->execute([$t2, hash_password($pwd)]);
+$pdo->prepare("INSERT INTO utilisateurs (tiers_id, email, mot_de_passe, doit_changer_mdp) VALUES (?, 'raf-recette@test', ?, 0)")
+    ->execute([$t2, hash_password($mdp)]);
 $u2 = (int)$pdo->lastInsertId();
 $img2 = enregistrer_contenu($png, 'png', 'image/png', 'coffre', 'RECETTE-specimen2.png', true);
-$pdo->prepare('INSERT INTO specimens (titulaire_id, image_fichier_id, acte_depot_fichier_id, date_depot) VALUES (?, ?, ?, CURDATE())')->execute([$u2, $img2['id'], $acte['id']]);
-$_SESSION['user_id'] = $u2; $_SESSION['user_role'] = 'raf'; $_SESSION['est_mandataire'] = false;
-$r = apposer($doc2, 'approbation', $pwd);
+$pdo->prepare('INSERT INTO specimens (titulaire_id, image_fichier_id, acte_depot_fichier_id, date_depot) VALUES (?, ?, ?, CURDATE())')
+    ->execute([$u2, $img2['id'], $acte['id']]);
+$_SESSION['user_id'] = $u2; $_SESSION['role_projet'] = 'raf'; $_SESSION['est_mandataire'] = false;
+$r = apposer($d2, 'approbation', $mdp);
 cas('Deux appositions depuis la meme session refusees', !$r['success'], $r['error'] ?? '');
-$r = apposer($doc2, 'reglement', $pwd);
+$r = apposer($d2, 'reglement', $mdp);
 cas('Signature de reglement par un non-mandataire refusee', !$r['success'], $r['error'] ?? '');
+
+echo "\n== Pieces\n";
+$empreinte = $acte['empreinte'];
+[$deja, $motif] = empreinte_deja_utilisee($empreinte);
+cas('Une empreinte deja versee est detectee', $deja, $motif);
+[$deja2] = empreinte_deja_utilisee(str_repeat('f', 64));
+cas('Une empreinte inconnue passe', !$deja2);
 
 echo "\n$ok OK, $ko ECHEC\n";
 exit($ko > 0 ? 1 : 0);

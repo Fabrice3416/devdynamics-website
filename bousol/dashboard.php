@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/layout.php';
-require_login();
+require_projet();
 
 $init      = initialisation_complete();
 $debut     = date_debut();
@@ -10,16 +10,19 @@ $fin       = date_fin();
 $moisCour  = mois_projet();
 $residuel  = duree_residuelle_phase2();
 $contrat   = param('numero_contrat');
-$plafond   = (float)param('montant_contractuel', '5600000');
+$plafond   = plafond_contractuel();
 
 $modules = db()->query('SELECT * FROM module_etats ORDER BY id')->fetchAll();
 $sauvegarde = sauvegarde_etat();
 $integrite  = integrite_triggers();
-$audit   = db()->query('SELECT * FROM journal_audit ORDER BY id DESC LIMIT 10')->fetchAll();
+$st = db()->prepare('SELECT * FROM journal_audit WHERE projet_code = ? OR projet_code IS NULL ORDER BY id DESC LIMIT 10');
+$st->execute([projet_code()]);
+$audit = $st->fetchAll();
 
 $aDefinir = [];
-foreach (['plafond_petite_caisse' => 'Plafond de la petite caisse', 'plafond_depense_especes' => 'Plafond de dépense en espèces',
-          'seuil_proformas' => 'Seuil déclenchant trois proformas', 'delai_alerte_sauvegarde_jours' => 'Délai d\'alerte d\'absence de sauvegarde',
+foreach (['plafond_contractuel' => 'Plafond contractuel du projet', 'plafond_petite_caisse' => 'Plafond de la petite caisse',
+          'plafond_depense_especes' => 'Plafond de dépense en espèces', 'seuil_proformas' => 'Seuil déclenchant trois proformas',
+          'delai_alerte_sauvegarde_jours' => 'Délai d\'alerte d\'absence de sauvegarde',
           'representant_legal' => 'Représentant légal'] as $k => $lib) {
     if (param($k) === null) {
         $aDefinir[] = $lib;
@@ -29,7 +32,7 @@ foreach (['plafond_petite_caisse' => 'Plafond de la petite caisse', 'plafond_dep
 page_start('Tableau de bord', 'dashboard');
 ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h4 mb-0">Tableau de bord</h1>
+    <h1 class="h4 mb-0">Tableau de bord <small class="text-muted fw-normal">· <?= e(projet_intitule()) ?></small></h1>
     <span class="text-muted small"><?= e(date_fr(date('Y-m-d'))) ?></span>
 </div>
 
@@ -64,19 +67,24 @@ page_start('Tableau de bord', 'dashboard');
 
 <div class="row g-3 mb-4">
     <div class="col-6 col-lg-3"><div class="card card-indicateur border-0 shadow-sm"><div class="card-body">
-        <div class="libelle">Contrat</div><div class="valeur fs-5"><?= e($contrat ?? 'À saisir') ?></div></div></div></div>
+        <div class="libelle">Convention</div><div class="valeur fs-5"><?= e($contrat ?? 'À saisir') ?></div>
+        <small class="text-muted"><?= e(projet_code()) ?></small></div></div></div>
     <div class="col-6 col-lg-3"><div class="card card-indicateur border-0 shadow-sm"><div class="card-body">
         <div class="libelle">Exécution</div>
         <div class="valeur fs-5"><?= $debut ? e(date_fr($debut)) . ' → ' . e(date_fr($fin)) : 'À saisir' ?></div>
         <?php if ($moisCour): ?><small class="text-muted">Mois de projet <?= $moisCour ?> / <?= duree_mois() ?></small><?php endif; ?>
     </div></div></div>
     <div class="col-6 col-lg-3"><div class="card card-indicateur border-0 shadow-sm"><div class="card-body">
-        <div class="libelle">Plafond contractuel</div><div class="valeur fs-5"><?= e(htg($plafond)) ?></div>
-        <small class="text-muted">Budget détaillé : 5 599 889,14 HTG</small></div></div></div>
+        <div class="libelle">Plafond contractuel</div>
+        <div class="valeur fs-5"><?= $plafond === null ? 'À saisir' : e(htg($plafond)) ?></div>
+        <?php $bd = db()->prepare('SELECT SUM(montant) FROM lignes_budgetaires WHERE projet_id = ? AND nature = \'calculee\' AND parent_code IS NULL');
+              $bd->execute([projet_id()]); ?>
+        <small class="text-muted"><?php $nl = db()->prepare('SELECT COUNT(*) FROM lignes_budgetaires WHERE projet_id = ?'); $nl->execute([projet_id()]);
+            echo (int)$nl->fetchColumn(); ?> lignes chargées</small></div></div></div>
     <div class="col-6 col-lg-3"><div class="card card-indicateur border-0 shadow-sm"><div class="card-body">
         <div class="libelle">Phase 2 résiduelle</div>
-        <div class="valeur fs-5"><?= $residuel === null ? '—' : $residuel . ' mois' ?></div>
-        <small class="text-muted">jusqu'au <?= e(date_fr(seconde_borne())) ?></small></div></div></div>
+        <div class="valeur fs-5"><?= $residuel === null ? 'sans objet' : $residuel . ' mois' ?></div>
+        <small class="text-muted"><?= $residuel === null ? 'suivi post-clôture désactivé' : 'jusqu\'au ' . e(date_fr(seconde_borne())) ?></small></div></div></div>
 </div>
 
 <div class="row g-3">

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** Noyau - parametrage (annexe F) et calendrier relatif. Coordinateur seulement. */
+/** Noyau - parametrage du projet courant (annexe F) et calendrier relatif. Coordinateur du projet. */
 
 require_once __DIR__ . '/../../includes/layout.php';
 require_role(['coordinateur']);
@@ -59,7 +59,7 @@ require __DIR__ . '/_nav.php';
     <div class="col-lg-8">
         <div class="card">
             <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
-                <span>Paramètres (annexe F)</span>
+                <span>Paramètres de <?= e(projet_intitule()) ?></span>
                 <small class="text-muted fw-normal">Chaque modification crée une version datée ; les dossiers antérieurs ne sont pas affectés.</small>
             </div>
             <div class="table-responsive">

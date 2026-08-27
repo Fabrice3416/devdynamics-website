@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../includes/layout.php';
 require_once __DIR__ . '/../../includes/signature.php';
-require_login();
+require_login();  // Le specimen est partage entre projets : une personne garde une identite
 require_module('signature');
 
 $erreur = null;

@@ -15,6 +15,11 @@ $page    = max(1, (int)($_GET['p'] ?? 1));
 $parPage = 50;
 
 $where = []; $args = [];
+// Le journal se lit dans le projet courant ; l'administrateur de l'outil voit aussi les actes hors projet.
+if (!user_est_admin_outil()) {
+    $where[] = '(projet_code = ? OR projet_code IS NULL)';
+    $args[] = projet_code();
+}
 if ($fModule !== '' && isset(MODULES[$fModule])) { $where[] = 'module = ?'; $args[] = $fModule; }
 if ($fAction !== '') { $where[] = 'action LIKE ?'; $args[] = '%' . $fAction . '%'; }
 if ($fUser !== '')   { $where[] = 'utilisateur_nom LIKE ?'; $args[] = '%' . $fUser . '%'; }

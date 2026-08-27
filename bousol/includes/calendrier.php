@@ -7,41 +7,65 @@ declare(strict_types=1);
  * sauf la seconde borne (avril 2028), absolue.
  */
 
+require_once __DIR__ . '/auth.php';   // projet_id() : les parametres et le calendrier suivent le projet courant
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/audit.php';
 
-/** Valeur en vigueur d'un parametre (derniere version dont la date d'effet est atteinte). */
-function param(string $cle, ?string $default = null): ?string
+/**
+ * Valeur en vigueur d'un parametre, pour un projet donne (le projet courant par defaut).
+ * Il n'existe aucun parametre global (CDC 2.5).
+ */
+function &param_cache(): array
 {
     static $cache = [];
-    if (array_key_exists($cle, $cache)) {
-        return $cache[$cle];
-    }
-    $stmt = db()->prepare(
-        'SELECT valeur FROM parametres WHERE cle = ? AND date_effet <= CURDATE()
-          ORDER BY date_effet DESC, id DESC LIMIT 1'
-    );
-    $stmt->execute([$cle]);
-    $v = $stmt->fetchColumn();
-    $cache[$cle] = ($v === false || $v === null || $v === '') ? $default : (string)$v;
-    return $cache[$cle];
+    return $cache;
 }
 
-/** Historique complet d'un parametre. */
-function param_historique(string $cle): array
+function param(string $cle, ?string $default = null, ?int $projetId = null): ?string
 {
-    $stmt = db()->prepare('SELECT * FROM parametres WHERE cle = ? ORDER BY date_effet DESC, id DESC');
-    $stmt->execute([$cle]);
+    $cache = &param_cache();
+    $pid = $projetId ?? projet_id();
+    if ($pid === null) {
+        return $default;
+    }
+    $k = $pid . '|' . $cle;
+    if (array_key_exists($k, $cache)) {
+        return $cache[$k] ?? $default;
+    }
+    $stmt = db()->prepare(
+        'SELECT valeur FROM parametres WHERE projet_id = ? AND cle = ? AND date_effet <= CURDATE()
+          ORDER BY date_effet DESC, id DESC LIMIT 1'
+    );
+    $stmt->execute([$pid, $cle]);
+    $v = $stmt->fetchColumn();
+    $cache[$k] = ($v === false || $v === null || $v === '') ? null : (string)$v;
+    return $cache[$k] ?? $default;
+}
+
+/** Vide le cache des parametres : au changement de projet, et apres toute nouvelle version. */
+function param_oublier(): void
+{
+    $cache = &param_cache();
+    $cache = [];
+}
+
+/** Historique complet d'un parametre, dans un projet. */
+function param_historique(string $cle, ?int $projetId = null): array
+{
+    $stmt = db()->prepare('SELECT * FROM parametres WHERE projet_id = ? AND cle = ? ORDER BY date_effet DESC, id DESC');
+    $stmt->execute([$projetId ?? projet_id(), $cle]);
     return $stmt->fetchAll();
 }
 
-/** Nouvelle version d'un parametre (jamais d'ecrasement). Reserve au Coordinateur. */
-function param_set(string $cle, ?string $valeur, string $motif, ?string $dateEffet = null): void
+/** Nouvelle version d'un parametre (jamais d'ecrasement). Reserve au Coordinateur du projet. */
+function param_set(string $cle, ?string $valeur, string $motif, ?string $dateEffet = null, ?int $projetId = null): void
 {
+    $pid = $projetId ?? projet_id();
     $stmt = db()->prepare(
-        'INSERT INTO parametres (cle, valeur, date_effet, motif, auteur_id) VALUES (?,?,?,?,?)'
+        'INSERT INTO parametres (projet_id, cle, valeur, date_effet, motif, auteur_id) VALUES (?,?,?,?,?,?)'
     );
-    $stmt->execute([$cle, $valeur, $dateEffet ?? date('Y-m-d'), $motif, $_SESSION['user_id'] ?? null]);
+    $stmt->execute([$pid, $cle, $valeur, $dateEffet ?? date('Y-m-d'), $motif, $_SESSION['user_id'] ?? null]);
+    param_oublier();
     audit('noyau', 'parametre_modifie', 'parametre', $cle, 'Nouvelle valeur: ' . ($valeur ?? '(vide)') . ' - ' . $motif);
 }
 
@@ -105,16 +129,22 @@ function periode_intermediaire(): ?array
 }
 
 /** Seconde borne absolue : fin du programme PAIESC. */
-function seconde_borne(): string
+function seconde_borne(): ?string
 {
-    return param('seconde_borne', '2028-04-30');
+    return param('seconde_borne');
+}
+
+/** La double temporalite s'active projet par projet (CDC 1.7). */
+function suivi_post_cloture(): bool
+{
+    return param('suivi_post_cloture', '0') === '1';
 }
 
 /** Duree residuelle de la phase 2 (en mois) : de la fin d'execution a la seconde borne. */
 function duree_residuelle_phase2(): ?int
 {
     $fin = date_fin();
-    if (!$fin) {
+    if (!$fin || !suivi_post_cloture() || !seconde_borne()) {
         return null;
     }
     $a = new DateTimeImmutable($fin);
@@ -127,16 +157,28 @@ function duree_residuelle_phase2(): ?int
 }
 
 /** La date de debut n'est modifiable que tant qu'aucune ecriture n'existe. */
-function calendrier_verrouille(): bool
+/** La date d'ancrage et la nomenclature restent modifiables tant que le projet n'a aucune ecriture. */
+function calendrier_verrouille(?int $projetId = null): bool
 {
-    $n = (int)db()->query('SELECT (SELECT COUNT(*) FROM ecritures) + (SELECT COUNT(*) FROM dossiers)')->fetchColumn();
-    return $n > 0;
+    $pid = $projetId ?? projet_id();
+    if ($pid === null) {
+        return false;
+    }
+    $stmt = db()->prepare('SELECT (SELECT COUNT(*) FROM ecritures WHERE projet_id = ?) + (SELECT COUNT(*) FROM dossiers WHERE projet_id = ?)');
+    $stmt->execute([$pid, $pid]);
+    return (int)$stmt->fetchColumn() > 0;
 }
 
 /** Phase courante : projet_actif | regularisation | post_cloture (ou null avant initialisation). */
-function phase_courante(): ?array
+function phase_courante(?int $projetId = null): ?array
 {
-    $row = db()->query("SELECT * FROM phases WHERE statut = 'en_cours' ORDER BY id DESC LIMIT 1")->fetch();
+    $pid = $projetId ?? projet_id();
+    if ($pid === null) {
+        return null;
+    }
+    $stmt = db()->prepare("SELECT * FROM phases WHERE projet_id = ? AND statut = 'en_cours' ORDER BY id DESC LIMIT 1");
+    $stmt->execute([$pid]);
+    $row = $stmt->fetch();
     return $row ?: null;
 }
 
@@ -149,6 +191,13 @@ function phase_code(): ?string
 function initialisation_complete(): bool
 {
     return date_debut() !== null && param('numero_contrat') !== null;
+}
+
+/** Plafond contractuel du projet : la somme des lignes de gestion ne peut le depasser (CDC 2.3). */
+function plafond_contractuel(): ?float
+{
+    $v = param('plafond_contractuel');
+    return $v === null ? null : (float)$v;
 }
 
 /** Validation d'une valeur de parametre selon le registre (annexe F). Retourne un message d'erreur ou null. */
@@ -183,9 +232,11 @@ function valider_param(string $cle, ?string $valeur): ?string
 }
 
 /** Les periodes (mois de projet) generees depuis la date de debut. */
-function periodes(): array
+function periodes(?int $projetId = null): array
 {
-    return db()->query('SELECT * FROM periodes ORDER BY numero')->fetchAll();
+    $stmt = db()->prepare('SELECT * FROM periodes WHERE projet_id = ? ORDER BY numero');
+    $stmt->execute([$projetId ?? projet_id()]);
+    return $stmt->fetchAll();
 }
 
 /**
@@ -197,18 +248,20 @@ function generer_periodes(): bool
     if (!date_debut() || calendrier_verrouille()) {
         return false;
     }
-    $figees = (int)db()->query("SELECT COUNT(*) FROM periodes WHERE statut <> 'ouverte'")->fetchColumn();
-    if ($figees > 0) {
+    $pid = projet_id();
+    $st = db()->prepare("SELECT COUNT(*) FROM periodes WHERE projet_id = ? AND statut <> 'ouverte'");
+    $st->execute([$pid]);
+    if ((int)$st->fetchColumn() > 0) {
         return false;
     }
     $pdo = db();
     $pdo->beginTransaction();
     try {
-        $pdo->exec('DELETE FROM periodes');
-        $ins = $pdo->prepare('INSERT INTO periodes (numero, date_debut, date_fin) VALUES (?,?,?)');
+        $pdo->prepare('DELETE FROM periodes WHERE projet_id = ?')->execute([$pid]);
+        $ins = $pdo->prepare('INSERT INTO periodes (projet_id, numero, date_debut, date_fin) VALUES (?,?,?,?)');
         for ($n = 1; $n <= duree_mois(); $n++) {
             $p = periode_mois($n);
-            $ins->execute([$n, $p['debut'], $p['fin']]);
+            $ins->execute([$pid, $n, $p['debut'], $p['fin']]);
         }
         $pdo->commit();
     } catch (Throwable $e) {
@@ -216,15 +269,15 @@ function generer_periodes(): bool
         error_log('generer_periodes: ' . $e->getMessage());
         return false;
     }
-    audit('noyau', 'periodes_generees', 'periode', null, duree_mois() . ' périodes depuis le ' . date_debut());
+    audit('noyau', 'periodes_generees', 'projet', $pid, duree_mois() . ' périodes depuis le ' . date_debut());
     return true;
 }
 
 /** Periode contenant une date (ou null). */
 function periode_pour_date(?string $date = null): ?array
 {
-    $stmt = db()->prepare('SELECT * FROM periodes WHERE ? BETWEEN date_debut AND date_fin LIMIT 1');
-    $stmt->execute([$date ?? date('Y-m-d')]);
+    $stmt = db()->prepare('SELECT * FROM periodes WHERE projet_id = ? AND ? BETWEEN date_debut AND date_fin LIMIT 1');
+    $stmt->execute([projet_id(), $date ?? date('Y-m-d')]);
     $p = $stmt->fetch();
     return $p ?: null;
 }

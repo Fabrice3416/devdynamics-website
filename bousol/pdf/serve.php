@@ -19,13 +19,23 @@ if (!$f) {
     exit('404 - fichier introuvable');
 }
 
+// Un fichier rattache a un projet ne se sert que dans ce projet : les pieces d'un bailleur
+// n'ont pas a etre visibles depuis un autre (CDC 1.4).
+if (!empty($f['projet_code']) && $f['projet_code'] !== projet_code() && !user_est_admin_outil()) {
+    audit('noyau', 'acces_refuse', 'fichier', $id, 'Fichier du projet ' . $f['projet_code']);
+    http_response_code(403);
+    exit('403 - Fichier appartenant à un autre projet');
+}
+
 // Coffre : specimens et pieces d'identite. Un specimen n'est visible que par son titulaire
 // ou par le Coordinateur ; les autres contenus du coffre sont reserves au Coordinateur et au RAF.
 if ((int)$f['coffre'] === 1) {
     $st = db()->prepare('SELECT titulaire_id FROM specimens WHERE image_fichier_id = ? OR acte_depot_fichier_id = ? LIMIT 1');
     $st->execute([$id, $id]);
     $titulaire = $st->fetchColumn();
-    $ok = ($titulaire !== false && (int)$titulaire === user_id()) || in_array(user_role(), ['coordinateur', 'raf'], true);
+    $ok = ($titulaire !== false && (int)$titulaire === user_id())
+        || in_array(user_role(), ['coordinateur', 'raf'], true)
+        || user_est_admin_outil();
     if (!$ok) {
         audit('noyau', 'acces_refuse', 'fichier', $id, 'Coffre');
         http_response_code(403);

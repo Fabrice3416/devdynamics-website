@@ -21,11 +21,21 @@ const MODULES = [
     'financement'  => ['Financement',  ['noyau', 'signature', 'comptes', 'restitution']],
 ];
 
+/** Les sept modules entierement cloisonnes par projet (CDC 1.4). */
+const MODULES_CLOISONNES = ['budget', 'comptes', 'depenses', 'remuneration', 'activites', 'restitution', 'financement'];
+
 const ROLES_LIBELLES = [
     'coordinateur' => 'Coordinateur',
     'raf'          => 'Responsable Administratif et Financier',
     'mandataire'   => 'Mandataire',
 ];
+
+/**
+ * L'administrateur de l'outil n'est pas un role de projet : il cree les projets,
+ * y designe les coordinateurs et n'y saisit rien. La matrice de l'annexe B ne le
+ * mentionne pas, ses droits etant exterieurs a tout projet.
+ */
+const ADMIN_OUTIL_LIBELLE = 'Administrateur de l\'outil';
 
 /** Qualite au titre de laquelle une apposition est faite (CDC 1.8). */
 const QUALITES_SIGNATURE = [
@@ -178,27 +188,76 @@ function type_dossier_libelle(string $code): string
  * type : date | int | decimal | texte | choix ; 'avant_ecriture' = modifiable tant qu'aucune ecriture n'existe.
  */
 const PARAMETRES_REGISTRE = [
-    'numero_contrat'                => ['Numéro du contrat de subvention',            'texte',   null, true],
-    'date_debut_execution'          => ['Date de début d\'exécution',                 'date',    null, 'avant_ecriture'],
+    // cle => [libelle, type, options, modifiable]
+    // modifiable : true | false | 'avant_ecriture' | 'admin_outil'
+    'numero_contrat'                => ['Numéro de la convention de subvention',      'texte',   null, true],
+    'date_debut_execution'          => ['Date d\'ancrage du calendrier',              'date',    null, 'avant_ecriture'],
     'duree_execution_mois'          => ['Durée d\'exécution (mois)',                  'int',     null, 'avant_ecriture'],
+    'plafond_contractuel'           => ['Plafond contractuel du projet (HTG)',        'decimal', null, true],
+    'suivi_post_cloture'            => ['Phase de suivi post-clôture',                'choix',   ['0' => 'Désactivée', '1' => 'Activée'], true],
+    'seconde_borne'                 => ['Seconde borne de la phase de suivi',         'date',    null, true],
     'duree_regularisation_jours'    => ['Durée de la période de régularisation (jours)', 'int',  null, true],
-    'seconde_borne'                 => ['Seconde borne (fin du programme PAIESC)',    'date',    null, true],
     'plafond_petite_caisse'         => ['Plafond de la petite caisse (HTG)',          'decimal', null, true],
     'plafond_depense_especes'       => ['Plafond de dépense en espèces (HTG)',        'decimal', null, true],
-    'seuil_proformas'               => ['Seuil déclenchant trois proformas (HTG)',    'decimal', null, true],
-    'seuil_alerte_variation_pct'    => ['Seuil d\'alerte de variation par rubrique (%)', 'int',  null, true],
-    'seuil_blocage_variation_pct'   => ['Seuil de blocage de variation par rubrique (%)', 'int', null, false],
+    'seuil_proformas'               => ['Seuil déclenchant trois proformas',          'decimal', null, true],
+    'seuil_concurrence_devise'      => ['Devise du seuil de mise en concurrence',     'choix',   ['HTG' => 'Gourde', 'EUR' => 'Euro', 'USD' => 'Dollar'], true],
+    'seuil_concurrence_perimetre'   => ['Périmètre de la mise en concurrence',        'choix',   ['tout_achat' => 'Tous achats', 'equipements_materiels' => 'Équipements et matériels'], true],
+    'seuil_alerte_variation_pct'    => ['Seuil d\'alerte de variation (%)',           'int',     null, true],
+    'seuil_blocage_variation_pct'   => ['Seuil de blocage de variation (%)',          'int',     null, false],
+    'granularite_variation'         => ['Granularité du contrôle de variation',       'choix',   ['rubrique' => 'Rubrique principale', 'ligne' => 'Ligne budgétaire'], true],
+    'regime_provision'              => ['Régime de la provision pour imprévus',       'choix',   ['ligne_dediee' => 'Ligne dédiée, mobilisable', 'ligne_mixte' => 'Ligne mixte, frais bancaires seuls', 'aucune' => 'Aucune provision'], true],
     'taux_acompte_defaut_pct'       => ['Taux d\'acompte par défaut (%)',             'decimal', null, true],
+    'avances_honoraires'            => ['Avances sur honoraires',                     'choix',   ['0' => 'Interdites', '1' => 'Autorisées, rémunérations non récurrentes'], true],
     'mode_reglement_defaut'         => ['Mode de règlement par défaut',               'choix',   ['virement' => 'Virement', 'cheque' => 'Chèque'], true],
     'ecart_recu_reglement_jours'    => ['Écart toléré entre reçu et règlement (jours)', 'int',   null, true],
-    'delai_accuse_phase2_heures'    => ['Délai d\'accusé de réception en phase 2 (heures ouvrables)', 'int', null, true],
+    'regime_signature_defaut'       => ['Régime de signature par défaut',             'choix',   ['papier' => 'Papier', 'electronique' => 'Électronique'], true],
+    'exemplaires_mention'           => ['Mentions d\'exemplaire, séparées par |',     'texte',   null, true],
+    'delai_accuse_phase2_heures'    => ['Délai d\'accusé de réception en phase 2 (h ouvrables)', 'int', null, true],
     'delai_correctif_phase2_jours'  => ['Délai de correctif non critique en phase 2 (jours)', 'int', null, true],
     'delai_alerte_sauvegarde_jours' => ['Délai d\'alerte d\'absence de sauvegarde (jours)', 'int', null, true],
-    'regime_signature_defaut'       => ['Régime de signature par défaut',             'choix',   ['papier' => 'Papier', 'electronique' => 'Électronique'], true],
-    'signature_par_lot'             => ['Signature par lot',                          'choix',   ['0' => 'Désactivée', '1' => 'Activée'], true],
-    'montant_contractuel'           => ['Montant contractuel (HTG, art. 3.1)',        'decimal', null, true],
-    'compte_bancaire'               => ['Compte bancaire du projet',                  'texte',   null, true],
-    'nom_projet'                    => ['Intitulé du projet',                          'texte',   null, true],
-    'nom_organisation'              => ['Nom de l\'organisation',                     'texte',   null, true],
     'representant_legal'            => ['Représentant légal (nom et fonction)',       'texte',   null, true],
+];
+
+/**
+ * Valeurs initiales du registre de parametres d'un projet nouvellement cree (annexe F).
+ * Chaque projet en service porte ensuite les siennes, historisees.
+ */
+const PARAMETRES_INITIAUX = [
+    'numero_contrat'                => null,
+    'date_debut_execution'          => null,
+    'duree_execution_mois'          => '8',
+    'plafond_contractuel'           => null,
+    'suivi_post_cloture'            => '0',
+    'seconde_borne'                 => null,
+    'duree_regularisation_jours'    => '30',
+    'plafond_petite_caisse'         => null,
+    'plafond_depense_especes'       => null,
+    'seuil_proformas'               => null,
+    'seuil_concurrence_devise'      => 'HTG',
+    'seuil_concurrence_perimetre'   => 'tout_achat',
+    'seuil_alerte_variation_pct'    => '20',
+    'seuil_blocage_variation_pct'   => '25',
+    'granularite_variation'         => 'rubrique',
+    'regime_provision'              => 'ligne_dediee',
+    'taux_acompte_defaut_pct'       => '2',
+    'avances_honoraires'            => '0',
+    'mode_reglement_defaut'         => 'virement',
+    'ecart_recu_reglement_jours'    => '0',
+    'regime_signature_defaut'       => 'papier',
+    'exemplaires_mention'           => 'Organisation|Bailleur|Bailleur',
+    'delai_accuse_phase2_heures'    => '48',
+    'delai_correctif_phase2_jours'  => '15',
+    'delai_alerte_sauvegarde_jours' => null,
+    'representant_legal'            => null,
+];
+
+/** Plan de comptes de base pose a la creation d'un projet (CDC 4.8, six familles). */
+const COMPTES_INITIAUX = [
+    ['BQ',   'Banque',                              'banque'],
+    ['CA',   'Petite caisse',                       'caisse'],
+    ['TI',   'Tiers - fournisseurs et prestataires', 'tiers'],
+    ['DGI',  'Dette envers la DGI (acomptes)',      'dette_dgi'],
+    ['AV',   'Avances à régulariser',               'avances'],
+    ['FIN',  'Financement',                         'financement'],
+    ['PROD', 'Produits financiers',                 'produit'],
 ];

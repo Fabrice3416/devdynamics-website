@@ -72,6 +72,12 @@ function enregistrer_contenu(string $contenu, string $ext, string $mime, string 
     if ($coffre) {
         $categorie = 'coffre';
     }
+    // Le nom genere porte le code du projet en tete (CDC 5.4) : extraite de Bousol,
+    // l'arborescence reste triee par projet avant de l'etre par rubrique.
+    $prefixe = $_SESSION['projet_code'] ?? null;
+    if ($prefixe !== null && !str_starts_with($nomGenere, $prefixe . '-')) {
+        $nomGenere = $prefixe . '-' . $nomGenere;
+    }
     $empreinte = hash('sha256', $contenu);
     $rel = sprintf('%s/%s/%s/%s.%s', $categorie, date('Y'), date('m'), bin2hex(random_bytes(12)), $coffre ? 'bin' : $ext);
     $abs = storage_dir() . '/' . $rel;
@@ -85,10 +91,11 @@ function enregistrer_contenu(string $contenu, string $ext, string $mime, string 
     @chmod($abs, 0640);
 
     $stmt = db()->prepare(
-        'INSERT INTO fichiers (nom_genere, chemin, extension, mime, taille, empreinte, coffre, remplace_id, auteur_id)
-         VALUES (?,?,?,?,?,?,?,?,?)'
+        'INSERT INTO fichiers (nom_genere, chemin, extension, mime, taille, empreinte, coffre, remplace_id, projet_code, auteur_id)
+         VALUES (?,?,?,?,?,?,?,?,?,?)'
     );
-    $stmt->execute([$nomGenere, $rel, $ext, $mime, strlen($contenu), $empreinte, $coffre ? 1 : 0, $remplaceId, $_SESSION['user_id'] ?? null]);
+    $stmt->execute([$nomGenere, $rel, $ext, $mime, strlen($contenu), $empreinte, $coffre ? 1 : 0, $remplaceId,
+                    $_SESSION['projet_code'] ?? null, $_SESSION['user_id'] ?? null]);
     $id = (int)db()->lastInsertId();
     audit('noyau', $remplaceId ? 'fichier_remplace' : 'fichier_cree', 'fichier', $id, $nomGenere, null, $empreinte);
     return ['success' => true, 'id' => $id, 'empreinte' => $empreinte];
@@ -100,6 +107,26 @@ function fichier(int $id): ?array
     $stmt->execute([$id]);
     $f = $stmt->fetch();
     return $f ?: null;
+}
+
+/**
+ * Un meme fichier ne peut justifier deux dossiers de projets differents, ni deux pieces
+ * d'un meme dossier (CDC 7.3). Le controle est bloquant et ne se leve pas.
+ * @return array{0:bool, 1:string} conforme, motif
+ */
+function empreinte_deja_utilisee(string $empreinte, ?int $exclureFichierId = null): array
+{
+    $stmt = db()->prepare(
+        'SELECT f.id, f.projet_code, f.nom_genere FROM fichiers f
+          WHERE f.empreinte = ? AND (? IS NULL OR f.id <> ?) LIMIT 1'
+    );
+    $stmt->execute([$empreinte, $exclureFichierId, $exclureFichierId]);
+    $f = $stmt->fetch();
+    if (!$f) {
+        return [false, ''];
+    }
+    return [true, 'Ce fichier a déjà été versé sous le nom « ' . $f['nom_genere'] . ' »'
+        . ($f['projet_code'] ? ' dans le projet ' . $f['projet_code'] : '') . '.'];
 }
 
 /** Contenu en clair d'un fichier (dechiffre si coffre). */
@@ -159,4 +186,22 @@ function decoder_png_base64(string $dataUrl): ?string
         return null;
     }
     return (new finfo(FILEINFO_MIME_TYPE))->buffer($bin) === 'image/png' ? $bin : null;
+}
+
+/**
+ * Cree un document (acte) rattache a un objet metier, en portant le projet en valeur.
+ * Le document est distinct du fichier : l'un est un acte, l'autre des octets (CDC 8.1).
+ */
+function creer_document(string $type, string $module, string $objetType, int $objetId,
+                        ?int $fichierId = null, string $statut = 'brouillon', ?string $regime = null): int
+{
+    $stmt = db()->prepare(
+        'INSERT INTO documents (type, module, objet_type, objet_id, projet_code, statut, regime, fichier_id, created_by)
+         VALUES (?,?,?,?,?,?,?,?,?)'
+    );
+    $stmt->execute([$type, $module, $objetType, $objetId, $_SESSION['projet_code'] ?? null,
+                    $statut, $regime ?? 'papier', $fichierId, $_SESSION['user_id'] ?? null]);
+    $id = (int)db()->lastInsertId();
+    audit($module, 'document_cree', 'document', $id, $type);
+    return $id;
 }
