@@ -92,7 +92,6 @@ page_start('Tableau de bord', 'dashboard');
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white fw-semibold"><i class="bi bi-grid-3x3-gap"></i> Modules</div>
             <div class="table-responsive">
-            <div class="table-responsive">
             <table class="table table-sm mb-0">
                 <?php foreach ($modules as $m): ?>
                 <tr>
@@ -102,6 +101,7 @@ page_start('Tableau de bord', 'dashboard');
                 </tr>
                 <?php endforeach; ?>
             </table>
+            </div>
         </div>
     </div>
     <div class="col-lg-7">
