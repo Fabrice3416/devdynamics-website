@@ -57,6 +57,9 @@ api/clear-*.php
 .dev
 
 # Bousol (pilotage KesKle)
+# Le schema de la base est du code source, pas une sauvegarde : la regle *.sql
+# ci-dessus l'excluait silencieusement, et le depot livrait un outil sans sa base.
+!/bousol/database/*.sql
 /bousol/includes/config.php
 /bousol/storage/*
 !/bousol/storage/*/
