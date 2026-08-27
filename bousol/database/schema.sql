@@ -9,20 +9,17 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- =====================================================================
--- MODULE NOYAU (11)
+-- MODULE NOYAU (11 tables)
 -- =====================================================================
 
 CREATE TABLE projets (
   id                 INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  code               VARCHAR(20) NOT NULL COMMENT 'Prefixe des noms de fichiers et du classement',
+  code               VARCHAR(20) NOT NULL COMMENT 'Prefixe des fichiers et des sequences ; fige des la premiere piece',
   intitule           VARCHAR(150) NOT NULL,
   bailleur           VARCHAR(120) NOT NULL,
   referentiel        VARCHAR(60) NOT NULL COMMENT 'Guide applicable : PAIESC, FOKAL_REVIV...',
-  numero_convention  VARCHAR(60) NULL,
-  date_debut         DATE NULL COMMENT 'Ancrage du calendrier relatif',
-  duree_mois         TINYINT UNSIGNED NULL,
-  plafond_contractuel DECIMAL(14,2) NULL,
-  suivi_post_cloture TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Phase 2 activee ou non, propre au projet',
+  -- Dates, plafond, duree et phase de suivi sont des parametres du projet (annexe F),
+  -- pour qu'il n'existe qu'une seule source de verite et un seul mecanisme d'historisation.
   statut             ENUM('creation','actif','clos','archive') NOT NULL DEFAULT 'creation',
   cree_par           INT UNSIGNED NULL COMMENT 'Administrateur de l''outil',
   created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -343,7 +340,9 @@ CREATE TABLE lignes_budgetaires (
   unite           ENUM('mois','jour','unite','personne','forfait') NULL,
   quantite        DECIMAL(10,2) NULL,
   valeur_unitaire DECIMAL(14,2) NULL,
-  montant         DECIMAL(14,2) NULL COMMENT 'Budget contractuel annexe B, fige',
+  montant         DECIMAL(14,2) NULL COMMENT 'Budget contractuel, fige, modifiable par avenant seulement',
+  montant_gestion DECIMAL(14,2) NULL COMMENT 'Budget de gestion : realloc. et provisions ; historique au journal d''audit',
+  quantite_gestion DECIMAL(10,2) NULL,
   ordre           SMALLINT UNSIGNED NOT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uk_lignes_code (projet_id, code),
@@ -389,39 +388,7 @@ CREATE TABLE contrats (
 -- MODULE BUDGET (3) - lignes_budgetaires est cree plus haut
 -- =====================================================================
 
-CREATE TABLE versions_budget (
-  id                       INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  projet_id        INT UNSIGNED NOT NULL,
-  numero                   SMALLINT UNSIGNED NOT NULL,
-  date_effet               DATE NOT NULL,
-  motif                    TEXT NOT NULL,
-  type                     ENUM('reallocation','mobilisation_provision','avenant') NOT NULL,
-  autorisation_fichier_id  INT UNSIGNED NULL COMMENT 'Obligatoire pour mobilisation et > 25 %',
-  auteur_id                INT UNSIGNED NOT NULL,
-  created_at               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_versions_budget_numero (projet_id, numero),
-  CONSTRAINT fk_vb_fichier FOREIGN KEY (autorisation_fichier_id) REFERENCES fichiers(id),
-  CONSTRAINT fk_vb_auteur FOREIGN KEY (auteur_id) REFERENCES utilisateurs(id),
-  KEY idx_versions_budget_projet (projet_id),
-  CONSTRAINT fk_versions_budget_projet FOREIGN KEY (projet_id) REFERENCES projets(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE lignes_version (
-  id                  INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  projet_id        INT UNSIGNED NOT NULL,
-  version_id          INT UNSIGNED NOT NULL,
-  ligne_id            SMALLINT UNSIGNED NOT NULL,
-  montant_gestion     DECIMAL(14,2) NOT NULL,
-  quantite_gestion    DECIMAL(10,2) NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_lignes_version (version_id, ligne_id),
-  CONSTRAINT fk_lv_version FOREIGN KEY (version_id) REFERENCES versions_budget(id),
-  CONSTRAINT fk_lv_ligne FOREIGN KEY (ligne_id) REFERENCES lignes_budgetaires(id),
-  KEY idx_lignes_version_projet (projet_id),
-  CONSTRAINT fk_lignes_version_projet FOREIGN KEY (projet_id) REFERENCES projets(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='Ne contient que les lignes effectivement modifiees par la version';
 
 -- =====================================================================
 -- MODULE COMPTES (8)
@@ -912,26 +879,6 @@ CREATE TABLE proformas (
   CONSTRAINT fk_proformas_projet FOREIGN KEY (projet_id) REFERENCES projets(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE repartitions (
-  id                INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  projet_id         INT UNSIGNED NOT NULL,
-  dossier_id        INT UNSIGNED NOT NULL,
-  dossier_jumeau_ref VARCHAR(40) NOT NULL COMMENT 'projet:dossier de l''autre part, en valeur',
-  quote_part        DECIMAL(5,2) NOT NULL COMMENT 'Pourcentage imputable a ce projet',
-  cle_repartition   VARCHAR(255) NOT NULL COMMENT 'Saisie et justifiee, jamais deduite',
-  justification     TEXT NOT NULL,
-  fichier_id        INT UNSIGNED NOT NULL COMMENT 'Piece commune : seule exception a l''unicite',
-  created_by        INT UNSIGNED NOT NULL,
-  created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_repartition_dossier (dossier_id),
-  KEY idx_repartitions_projet (projet_id),
-  CONSTRAINT fk_repartitions_projet FOREIGN KEY (projet_id) REFERENCES projets(id),
-  CONSTRAINT fk_repartitions_dossier FOREIGN KEY (dossier_id) REFERENCES dossiers(id),
-  CONSTRAINT fk_repartitions_fichier FOREIGN KEY (fichier_id) REFERENCES fichiers(id),
-  CONSTRAINT fk_repartitions_user FOREIGN KEY (created_by) REFERENCES utilisateurs(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='Une facture servant plusieurs projets est scindee, jamais imputee deux fois';
 
 -- =====================================================================
 -- MODULE REMUNERATION (3)
@@ -1102,7 +1049,7 @@ CREATE TABLE sources_revenu (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Le PAIESC n''en declare qu''une, decoupee en tranches ; la FOKAL plusieurs';
 
-CREATE TABLE versements (
+CREATE TABLE tranches (
   id                  TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
   projet_id        INT UNSIGNED NOT NULL,
   source_revenu_id    INT UNSIGNED NOT NULL,
@@ -1115,17 +1062,17 @@ CREATE TABLE versements (
   avis_credit_fichier_id INT UNSIGNED NULL,
   ecriture_ref        VARCHAR(40) NULL,
   PRIMARY KEY (id),
-  UNIQUE KEY uk_versements_numero (projet_id, numero),
-  CONSTRAINT fk_versements_fichier FOREIGN KEY (avis_credit_fichier_id) REFERENCES fichiers(id),
-  CONSTRAINT fk_versements_source FOREIGN KEY (source_revenu_id) REFERENCES sources_revenu(id),
-  KEY idx_versements_projet (projet_id),
-  CONSTRAINT fk_versements_projet FOREIGN KEY (projet_id) REFERENCES projets(id)
+  UNIQUE KEY uk_tranches_numero (projet_id, numero),
+  CONSTRAINT fk_tranches_fichier FOREIGN KEY (avis_credit_fichier_id) REFERENCES fichiers(id),
+  CONSTRAINT fk_tranches_source FOREIGN KEY (source_revenu_id) REFERENCES sources_revenu(id),
+  KEY idx_tranches_projet (projet_id),
+  CONSTRAINT fk_tranches_projet FOREIGN KEY (projet_id) REFERENCES projets(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE demandes_paiement (
   id                   INT UNSIGNED NOT NULL AUTO_INCREMENT,
   projet_id        INT UNSIGNED NOT NULL,
-  versement_id         TINYINT UNSIGNED NOT NULL,
+  tranche_id           TINYINT UNSIGNED NOT NULL,
   date                 DATE NOT NULL,
   montant              DECIMAL(14,2) NOT NULL,
   statut               ENUM('preparation','validee','transmise','complement_demande','complement_repondu','payee') NOT NULL DEFAULT 'preparation',
@@ -1139,7 +1086,7 @@ CREATE TABLE demandes_paiement (
   created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT fk_dp_versement FOREIGN KEY (versement_id) REFERENCES versements(id),
+  CONSTRAINT fk_dp_tranche FOREIGN KEY (tranche_id) REFERENCES tranches(id),
   CONSTRAINT fk_dp_document FOREIGN KEY (document_id) REFERENCES documents(id),
   CONSTRAINT fk_dp_accuse FOREIGN KEY (accuse_fichier_id) REFERENCES fichiers(id),
   CONSTRAINT fk_dp_user FOREIGN KEY (created_by) REFERENCES utilisateurs(id),
@@ -1164,67 +1111,8 @@ CREATE TABLE pieces_demande (
   CONSTRAINT fk_pieces_demande_projet FOREIGN KEY (projet_id) REFERENCES projets(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- =====================================================================
--- MODULE FORMULAIRES (3) - onzieme module, isole : il expose une page publique.
--- Il ne lit rien hors de ses propres tables et de l'intitule de la session.
--- =====================================================================
 
-CREATE TABLE formulaires (
-  id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  projet_id      INT UNSIGNED NOT NULL,
-  session_id     INT UNSIGNED NULL COMMENT 'Le formulaire de recrutement precede toute session',
-  titre          VARCHAR(150) NOT NULL,
-  introduction   TEXT NULL,
-  regime         ENUM('nominatif','anonyme') NOT NULL,
-  jeton          CHAR(32) NOT NULL COMMENT 'Lien unique partageable, non individuel',
-  ouverture      DATETIME NULL,
-  fermeture      DATETIME NULL COMMENT 'Hors fenetre, le lien ne repond pas',
-  plafond        SMALLINT UNSIGNED NULL COMMENT 'Le formulaire se ferme de lui-meme une fois atteint',
-  statut         ENUM('brouillon','ouvert','clos') NOT NULL DEFAULT 'brouillon',
-  created_by     INT UNSIGNED NOT NULL,
-  created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_formulaires_jeton (jeton),
-  KEY idx_formulaires_projet (projet_id),
-  CONSTRAINT fk_formulaires_projet FOREIGN KEY (projet_id) REFERENCES projets(id),
-  CONSTRAINT fk_formulaires_user FOREIGN KEY (created_by) REFERENCES utilisateurs(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE questions (
-  id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  formulaire_id INT UNSIGNED NOT NULL,
-  libelle       VARCHAR(255) NOT NULL,
-  type          ENUM('texte','texte_long','note_1_5','choix','sexe','tranche_age','telephone','oui_non') NOT NULL,
-  options       VARCHAR(500) NULL COMMENT 'Valeurs separees par des barres verticales, pour le type choix',
-  obligatoire   TINYINT(1) NOT NULL DEFAULT 1,
-  rang          SMALLINT UNSIGNED NOT NULL,
-  PRIMARY KEY (id),
-  KEY idx_questions_formulaire (formulaire_id),
-  CONSTRAINT fk_questions_formulaire FOREIGN KEY (formulaire_id) REFERENCES formulaires(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE reponses (
-  id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  formulaire_id  INT UNSIGNED NOT NULL,
-  valeurs        JSON NOT NULL COMMENT 'Reponses par identifiant de question',
-  identite       VARCHAR(150) NULL COMMENT 'Renseigne pour un formulaire nominatif, jamais pour un anonyme',
-  contact        VARCHAR(120) NULL,
-  mode_saisie    ENUM('en_ligne','papier_saisi') NOT NULL DEFAULT 'en_ligne',
-  statut         ENUM('recue','validee','ecartee') NOT NULL DEFAULT 'recue' COMMENT 'Pre-inscription tant qu''elle n''est pas validee',
-  beneficiaire_id INT UNSIGNED NULL COMMENT 'Renseigne a la validation d''une pre-inscription',
-  motif_ecart    VARCHAR(255) NULL,
-  autorisation_parentale_fichier_id INT UNSIGNED NULL COMMENT 'Exigee si l''age declare est inferieur a la majorite',
-  horodatage     DATETIME NOT NULL,
-  saisi_par      INT UNSIGNED NULL COMMENT 'Renseigne pour une saisie papier',
-  PRIMARY KEY (id),
-  KEY idx_reponses_formulaire (formulaire_id, statut),
-  CONSTRAINT fk_reponses_formulaire FOREIGN KEY (formulaire_id) REFERENCES formulaires(id),
-  CONSTRAINT fk_reponses_beneficiaire FOREIGN KEY (beneficiaire_id) REFERENCES beneficiaires(id),
-  CONSTRAINT fk_reponses_autorisation FOREIGN KEY (autorisation_parentale_fichier_id) REFERENCES fichiers(id),
-  CONSTRAINT fk_reponses_saisie FOREIGN KEY (saisi_par) REFERENCES utilisateurs(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='Aucune adresse ni empreinte d''appareil : c''est cette absence qui garantit l''anonymat';
 
 -- Reference Noyau -> fichier (piece d'identite) ajoutee apres creation de fichiers
 ALTER TABLE tiers ADD CONSTRAINT fk_tiers_piece_identite FOREIGN KEY (piece_identite_fichier_id) REFERENCES fichiers(id);

@@ -15,14 +15,13 @@ INSERT INTO module_etats (module, libelle, version, critique) VALUES
 ('depenses',     'Dépenses',     '0.1.0', 0),
 ('remuneration', 'Rémunération', '0.1.0', 0),
 ('restitution',  'Restitution',  '0.1.0', 0),
-('financement',  'Financement',  '0.1.0', 0),
-('formulaires',  'Formulaires',  '0.1.0', 0);
+('financement',  'Financement',  '0.1.0', 0);
 
 -- 2. Projets -----------------------------------------------------------
 -- Le projet est une dimension de toute donnee d'execution (addendum 1, section 2).
-INSERT INTO projets (id, code, intitule, bailleur, referentiel, duree_mois, plafond_contractuel, suivi_post_cloture, statut) VALUES
-(1, 'KESKLE', 'KèsKlè',        'UGP DP-PAIESC',                   'PAIESC',      8, 5600000.00, 1, 'actif'),
-(2, 'KKP',    'Koulè Ki Pale', 'FOKAL, programme REVIV, appel 5', 'FOKAL_REVIV', 4,  974556.00, 0, 'actif');
+INSERT INTO projets (id, code, intitule, bailleur, referentiel, statut) VALUES
+(1, 'KESKLE', 'KèsKlè',        'UGP DP-PAIESC',                   'PAIESC',      'actif'),
+(2, 'KKP',    'Koulè Ki Pale', 'FOKAL, programme REVIV, appel 5', 'FOKAL_REVIV', 'actif');
 
 -- 3. Phases, propres a chaque projet ------------------------------------
 INSERT INTO phases (projet_id, code, statut) VALUES
@@ -61,50 +60,50 @@ INSERT INTO parametres (projet_id, cle, valeur, date_effet, motif, auteur_id) VA
 (1, 'mode_reglement_defaut', 'virement', '2026-01-01', 'Annexe F', 1),
 (1, 'ecart_recu_reglement_jours', '0', '2026-01-01', 'Meme jour', 1),
 (1, 'regime_signature_defaut', 'papier', '2026-01-01', 'Annexe F', 1),
-(1, 'signature_par_lot', '0', '2026-01-01', 'Desactivee a la livraison', 1),
 (1, 'seuil_alerte_variation_pct', '20', '2026-01-01', 'Annexe F', 1),
 (1, 'seuil_blocage_variation_pct', '25', '2026-01-01', 'Annexe F - non modifiable', 1),
 (1, 'delai_alerte_sauvegarde_jours', NULL, '2026-01-01', 'A definir', 1),
 (1, 'plafond_petite_caisse', NULL, '2026-01-01', 'A definir', 1),
 (1, 'plafond_depense_especes', NULL, '2026-01-01', 'A definir', 1),
+(1, 'seuil_proformas', NULL, '2026-01-01', 'A definir', 1),
 (1, 'representant_legal', NULL, '2026-01-01', 'A saisir', 1),
-(1, 'nom_organisation', 'DÉVELOPPEMENT ET DYNAMISME', '2026-01-01', 'Porteur', 1),
 (1, 'numero_contrat', NULL, '2026-01-01', 'A saisir a la signature', 1),
-(1, 'date_debut_execution', NULL, '2026-01-01', 'A saisir', 1),
+(1, 'date_debut_execution', NULL, '2026-01-01', 'Ancrage du calendrier, avant toute ecriture', 1),
 (1, 'duree_execution_mois', '8', '2026-01-01', 'Contrat', 1),
-(1, 'seconde_borne', '2028-04-30', '2026-01-01', 'Fin du programme PAIESC (absolue)', 1),
-(1, 'seuil_proformas', NULL, '2026-01-01', 'A definir, en gourdes, tous achats', 1),
+(1, 'seconde_borne', '2028-04-30', '2026-01-01', 'Terme du programme PAIESC, absolu', 1),
+(1, 'plafond_contractuel', '5600000.00', '2026-01-01', 'Article 3.1 du contrat', 1),
+(1, 'suivi_post_cloture', '1', '2026-01-01', 'Accompagnement jusquen avril 2028', 1),
 (1, 'seuil_concurrence_devise', 'HTG', '2026-01-01', 'Le PAIESC exprime le seuil en gourdes', 1),
 (1, 'seuil_concurrence_perimetre', 'tout_achat', '2026-01-01', 'Tous achats', 1),
 (1, 'granularite_variation', 'rubrique', '2026-01-01', '25 % entre rubriques principales', 1),
 (1, 'regime_provision', 'ligne_dediee', '2026-01-01', 'Ligne 10, mobilisable sur autorisation', 1),
 (1, 'exemplaires_mention', 'Organisation|Bailleur|Bailleur', '2026-01-01', 'Un organisation, deux bailleur', 1),
+(1, 'avances_honoraires', '0', '2026-01-01', 'Interdites sur ce projet', 1),
 (1, 'delai_accuse_phase2_heures', '48', '2026-01-01', 'Heures ouvrables', 1),
 (1, 'delai_correctif_phase2_jours', '15', '2026-01-01', 'Annexe F', 1),
-(1, 'nom_projet', 'KèsKlè', '2026-01-01', 'Intitule de laction', 1),
 (2, 'duree_regularisation_jours', '30', '2026-01-01', 'Annexe F', 1),
 (2, 'taux_acompte_defaut_pct', '2', '2026-01-01', 'Guide de procedures', 1),
 (2, 'mode_reglement_defaut', 'virement', '2026-01-01', 'Annexe F', 1),
 (2, 'ecart_recu_reglement_jours', '0', '2026-01-01', 'Meme jour', 1),
 (2, 'regime_signature_defaut', 'papier', '2026-01-01', 'Annexe F', 1),
-(2, 'signature_par_lot', '0', '2026-01-01', 'Desactivee a la livraison', 1),
 (2, 'seuil_alerte_variation_pct', '20', '2026-01-01', 'Annexe F', 1),
 (2, 'seuil_blocage_variation_pct', '25', '2026-01-01', 'Annexe F - non modifiable', 1),
 (2, 'delai_alerte_sauvegarde_jours', NULL, '2026-01-01', 'A definir', 1),
 (2, 'plafond_petite_caisse', NULL, '2026-01-01', 'A definir', 1),
 (2, 'plafond_depense_especes', NULL, '2026-01-01', 'A definir', 1),
+(2, 'seuil_proformas', NULL, '2026-01-01', 'A definir', 1),
 (2, 'representant_legal', NULL, '2026-01-01', 'A saisir', 1),
-(2, 'nom_organisation', 'DÉVELOPPEMENT ET DYNAMISME', '2026-01-01', 'Porteur', 1),
 (2, 'numero_contrat', NULL, '2026-01-01', 'A saisir a la signature de la convention FOKAL', 1),
-(2, 'date_debut_execution', NULL, '2026-01-01', 'A saisir - ancrage du calendrier relatif', 1),
+(2, 'date_debut_execution', NULL, '2026-01-01', 'Ancrage du calendrier, avant toute ecriture', 1),
 (2, 'duree_execution_mois', '4', '2026-01-01', 'Septembre a decembre 2026', 1),
-(2, 'seuil_proformas', NULL, '2026-01-01', 'Contre-valeur des 500 euros, a figer une fois pour toutes', 1),
+(2, 'plafond_contractuel', '974556.00', '2026-01-01', 'Convention FOKAL', 1),
+(2, 'suivi_post_cloture', '0', '2026-01-01', 'Le projet se clot en decembre 2026', 1),
 (2, 'seuil_concurrence_devise', 'EUR', '2026-01-01', 'Le guide REVIV exprime le seuil en euros', 1),
 (2, 'seuil_concurrence_perimetre', 'equipements_materiels', '2026-01-01', 'Equipements et materiels seulement', 1),
 (2, 'granularite_variation', 'ligne', '2026-01-01', 'Lecture la plus restrictive : 25 % entre lignes', 1),
 (2, 'regime_provision', 'ligne_mixte', '2026-01-01', 'Imputable pour les seuls frais bancaires', 1),
 (2, 'exemplaires_mention', 'Organisation|FOKAL|Union européenne', '2026-01-01', 'Un organisation, deux FOKAL dont un UE', 1),
-(2, 'nom_projet', 'Koulè Ki Pale', '2026-01-01', 'Intitule de laction', 1);
+(2, 'avances_honoraires', '1', '2026-01-01', 'Autorisees pour les remunerations non recurrentes', 1);
 
 -- 7. Nomenclature budgetaire de KesKle (annexe A) - 31 lignes, budget contractuel fige
 INSERT INTO lignes_budgetaires (projet_id, code, parent_code, rubrique, niveau, nature, libelle, unite, quantite, valeur_unitaire, montant, ordre) VALUES
@@ -165,6 +164,9 @@ INSERT INTO lignes_budgetaires (projet_id, code, parent_code, rubrique, niveau, 
 -- Controle : 240 000 + 143 000 + 354 800 + 133 000 + 40 000 = 910 800 de couts directs,
 -- dont 7 % font exactement les 63 756 de frais administratifs, soit 974 556 au total.
 
+-- 7 ter. Le budget de gestion part du budget contractuel
+UPDATE lignes_budgetaires SET montant_gestion = montant, quantite_gestion = quantite;
+
 -- 8. Plan de comptes en partie double allegee (CDC 4.7) --------------------
 INSERT INTO comptes (projet_id, code, libelle, type, compte_bancaire_id) VALUES
 (1, 'BQ',   'Banque SOGEBANK - compte 3306006788', 'banque',      1),
@@ -192,7 +194,7 @@ INSERT INTO sources_revenu (id, projet_id, origine, libelle, montant_attendu) VA
 (2, 2, 'subvention', 'Subvention FOKAL, programme REVIV', 974556.00);
 -- KesKle : trois tranches contractuelles a 50, 45 et 5 % du total hors reserve.
 -- Koule Ki Pale : trois versements dont les montants et declencheurs sont saisis a la signature.
-INSERT INTO versements (projet_id, source_revenu_id, numero, taux) VALUES
+INSERT INTO tranches (projet_id, source_revenu_id, numero, taux) VALUES
 (1, 1, 1, 50.00), (1, 1, 2, 45.00), (1, 1, 3, 5.00),
 (2, 2, 1, NULL),  (2, 2, 2, NULL),  (2, 2, 3, NULL);
 

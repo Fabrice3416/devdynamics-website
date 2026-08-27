@@ -1,8 +1,8 @@
 # Base de donnees Bousol
 
-58 tables sur 11 modules (CDC section 8 et annexe C, addendum 1 section 10), 8 triggers.
+52 tables sur 10 modules (CDC version 2.0, section 8 et annexe C), 8 triggers.
 
-Le projet est une dimension de toute donnée d'exécution : 41 tables portent un `projet_id`
+Le projet est une dimension de toute donnée d'exécution : les tables d'exécution portent un `projet_id`
 obligatoire. Restent partagés le socle (fichiers, documents, appositions, spécimens, journal
 d'audit, qui portent le projet en valeur), le référentiel des tiers et les utilisateurs, dont
 le rattachement passe par la table des affectations.
@@ -21,7 +21,7 @@ mysql -u root -p bousol < seed.sql
 Verifications :
 
 ```sql
-SELECT COUNT(*) FROM information_schema.tables   WHERE table_schema = DATABASE();  -- 58
+SELECT COUNT(*) FROM information_schema.tables   WHERE table_schema = DATABASE();  -- 52
 SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = DATABASE(); -- 8
 SELECT COUNT(*) FROM lignes_budgetaires;                                            -- 31
 SELECT montant FROM lignes_budgetaires WHERE code = '11';                           -- 5599889.14
@@ -42,7 +42,7 @@ SELECT montant FROM lignes_budgetaires WHERE code = '11';                       
 | Cloisonnement par projet (addendum 2) | `projet_id` obligatoire sur 41 tables, unicites portees au couple projet et cle metier |
 | Une depense, une ligne du meme projet | Trigger `trg_imputations_ligne` : refuse la ligne budgetaire d'un autre projet |
 | Sans acte, pas d'affectation (addendum 4) | `affectations.acte_delegation_fichier_id` NOT NULL |
-| Anonymat structurel des reponses | `reponses` ne porte ni adresse ni empreinte d'appareil : une colonne suffirait a le detruire |
+| Budget de gestion (2.2) | Colonnes `montant_gestion` et `quantite_gestion` sur la ligne ; l'historique est au journal d'audit, sans versions successives |
 
 ## Identifiant initial
 
@@ -59,6 +59,11 @@ televersement d'un acte de delegation d'autorite.
 |---|---|---|---|---|---|
 | `KESKLE` | KesKle | UGP DP-PAIESC | 5 600 000 HTG | 31 dont 18 imputables | oui |
 | `KKP` | Koule Ki Pale | FOKAL, programme REVIV | 974 556 HTG | 17 dont 11 imputables | non |
+
+Le projet ne porte que son identite : code, intitule, bailleur, referentiel et statut. Les dates,
+les seuils, le plafond contractuel et l'activation de la phase de suivi sont des parametres du
+projet (annexe F), pour qu'il n'existe qu'une seule source de verite et un seul mecanisme
+d'historisation.
 
 Le detail par ligne du budget de Koule Ki Pale reste a saisir : la convention ne communique
 que les sous-totaux de rubrique.
