@@ -58,6 +58,7 @@ require __DIR__ . '/_nav.php';
         </div>
 
         <div class="card">
+            <div class="table-responsive">
             <table class="table table-sm table-striped mb-0 align-middle">
                 <thead><tr><th>Module</th><th>Version</th><th>Dépend de</th><th>État</th><th>Motif</th><th></th></tr></thead>
                 <tbody>

@@ -28,15 +28,23 @@ function page_start(string $titre, string $menuActif = ''): void
     <link rel="stylesheet" href="<?= e(base_path('assets/css/bousol.css')) ?>?v=1">
 </head>
 <body class="bousol-app">
-<nav class="navbar navbar-expand-lg navbar-dark bousol-nav">
+<nav class="navbar navbar-expand-xl navbar-dark bousol-nav">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="<?= e(base_path('dashboard.php')) ?>">
+        <a class="navbar-brand" href="<?= e(base_path('dashboard.php')) ?>">
             <i class="bi bi-compass"></i> Bousòl
         </a>
+
         <?php if (projet_id() !== null): ?>
-        <div class="dropdown me-lg-3">
-            <button class="btn btn-sm bousol-projet dropdown-toggle" data-bs-toggle="dropdown" title="Projet courant">
-                <?= e(projet_code()) ?> · <?= e(projet_intitule()) ?>
+        <!-- Le projet et sa phase vont ensemble : la phase qualifie le projet, elle ne flotte pas au milieu des modules. -->
+        <div class="dropdown bousol-contexte">
+            <button class="btn bousol-projet dropdown-toggle" data-bs-toggle="dropdown" title="Projet courant">
+                <span class="bousol-projet-txt">
+                <span class="code"><?= e(projet_code()) ?></span>
+                <span class="nom"><?= e(projet_intitule()) ?></span>
+                <span class="phase"><?= e(match ($phase) {
+                    'projet_actif' => 'Projet actif', 'regularisation' => 'Régularisation',
+                    'post_cloture' => 'Suivi post-clôture', default => 'Non initialisé' }) ?><?= $moisCourant ? ' · M' . str_pad((string)$moisCourant, 2, '0', STR_PAD_LEFT) : '' ?></span>
+                </span>
             </button>
             <ul class="dropdown-menu">
                 <li><h6 class="dropdown-header">Changer de projet</h6></li>
@@ -52,6 +60,7 @@ function page_start(string $titre, string $menuActif = ''): void
             </ul>
         </div>
         <?php endif; ?>
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain"><span class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse" id="navMain">
             <ul class="navbar-nav me-auto">
@@ -74,31 +83,30 @@ function page_start(string $titre, string $menuActif = ''): void
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <ul class="navbar-nav align-items-lg-center">
-                <li class="nav-item me-lg-3<?= projet_id() === null ? ' d-none' : '' ?>">
-                    <span class="badge bousol-phase" title="Phase courante">
-                        <?= e(match ($phase) { 'projet_actif' => 'Projet actif', 'regularisation' => 'Régularisation', 'post_cloture' => 'Suivi post-clôture', default => 'Non initialisé' }) ?>
-                        <?= $moisCourant ? ' · M' . str_pad((string)$moisCourant, 2, '0', STR_PAD_LEFT) : '' ?>
-                    </span>
-                </li>
-                <?php if (user_role() === 'coordinateur'): ?>
-                <li class="nav-item">
-                    <a class="nav-link <?= $menuActif === 'noyau' ? 'active' : '' ?>" href="<?= e(base_path('modules/noyau/')) ?>"><i class="bi bi-gear"></i> Paramétrage</a>
-                </li>
-                <?php endif; ?>
-                <?php if (user_est_admin_outil()): ?>
-                <li class="nav-item">
-                    <a class="nav-link <?= $menuActif === 'administration' ? 'active' : '' ?>" href="<?= e(base_path('modules/noyau/projets.php')) ?>"><i class="bi bi-diagram-2"></i> Administration</a>
-                </li>
-                <?php endif; ?>
+
+            <!-- Tout ce qui n'est pas un module de travail se range ici : la barre reste lisible. -->
+            <ul class="navbar-nav align-items-xl-center">
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                        <i class="bi bi-person-circle"></i> <?= e(user_nom()) ?>
-                        <small class="opacity-75">(<?= e(user_role() ? (ROLES_LIBELLES[user_role()] ?? user_role()) : (user_est_admin_outil() ? ADMIN_OUTIL_LIBELLE : 'sans rôle')) ?>)</small>
+                    <a class="nav-link bousol-compte dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i>
+                        <span class="d-none d-xl-inline"><?= e(user_nom()) ?></span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
+                        <li class="px-3 py-2">
+                            <div class="fw-semibold"><?= e(user_nom()) ?></div>
+                            <small class="text-muted"><?= e(user_role() ? (ROLES_LIBELLES[user_role()] ?? user_role()) : (user_est_admin_outil() ? ADMIN_OUTIL_LIBELLE : 'sans rôle')) ?></small>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="<?= e(base_path('profil.php')) ?>"><i class="bi bi-person"></i> Profil et spécimen</a></li>
+                        <?php if (projet_id() !== null): ?>
                         <li><a class="dropdown-item" href="<?= e(base_path('modules/signature/')) ?>"><i class="bi bi-pen"></i> File de signature</a></li>
+                        <?php endif; ?>
+                        <?php if (user_role() === 'coordinateur'): ?>
+                        <li><a class="dropdown-item <?= $menuActif === 'noyau' ? 'active' : '' ?>" href="<?= e(base_path('modules/noyau/')) ?>"><i class="bi bi-gear"></i> Paramétrage du projet</a></li>
+                        <?php endif; ?>
+                        <?php if (user_est_admin_outil()): ?>
+                        <li><a class="dropdown-item <?= $menuActif === 'administration' ? 'active' : '' ?>" href="<?= e(base_path('modules/noyau/projets.php')) ?>"><i class="bi bi-diagram-2"></i> Administration de l'outil</a></li>
+                        <?php endif; ?>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="<?= e(base_path('logout.php')) ?>"><i class="bi bi-box-arrow-right"></i> Déconnexion</a></li>
                     </ul>
@@ -107,6 +115,7 @@ function page_start(string $titre, string $menuActif = ''): void
         </div>
     </div>
 </nav>
+
 <main class="container-fluid py-4 bousol-main">
     <?php foreach (flash_get() as $f):
         $t = in_array($f['type'], ['success', 'danger', 'warning', 'info'], true) ? $f['type'] : 'info'; ?>

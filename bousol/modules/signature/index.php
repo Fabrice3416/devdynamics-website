@@ -33,6 +33,8 @@ page_start('File de signature', 'signature');
             <div class="card-header bg-white fw-semibold">Documents en attente de ma signature <span class="badge text-bg-secondary"><?= count($aSigner) ?></span></div>
             <?php if (!$aSigner): ?><div class="card-body text-muted small">Rien à signer pour l'instant. Les documents arrivent ici lorsqu'un module les met en attente de signature au titre de votre rôle<?= user_est_mandataire() ? ' ou de votre qualité de mandataire' : '' ?>.</div>
             <?php else: ?>
+            <div class="table-responsive">
+            <div class="table-responsive">
             <table class="table table-sm table-striped mb-0 align-middle">
                 <thead><tr><th>Document</th><th>Objet</th><th>Version</th><th>Signatures</th><th>Créé le</th><th></th></tr></thead>
                 <tbody>
@@ -51,6 +53,7 @@ page_start('File de signature', 'signature');
                 <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
             <?php endif; ?>
         </div>
 
@@ -66,6 +69,7 @@ page_start('File de signature', 'signature');
                 <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
             <?php endif; ?>
         </div>
     </div>

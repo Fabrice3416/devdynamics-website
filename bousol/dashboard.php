@@ -91,6 +91,8 @@ page_start('Tableau de bord', 'dashboard');
     <div class="col-lg-5">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white fw-semibold"><i class="bi bi-grid-3x3-gap"></i> Modules</div>
+            <div class="table-responsive">
+            <div class="table-responsive">
             <table class="table table-sm mb-0">
                 <?php foreach ($modules as $m): ?>
                 <tr>

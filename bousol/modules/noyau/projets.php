@@ -109,6 +109,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
+    } elseif ($action === 'remplacer_acte') {
+        // Un fichier ne se supprime pas, il se remplace : l'acte precedent reste accessible
+        // par la chaine des versions, et le journal d'audit garde les deux empreintes.
+        $aid = (int)($_POST['affectation_id'] ?? 0);
+        $st = db()->prepare(
+            'SELECT a.acte_delegation_fichier_id, a.role, p.code
+               FROM affectations a JOIN projets p ON p.id = a.projet_id WHERE a.id = ?'
+        );
+        $st->execute([$aid]);
+        $aff = $st->fetch();
+        if (!$aff) {
+            $erreur = 'Affectation introuvable.';
+        } elseif (empty($_FILES['acte']['name'])) {
+            $erreur = 'Choisissez le nouvel acte de délégation.';
+        } else {
+            $ancien = (int)$aff['acte_delegation_fichier_id'];
+            $nouveau = enregistrer_upload($_FILES['acte'], 'coffre',
+                $aff['code'] . '-DELEGATION-' . $aff['role'] . '-' . date('Ymd') . '.pdf',
+                ALLOWED_DOCUMENT, true, $ancien);
+            if (!$nouveau['success']) {
+                $erreur = 'Acte de délégation : ' . $nouveau['error'];
+            } else {
+                db()->prepare('UPDATE affectations SET acte_delegation_fichier_id = ? WHERE id = ?')
+                    ->execute([$nouveau['id'], $aid]);
+                $ancienF = fichier($ancien);
+                audit('noyau', 'acte_delegation_remplace', 'affectation', $aid,
+                    'Acte remplacé', $ancienF['empreinte'] ?? null, $nouveau['empreinte']);
+                flash_set('success', 'Acte de délégation remplacé. Le précédent reste conservé et consultable.');
+                redirect(base_path('modules/noyau/projets.php'));
+            }
+        }
     } elseif ($action === 'clore') {
         $pid = (int)($_POST['projet_id'] ?? 0);
         db()->prepare("UPDATE projets SET statut = 'clos' WHERE id = ? AND statut = 'actif'")->execute([$pid]);
@@ -152,6 +183,7 @@ require __DIR__ . '/_nav_outil.php';
         <div class="card mb-4">
             <div class="card-header bg-white fw-semibold">Projets</div>
             <div class="table-responsive">
+            <div class="table-responsive">
             <table class="table table-sm table-striped mb-0 align-middle">
                 <thead><tr><th>Code</th><th>Projet</th><th>Bailleur</th><th>Lignes</th><th>Affect.</th><th>Statut</th><th></th></tr></thead>
                 <tbody>
@@ -186,21 +218,40 @@ require __DIR__ . '/_nav_outil.php';
             <?php if (!$affectations): ?>
                 <div class="card-body small text-muted">Aucune affectation. Tant qu'un projet n'a pas de coordinateur, personne ne peut y travailler.</div>
             <?php else: ?>
-            <table class="table table-sm table-striped mb-0 small">
-                <thead><tr><th>Projet</th><th>Personne</th><th>Rôle</th><th>Du</th><th>Au</th><th>Acte</th></tr></thead>
+            <table class="table table-sm table-striped mb-0 small align-middle">
+                <thead><tr><th>Projet</th><th>Personne</th><th>Rôle</th><th>Du</th><th>Au</th><th>Acte de délégation</th></tr></thead>
                 <tbody>
                 <?php foreach ($affectations as $a): ?>
                 <tr>
                     <td><code><?= e($a['projet_code']) ?></code></td>
                     <td><?= e($a['nom']) ?></td>
                     <td><?= e(ROLES_LIBELLES[$a['role']] ?? $a['role']) ?></td>
-                    <td><?= e(date_fr($a['date_debut'])) ?></td>
-                    <td><?= $a['date_fin'] ? e(date_fr($a['date_fin'])) : '—' ?></td>
-                    <td><a href="<?= e(base_path('pdf/serve.php?id=' . (int)$a['acte_delegation_fichier_id'])) ?>" target="_blank"><i class="bi bi-file-earmark-text"></i></a></td>
+                    <td class="text-nowrap"><?= e(date_fr($a['date_debut'])) ?></td>
+                    <td class="text-nowrap"><?= $a['date_fin'] ? e(date_fr($a['date_fin'])) : '—' ?></td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <a href="<?= e(base_path('pdf/serve.php?id=' . (int)$a['acte_delegation_fichier_id'])) ?>" target="_blank" class="text-nowrap">
+                                <i class="bi bi-file-earmark-text"></i> Consulter
+                            </a>
+                            <form method="post" enctype="multipart/form-data" class="d-flex align-items-center gap-1">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="remplacer_acte">
+                                <input type="hidden" name="affectation_id" value="<?= (int)$a['id'] ?>">
+                                <input type="file" name="acte" accept="application/pdf,image/png,image/jpeg"
+                                       class="form-control form-control-sm" style="max-width:13rem" required>
+                                <button class="btn btn-sm btn-outline-secondary text-nowrap">Remplacer</button>
+                            </form>
+                        </div>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
+            <div class="card-footer small text-muted">
+                Remplacer un acte n'efface pas le précédent : les fichiers ne se suppriment jamais, ils se
+                versionnent, et le journal d'audit conserve les deux empreintes.
+            </div>
             <?php endif; ?>
         </div>
     </div>

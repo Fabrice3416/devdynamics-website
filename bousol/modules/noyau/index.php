@@ -154,6 +154,7 @@ require __DIR__ . '/_nav.php';
                         <dt class="col-6">Phase 2 résiduelle</dt><dd class="col-6"><?= (int)duree_residuelle_phase2() ?> mois</dd>
                     </dl>
                     <?php if ($periodesListe): ?>
+                    <div class="table-responsive">
                     <table class="table table-sm mb-0">
                         <thead><tr><th>Mois</th><th>Du</th><th>Au</th><th>Statut</th></tr></thead>
                         <tbody>
@@ -162,6 +163,7 @@ require __DIR__ . '/_nav.php';
                         <?php endforeach; ?>
                         </tbody>
                     </table>
+            </div>
                     <?php else: ?>
                     <form method="post" action="<?= e(base_path('modules/noyau/index.php')) ?>" class="mt-2">
                         <?= csrf_field() ?>

@@ -88,6 +88,7 @@ page_start('Mon spécimen de signature', 'signature');
         <?php if (count($historique) > ($specimen ? 1 : 0)): ?>
         <div class="card">
             <div class="card-header bg-white fw-semibold">Spécimens révoqués</div>
+            <div class="table-responsive">
             <table class="table table-sm mb-0 small">
                 <thead><tr><th>Déposé le</th><th>Révoqué le</th><th>Motif</th></tr></thead>
                 <tbody><?php foreach ($historique as $h): if (!$h['date_revocation']) continue; ?><tr><td><?= e(date_fr($h['date_depot'])) ?></td><td><?= e(date_fr($h['date_revocation'])) ?></td><td><?= e($h['motif_revocation'] ?? '') ?></td></tr><?php endforeach; ?></tbody>

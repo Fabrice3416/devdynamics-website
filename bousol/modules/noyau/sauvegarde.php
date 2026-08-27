@@ -142,10 +142,12 @@ require __DIR__ . '/_nav.php';
             <div class="card-header bg-white fw-semibold">Exports générés sur le serveur</div>
             <?php if (!$exports): ?><div class="card-body small text-muted">Aucun export pour l'instant.</div>
             <?php else: ?>
+            <div class="table-responsive">
             <table class="table table-sm mb-0 small">
                 <thead><tr><th>Archive</th><th>Date</th><th class="text-end">Taille</th></tr></thead>
                 <tbody><?php foreach ($exports as $x): ?><tr><td><?= e($x['nom']) ?></td><td><?= e($x['date']) ?></td><td class="text-end"><?= number_format($x['taille'] / 1024, 0, ',', ' ') ?> Ko</td></tr><?php endforeach; ?></tbody>
             </table>
+            </div>
             <?php endif; ?>
         </div>
     </div>
