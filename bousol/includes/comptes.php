@@ -455,13 +455,31 @@ function reglement_creer(array $d): array
     }
 
     // « Un reglement ne peut porter que sur une seule ligne budgetaire » (CDC 4.1).
+    // Cette regle-la est tenue par la base, ou uk_imputation_dossier interdit une
+    // seconde imputation sur le meme dossier : il n'y a rien a verifier ici.
+    //
+    // Ce qui reste a verifier, c'est le montant. Une ligne au forfait accepte un
+    // reglement en deux temps, avance puis solde, mais la somme des reglements
+    // d'un dossier ne depasse pas ce qui y a ete impute.
     $origineRef = (string)($d['origine_ref'] ?? '');
     if (str_starts_with($origineRef, 'dossier:')) {
         $dossierId = (int)substr($origineRef, 8);
-        $si = db()->prepare('SELECT COUNT(*) FROM imputations WHERE dossier_id = ?');
-        $si->execute([$dossierId]);
-        if ((int)$si->fetchColumn() > 1) {
-            return ['success' => false, 'error' => 'Ce dossier porte plusieurs imputations : une facture couvrant deux lignes se scinde en deux dossiers et deux règlements.'];
+        $si = db()->prepare('SELECT montant FROM imputations WHERE dossier_id = ? AND projet_id = ?');
+        $si->execute([$dossierId, $pid]);
+        $impute = $si->fetchColumn();
+        if ($impute !== false) {
+            $sr = db()->prepare(
+                "SELECT COALESCE(SUM(montant), 0) FROM reglements
+                  WHERE projet_id = ? AND origine_ref = ? AND statut <> 'annule'"
+            );
+            $sr->execute([$pid, $origineRef]);
+            $deja = (float)$sr->fetchColumn();
+            $reste = round((float)$impute - $deja, 2);
+            if ($montant > $reste + 0.005) {
+                return ['success' => false, 'error' => sprintf(
+                    'Ce dossier a été imputé de %s, dont %s déjà réglés : il reste %s à régler.',
+                    htg((float)$impute), htg($deja), htg($reste))];
+            }
         }
     }
 

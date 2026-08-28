@@ -61,6 +61,8 @@ function nettoyer_traces3(PDO $pdo): void
         "DELETE lr FROM lignes_rapprochement lr JOIN rapprochements ra ON ra.id = lr.rapprochement_id WHERE ra.date_releve = '2026-06-30'",
         "DELETE FROM rapprochements WHERE date_releve = '2026-06-30'",
         "DELETE FROM arretes_caisse WHERE commentaire LIKE 'REC3-%' OR date = '2026-06-30'",
+        "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id WHERE d.numero LIKE 'REC3-%'",
+        "DELETE FROM dossiers WHERE numero LIKE 'REC3-%'",
         "DELETE FROM tiers WHERE nom LIKE 'REC3 %'",
     ];
     foreach ($etapes as $q) {
@@ -159,18 +161,36 @@ refuse_avec('Un montant nul est refuse',
     reglement_creer(['mode' => 'virement', 'beneficiaire_id' => $simple, 'compte_id' => (int)$banque['id'],
                      'montant' => 0, 'objet' => 'REC3-montant nul']), 'positif');
 
-// Un dossier portant deux imputations ne peut pas donner un seul reglement.
-$pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC3-D1', 'achat_bien', 1, 'REC3-deux lignes', 1)");
-$dossierMulti = (int)$pdo->lastInsertId();
+// « Un reglement ne porte que sur une seule ligne budgetaire » : la regle est tenue
+// par la base, uk_imputation_dossier interdisant une seconde imputation sur le meme
+// dossier. C'est ce garde-fou qu'on verifie, et non un controle applicatif qui ne
+// pourrait jamais se declencher.
+$pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC3-D1', 'service_compagnie', 1, 'REC3-dossier a regler', 1)");
+$dossier = (int)$pdo->lastInsertId();
 $l22 = budget_ligne('2.2');
 $pdo->prepare("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
-               VALUES (1, ?, ?, 'forfait', 1, 10, 10, CURDATE())")->execute([$dossierMulti, (int)$l22['id']]);
-$pdo->prepare("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
-               VALUES (1, ?, ?, 'mois', 1, 10, 10, CURDATE())")->execute([$dossierMulti, (int)$l11['id']]);
-refuse_avec('Creer un reglement portant sur deux lignes budgetaires est refuse',
+               VALUES (1, ?, ?, 'forfait', 1, 3325, 3325, CURDATE())")->execute([$dossier, (int)$l22['id']]);
+doit_echouer('Un dossier ne porte qu\'une seule imputation, donc une seule ligne', function () use ($pdo, $dossier, $l11) {
+    $pdo->prepare("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
+                   VALUES (1, ?, ?, 'mois', 1, 10, 10, CURDATE())")->execute([$dossier, (int)$l11['id']]);
+});
+
+// Une ligne au forfait accepte un reglement en deux temps, avance puis solde,
+// mais la somme des reglements ne depasse pas ce qui a ete impute.
+refuse_avec('Regler plus que le montant impute au dossier est refuse',
     reglement_creer(['mode' => 'virement', 'beneficiaire_id' => $simple, 'compte_id' => (int)$banque['id'],
-                     'montant' => 20, 'objet' => 'REC3-multiligne', 'origine_ref' => 'dossier:' . $dossierMulti]),
-    'plusieurs imputations');
+                     'montant' => 4000, 'objet' => 'REC3-au-dela de l\'imputation', 'origine_ref' => 'dossier:' . $dossier]),
+    'reste');
+$avance = reglement_creer(['mode' => 'virement', 'beneficiaire_id' => $simple, 'compte_id' => (int)$banque['id'],
+                           'montant' => 2000, 'objet' => 'REC3-avance sur forfait', 'origine_ref' => 'dossier:' . $dossier]);
+cas('Une avance sur une ligne au forfait est acceptee', !empty($avance['success']), $avance['error'] ?? '');
+$solde = reglement_creer(['mode' => 'virement', 'beneficiaire_id' => $simple, 'compte_id' => (int)$banque['id'],
+                          'montant' => 1325, 'objet' => 'REC3-solde du forfait', 'origine_ref' => 'dossier:' . $dossier]);
+cas('Le solde qui complete l\'enveloppe est accepte', !empty($solde['success']), $solde['error'] ?? '');
+refuse_avec('Un troisieme reglement au-dela de l\'enveloppe est refuse',
+    reglement_creer(['mode' => 'virement', 'beneficiaire_id' => $simple, 'compte_id' => (int)$banque['id'],
+                     'montant' => 1, 'objet' => 'REC3-de trop', 'origine_ref' => 'dossier:' . $dossier]),
+    'reste');
 
 $r = reglement_creer(['mode' => 'virement', 'beneficiaire_id' => $mA, 'compte_id' => (int)$banque['id'],
                       'montant' => 50000, 'objet' => 'REC3-reglement nominal']);
