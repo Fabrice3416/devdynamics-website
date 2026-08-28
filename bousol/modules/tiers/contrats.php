@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         http_response_code(403);
         exit('403 - Acces refuse');
     }
+    require_phase_execution('Nouer un contrat');
     $tiersId = (int)($_POST['tiers_id'] ?? 0);
     $type    = (string)($_POST['type'] ?? 'service');
     $ligneId = (int)($_POST['ligne_id'] ?? 0) ?: null;

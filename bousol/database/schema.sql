@@ -319,11 +319,13 @@ CREATE TABLE beneficiaires (
   fonction        VARCHAR(120) NULL,
   sexe            ENUM('F','M','autre') NOT NULL,
   tranche_age     ENUM('moins_18','18_24','25_35','36_50','plus_50') NOT NULL,
+  autorisation_parentale_fichier_id INT UNSIGNED NULL COMMENT 'Exigee si tranche_age = moins_18 (CDC 3.2)',
   telephone       VARCHAR(40) NULL,
   actif           TINYINT(1) NOT NULL DEFAULT 1,
   created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   CONSTRAINT fk_beneficiaires_org FOREIGN KEY (organisation_id) REFERENCES tiers(id),
+  CONSTRAINT fk_beneficiaires_autorisation FOREIGN KEY (autorisation_parentale_fichier_id) REFERENCES fichiers(id),
   KEY idx_beneficiaires_projet (projet_id),
   CONSTRAINT fk_beneficiaires_projet FOREIGN KEY (projet_id) REFERENCES projets(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

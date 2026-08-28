@@ -14,15 +14,15 @@ declare(strict_types=1);
  * la section des questions transversales attend un rendu sur l'egalite de genre. La
  * collecte doit etre annoncee aux personnes concernees.
  *
- * Reserve connue : l'inscription d'un beneficiaire mineur exige une autorisation
- * parentale televersee, et la table `beneficiaires` ne porte pas encore de champ ou
- * la ranger - pas plus que `participations`, qui ne connait que la feuille de
- * presence et la fiche d'evaluation. L'annexe G range ce cas dans le module
- * Activites. En attendant, l'inscription d'un mineur est refusee ici plutot que
- * silencieusement acceptee sans sa piece : aucun des deux projets n'en prevoit.
+ * L'inscription d'un beneficiaire mineur exige le televersement d'une autorisation
+ * parentale, qui devient une piece du dossier au meme titre qu'une feuille de
+ * presence. Aucun des deux projets ne prevoit de participants mineurs, mais la
+ * regle evite d'avoir a decider dans l'urgence si le cas se presente. La piece va
+ * au coffre : elle porte le nom d'un mineur.
  */
 
 require_once __DIR__ . '/../../includes/layout.php';
+require_once __DIR__ . '/../../includes/tiers.php';
 require_projet();
 require_module('tiers');
 
@@ -37,41 +37,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $action = (string)($_POST['action'] ?? '');
 
+    require_phase_execution('Tenir le registre des bénéficiaires');
+
     if ($action === 'inscrire') {
-        $nom     = trim((string)($_POST['nom'] ?? ''));
-        $orgId   = (int)($_POST['organisation_id'] ?? 0) ?: null;
-        $fonction = trim((string)($_POST['fonction'] ?? ''));
-        $sexe    = (string)($_POST['sexe'] ?? '');
-        $tranche = (string)($_POST['tranche_age'] ?? '');
-        $tel     = trim((string)($_POST['telephone'] ?? ''));
-
-        if ($nom === '' || !array_key_exists($sexe, SEXES) || !array_key_exists($tranche, TRANCHES_AGE)) {
-            $erreur = 'Nom, sexe et tranche d\'âge sont obligatoires : le rapport d\'activités les exige.';
-        } elseif ($tranche === 'moins_18') {
-            $erreur = 'Un bénéficiaire mineur ne peut pas être inscrit sans autorisation parentale téléversée, '
-                    . 'et l\'outil ne sait pas encore ranger cette pièce. À traiter avec le module Activités.';
-        } elseif ($orgId !== null) {
-            $so = db()->prepare("SELECT COUNT(*) FROM tiers WHERE id = ? AND type = 'organisation'");
-            $so->execute([$orgId]);
-            if ((int)$so->fetchColumn() === 0) {
-                $erreur = 'Organisation inconnue au référentiel.';
-            }
-        }
-
-        if ($erreur === null) {
-            try {
-                db()->prepare(
-                    'INSERT INTO beneficiaires (projet_id, organisation_id, nom, fonction, sexe, tranche_age, telephone)
-                     VALUES (?,?,?,?,?,?,?)'
-                )->execute([projet_id(), $orgId, $nom, $fonction ?: null, $sexe, $tranche, $tel ?: null]);
-                $bid = (int)db()->lastInsertId();
-                audit('tiers', 'beneficiaire_inscrit', 'beneficiaire', $bid, $nom . ' · ' . SEXES[$sexe] . ' · ' . TRANCHES_AGE[$tranche]);
-                flash_set('success', $nom . ' inscrit au registre.');
-                redirect(base_path('modules/tiers/beneficiaires.php'));
-            } catch (Throwable $ex) {
-                error_log('inscrire beneficiaire: ' . $ex->getMessage());
-                $erreur = 'Inscription impossible.';
-            }
+        $res = beneficiaire_inscrire([
+            'organisation_id' => (int)($_POST['organisation_id'] ?? 0) ?: null,
+            'nom'             => (string)($_POST['nom'] ?? ''),
+            'fonction'        => (string)($_POST['fonction'] ?? ''),
+            'sexe'            => (string)($_POST['sexe'] ?? ''),
+            'tranche_age'     => (string)($_POST['tranche_age'] ?? ''),
+            'telephone'       => (string)($_POST['telephone'] ?? ''),
+        ], $_FILES['autorisation'] ?? null);
+        if (!$res['success']) {
+            $erreur = $res['error'];
+        } else {
+            flash_set('success', trim((string)($_POST['nom'] ?? '')) . ' inscrit au registre.');
+            redirect(base_path('modules/tiers/beneficiaires.php'));
         }
     } elseif ($action === 'actif') {
         $bid = (int)($_POST['id'] ?? 0);
@@ -169,7 +150,12 @@ require __DIR__ . '/_nav.php';
                         <td style="padding-left:1.5rem"><?= e($b['nom']) ?>
                             <?php if ($b['fonction']): ?><span class="text-muted small">· <?= e($b['fonction']) ?></span><?php endif; ?></td>
                         <td class="small text-muted"><?= e(SEXES[$b['sexe']] ?? $b['sexe']) ?></td>
-                        <td class="small text-muted"><?= e(TRANCHES_AGE[$b['tranche_age']] ?? $b['tranche_age']) ?></td>
+                        <td class="small text-muted"><?= e(TRANCHES_AGE[$b['tranche_age']] ?? $b['tranche_age']) ?>
+                            <?php if ($b['tranche_age'] === 'moins_18'): ?>
+                                <?= $b['autorisation_parentale_fichier_id']
+                                    ? '<i class="bi bi-paperclip" title="Autorisation parentale au coffre"></i>'
+                                    : '<span class="badge text-bg-light border">autorisation manquante</span>' ?>
+                            <?php endif; ?></td>
                         <td class="text-end">
                             <?php if ($peutEcrire): ?>
                             <form method="post" class="d-inline"><?= csrf_field() ?>
@@ -193,7 +179,7 @@ require __DIR__ . '/_nav.php';
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white fw-semibold"><i class="bi bi-plus-circle"></i> Inscrire</div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" enctype="multipart/form-data">
                     <?= csrf_field() ?>
                     <input type="hidden" name="action" value="inscrire">
                     <div class="mb-2">
@@ -228,9 +214,14 @@ require __DIR__ . '/_nav.php';
                                 <?php foreach (TRANCHES_AGE as $k => $lib): ?><option value="<?= e($k) ?>"><?= e($lib) ?></option><?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-12 mb-3">
+                        <div class="col-12 mb-2">
                             <label class="form-label small mb-1">Téléphone</label>
                             <input class="form-control form-control-sm" name="telephone" maxlength="40">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label small mb-1">Autorisation parentale</label>
+                            <input type="file" class="form-control form-control-sm" name="autorisation" accept=".pdf,.jpg,.jpeg,.png">
+                            <div class="form-text">Exigée si la tranche d'âge est « Moins de 18 ans ». Versée au coffre.</div>
                         </div>
                     </div>
                     <p class="form-text mb-2">Le sexe et la tranche d'âge alimentent le rapport d'activités.

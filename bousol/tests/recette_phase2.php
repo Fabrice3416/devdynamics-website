@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/budget.php';
+require_once __DIR__ . '/../includes/tiers.php';
 require_once __DIR__ . '/_garde.php';
 
 recette_garde('Recette de la phase 2 - Tiers et Budget');
@@ -52,6 +53,7 @@ function nettoyer_traces(PDO $pdo): void
     $etapes = [
         "DELETE FROM imputations WHERE dossier_id IN (SELECT id FROM dossiers WHERE numero LIKE 'REC2-%')",
         "DELETE FROM dossiers WHERE numero LIKE 'REC2-%'",
+        "DELETE FROM beneficiaires WHERE nom LIKE 'REC2 %'",
         "DELETE FROM tiers WHERE nom IN ('Fournisseur Recette', 'Doublon Recette', 'Sans NIF 1', 'Sans NIF 2')",
         // Les fichiers ne se suppriment pas (trg_fichiers_no_delete) : on les
         // renomme pour que le passage suivant reprenne les siens sans ambiguite.
@@ -289,6 +291,29 @@ cas('La granularite de Koule Ki Pale est rendue a la ligne',
 $ligneKeskle = budget_ligne('1.1', 1);
 $r = budget_controle_imputation((int)$ligneKeskle['id'], 1000.0, 1.0);
 cas('Imputer sur la ligne d\'un autre projet est refuse', refuse($r, 'cloisonnement'), messages($r));
+
+echo "\n== Registre des beneficiaires\n";
+$_SESSION['projet_id'] = 1; $_SESSION['projet_code'] = 'KESKLE'; param_oublier();
+$res = beneficiaire_inscrire(['nom' => 'REC2 Sans sexe', 'sexe' => '', 'tranche_age' => '25_35']);
+cas('Le sexe et la tranche d\'age sont obligatoires', empty($res['success']), $res['error'] ?? 'accepte');
+// « L'inscription d'un beneficiaire mineur exige le televersement d'une
+// autorisation parentale, qui devient une piece du dossier au meme titre qu'une
+// feuille de presence » (CDC 3.2).
+$res = beneficiaire_inscrire(['nom' => 'REC2 Mineur', 'sexe' => 'F', 'tranche_age' => 'moins_18']);
+cas('Inscrire un mineur sans autorisation parentale est refuse', empty($res['success']), $res['error'] ?? 'accepte');
+$res = beneficiaire_inscrire(['nom' => 'REC2 Majeure', 'sexe' => 'F', 'tranche_age' => '18_24', 'organisation_id' => 2]);
+cas('Une beneficiaire majeure s\'inscrit', !empty($res['success']), $res['error'] ?? '');
+$res = beneficiaire_inscrire(['nom' => 'REC2 Orpheline', 'sexe' => 'M', 'tranche_age' => '25_35', 'organisation_id' => 99999]);
+cas('Rattacher a une organisation inconnue est refuse', empty($res['success']), $res['error'] ?? 'accepte');
+$res = beneficiaire_inscrire(['nom' => 'REC2 En son nom propre', 'sexe' => 'M', 'tranche_age' => '18_24']);
+cas('Une personne s\'inscrit en son nom propre, sans organisation', !empty($res['success']), $res['error'] ?? '');
+cas('Aucun mineur inscrit sans sa piece', beneficiaires_mineurs_sans_autorisation(1) === [],
+    count(beneficiaires_mineurs_sans_autorisation(1)) . ' mineur(s) sans autorisation');
+$colonne = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS
+                              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'beneficiaires'
+                                AND COLUMN_NAME = 'autorisation_parentale_fichier_id'")->fetchColumn();
+cas('La colonne d\'autorisation parentale est en base', $colonne === 1,
+    $colonne === 1 ? '' : 'passer database/migration_autorisation_parentale.sql');
 
 echo "\n== Rendu des ecrans\n";
 // La recette validait la bibliotheque sans jamais rendre une page : un TypeError
