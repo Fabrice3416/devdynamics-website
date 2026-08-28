@@ -73,7 +73,11 @@ function page_start(string $titre, string $menuActif = ''): void
                     'activites'    => ['Activités',       'modules/activites/', 'bi-diagram-3'],
                     'restitution'  => ['Restitution',     'modules/restitution/', 'bi-file-earmark-text'],
                     'financement'  => ['Financement',     'modules/financement/', 'bi-cash-stack'],
-                    'referentiels' => ['Référentiels',    'modules/tiers/', 'bi-collection'],
+                    // Les deux referentiels ferment la barre : on les consulte, on n'y saisit
+                    // pas d'ecriture. La cle vaut le code du module, sinon l'onglet ne
+                    // s'allume jamais - page_start() passe 'tiers' et 'budget'.
+                    'budget'       => ['Budget',          'modules/budget/', 'bi-list-nested'],
+                    'tiers'        => ['Référentiels',    'modules/tiers/', 'bi-collection'],
                 ];
                 foreach ($menus as $key => [$lib, $href, $ico]): ?>
                     <li class="nav-item">
