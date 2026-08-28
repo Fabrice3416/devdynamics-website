@@ -63,21 +63,24 @@ $_SESSION['projet_code'] = 'KESKLE'; $_SESSION['role_projet'] = 'coordinateur';
 param_oublier();
 
 echo "== Tiers : unicite du NIF\n";
-$pdo->exec("INSERT INTO tiers (type, nom, nif) VALUES ('fournisseur', 'Fournisseur Recette', '001-234-567-8')");
-$tiersA = (int)$pdo->lastInsertId();
-cas('Creer un tiers avec un NIF neuf', $tiersA > 0);
+$tiersA = (int)etape('Creer un tiers avec un NIF neuf', function () use ($pdo) {
+    $pdo->exec("INSERT INTO tiers (type, nom, nif) VALUES ('fournisseur', 'Fournisseur Recette', '001-234-567-8')");
+    return (int)$pdo->lastInsertId();
+});
 doit_echouer('Creer un second tiers portant un NIF deja enregistre', function () use ($pdo) {
     $pdo->exec("INSERT INTO tiers (type, nom, nif) VALUES ('fournisseur', 'Doublon Recette', '001-234-567-8')");
 });
-$pdo->exec("INSERT INTO tiers (type, nom) VALUES ('fournisseur', 'Sans NIF 1')");
-$sansNif = (int)$pdo->lastInsertId();
+$sansNif = (int)etape('Creer un tiers sans NIF', function () use ($pdo) {
+    $pdo->exec("INSERT INTO tiers (type, nom) VALUES ('fournisseur', 'Sans NIF 1')");
+    return (int)$pdo->lastInsertId();
+});
 doit_echouer('Donner a un tiers existant un NIF deja pris', function () use ($pdo, $sansNif) {
     $pdo->exec("UPDATE tiers SET nif = '001-234-567-8' WHERE id = $sansNif");
 });
 $avant = (int)$pdo->query("SELECT COUNT(*) FROM tiers WHERE nif IS NULL")->fetchColumn();
-$pdo->exec("INSERT INTO tiers (type, nom) VALUES ('fournisseur', 'Sans NIF 2')");
+etape('Un second tiers sans NIF passe', fn() => $pdo->exec("INSERT INTO tiers (type, nom) VALUES ('fournisseur', 'Sans NIF 2')"));
 $apres = (int)$pdo->query("SELECT COUNT(*) FROM tiers WHERE nif IS NULL")->fetchColumn();
-cas('Plusieurs tiers sans NIF cohabitent', $apres === $avant + 1);
+cas('Plusieurs tiers sans NIF cohabitent', $apres === $avant + 1, $avant . ' -> ' . $apres);
 
 echo "\n== Budget : arithmetique de la nomenclature\n";
 cas('Couts directs contractuels de KesKle', abs(budget_couts_directs_contractuels(1) - 4984325.00) < 0.01,
@@ -100,10 +103,12 @@ $l22 = budget_ligne('2.2');          // Compte Google Play, forfait 3 325
 $l10 = budget_ligne('10');           // Provision pour imprevus
 
 // Huit mois deja consommes, pour pouvoir refuser le neuvieme.
-$pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC2-0001', 'honoraires', 1, 'recette', 1)");
-$d1 = (int)$pdo->lastInsertId();
-$pdo->prepare("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
-               VALUES (1, ?, ?, 'mois', 8, 120000, 960000, CURDATE())")->execute([$d1, (int)$l11['id']]);
+etape('Poser huit mois consommes sur la ligne 1.1', function () use ($pdo, $l11) {
+    $pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC2-0001', 'honoraires', 1, 'recette', 1)");
+    $d1 = (int)$pdo->lastInsertId();
+    $pdo->prepare("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
+                   VALUES (1, ?, ?, 'mois', 8, 120000, 960000, CURDATE())")->execute([$d1, (int)$l11['id']]);
+});
 
 $r = budget_controle_imputation((int)$l11['id'], 120000.0, 1.0);
 cas('Imputer un neuvieme mois sur une ligne budgetee a huit mois est refuse',
@@ -117,10 +122,12 @@ cas('Imputer directement sur la provision pour imprevus est refuse',
     refuse($r, 'provision') || refuse($r, 'nature'), messages($r));
 
 // Ligne au forfait : un reglement en deux temps, avance puis solde, doit passer.
-$pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC2-0002', 'achat_service', 1, 'recette forfait', 1)");
-$d2 = (int)$pdo->lastInsertId();
-$pdo->prepare("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
-               VALUES (1, ?, ?, 'forfait', 1, 2000, 2000, CURDATE())")->execute([$d2, (int)$l22['id']]);
+etape('Poser un premier versement sur la ligne au forfait 2.2', function () use ($pdo, $l22) {
+    $pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC2-0002', 'achat_service', 1, 'recette forfait', 1)");
+    $d2 = (int)$pdo->lastInsertId();
+    $pdo->prepare("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
+                   VALUES (1, ?, ?, 'forfait', 1, 2000, 2000, CURDATE())")->execute([$d2, (int)$l22['id']]);
+});
 $r = budget_controle_imputation((int)$l22['id'], 1325.0, 1.0);
 cas('Second versement sur une ligne au forfait dont l\'enveloppe reste disponible : accepte',
     $r === [], messages($r));
@@ -168,7 +175,8 @@ cas('Les deux autorisations separees debloquent la mobilisation',
 
 echo "\n== Budget : une reallocation qui aboutit\n";
 $avant = budget_ligne('3.1');
-budget_appliquer_reallocation(['3.2' => -20000.0, '3.1' => 20000.0], [], 'Recette phase 2');
+etape('Appliquer un mouvement interne a la rubrique 3',
+    fn() => budget_appliquer_reallocation(['3.2' => -20000.0, '3.1' => 20000.0], [], 'Recette phase 2'));
 $apres = budget_ligne('3.1');
 cas('Le budget de gestion a bouge',
     abs((float)$apres['montant_gestion'] - (float)$avant['montant_gestion'] - 20000.0) < 0.01,
