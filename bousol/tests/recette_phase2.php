@@ -53,6 +53,9 @@ function nettoyer_traces(PDO $pdo): void
         "DELETE FROM imputations WHERE dossier_id IN (SELECT id FROM dossiers WHERE numero LIKE 'REC2-%')",
         "DELETE FROM dossiers WHERE numero LIKE 'REC2-%'",
         "DELETE FROM tiers WHERE nom IN ('Fournisseur Recette', 'Doublon Recette', 'Sans NIF 1', 'Sans NIF 2')",
+        // Les fichiers ne se suppriment pas (trg_fichiers_no_delete) : on les
+        // renomme pour que le passage suivant reprenne les siens sans ambiguite.
+        "UPDATE fichiers SET nom_genere = CONCAT('ANCIEN-', id, '-', nom_genere) WHERE nom_genere LIKE 'REC2-AUTORISATION-%'",
         // Si une cle etrangere retient le tiers, liberer au moins son NIF suffit.
         "UPDATE tiers SET nif = NULL WHERE nif = '001-234-567-8'",
         // Le budget de gestion repart du contractuel, comme au chargement du seed.
@@ -138,7 +141,7 @@ $l10 = budget_ligne('10');           // Provision pour imprevus
 
 // Huit mois deja consommes, pour pouvoir refuser le neuvieme.
 etape('Poser huit mois consommes sur la ligne 1.1', function () use ($pdo, $l11) {
-    $pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC2-0001', 'honoraires', 1, 'recette', 1)");
+    $pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC2-0001', 'service_particulier', 1, 'recette', 1)");
     $d1 = (int)$pdo->lastInsertId();
     $pdo->prepare("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
                    VALUES (1, ?, ?, 'mois', 8, 120000, 960000, CURDATE())")->execute([$d1, (int)$l11['id']]);
@@ -157,7 +160,7 @@ cas('Imputer directement sur la provision pour imprevus est refuse',
 
 // Ligne au forfait : un reglement en deux temps, avance puis solde, doit passer.
 etape('Poser un premier versement sur la ligne au forfait 2.2', function () use ($pdo, $l22) {
-    $pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC2-0002', 'achat_service', 1, 'recette forfait', 1)");
+    $pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (1, 'REC2-0002', 'service_compagnie', 1, 'recette forfait', 1)");
     $d2 = (int)$pdo->lastInsertId();
     $pdo->prepare("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
                    VALUES (1, ?, ?, 'forfait', 1, 2000, 2000, CURDATE())")->execute([$d2, (int)$l22['id']]);
@@ -207,6 +210,22 @@ $r = budget_controle_reallocation(['10' => -120000.0, '3.1' => 120000.0], [], ['
 cas('Les deux autorisations separees debloquent la mobilisation',
     $r['refus'] === [], messages($r['refus']));
 
+// Deux autorisations exigees separement : donc deux pieces distinctes.
+$empreinte = str_repeat('a', 64);
+etape('Verser deux pieces d\'autorisation', function () use ($pdo, $empreinte) {
+    $ins = $pdo->prepare("INSERT INTO fichiers (nom_genere, chemin, extension, mime, taille, empreinte)
+                          VALUES (?, ?, 'pdf', 'application/pdf', 1, ?)");
+    $ins->execute(['REC2-AUTORISATION-A.pdf', 'coffre/rec2-a.pdf', $empreinte]);
+    $ins->execute(['REC2-AUTORISATION-B.pdf', 'coffre/rec2-b.pdf', str_repeat('b', 64)]);
+});
+$fA = (int)$pdo->query("SELECT id FROM fichiers WHERE nom_genere = 'REC2-AUTORISATION-A.pdf' ORDER BY id DESC LIMIT 1")->fetchColumn();
+$fB = (int)$pdo->query("SELECT id FROM fichiers WHERE nom_genere = 'REC2-AUTORISATION-B.pdf' ORDER BY id DESC LIMIT 1")->fetchColumn();
+$r = budget_controle_reallocation(['10' => -120000.0, '3.1' => 120000.0], [], ['provision' => $fA, 'variation' => $fA]);
+cas('La meme piece ne vaut pas les deux autorisations',
+    refuse($r['refus'], 'autorisations'), messages($r['refus']));
+$r = budget_controle_reallocation(['10' => -120000.0, '3.1' => 120000.0], [], ['provision' => $fA, 'variation' => $fB]);
+cas('Deux pieces distinctes sont acceptees', $r['refus'] === [], messages($r['refus']));
+
 echo "\n== Budget : une reallocation qui aboutit\n";
 $avant = budget_ligne('3.1');
 etape('Appliquer un mouvement interne a la rubrique 3',
@@ -239,6 +258,34 @@ cas('Sa provision est la ligne mixte 5.1, imputable',
 $r = budget_controle_imputation((int)budget_ligne_provision()['id'], 1000.0, 1.0);
 cas('Sur une ligne mixte, les frais bancaires s\'imputent sans autorisation',
     !refuse($r, 'provision'), messages($r));
+// Les 910 800 de couts directs du contrat KKP incluent les 40 000 de la ligne
+// mixte : les frais bancaires sont une charge reelle et non une provision, donc
+// ils entrent dans l'assiette des 7 %.
+$provKkp = budget_ligne_provision();
+etape('Imputer des frais bancaires sur la ligne mixte', function () use ($pdo, $provKkp) {
+    $pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, created_by) VALUES (2, 'REC2-KKP-01', 'service_compagnie', 1, 'recette KKP', 1)");
+    $d = (int)$pdo->lastInsertId();
+    $pdo->prepare("INSERT INTO imputations (projet_id, dossier_id, ligne_id, unite, quantite, valeur_unitaire, montant, date_imputation)
+                   VALUES (2, ?, ?, 'forfait', 1, 1000, 1000, CURDATE())")->execute([$d, (int)$provKkp['id']]);
+});
+$indKkp = budget_couts_indirects_constates(2);
+cas('La ligne mixte compte dans l\'assiette des couts indirects',
+    abs($indKkp['directs_constates'] - 1000.0) < 0.01, (string)$indKkp['directs_constates']);
+
+// Un budget non ventile mesure a la rubrique ne doit pas afficher 100 % de
+// variation : la rubrique vaut son sous-total des deux cotes tant que le detail
+// n'est pas saisi, sinon plus aucun mouvement ne passerait.
+param_set('granularite_variation', 'rubrique', 'Recette : controle du repli');
+param_oublier();
+$bloquantes = array_filter(budget_variations(2),
+    fn($g) => $g['variation_pct'] !== null && $g['variation_pct'] >= 25);
+cas('Un budget non ventile ne bloque aucune rubrique',
+    $bloquantes === [], count($bloquantes) . ' groupe(s) au-dela du seuil');
+param_set('granularite_variation', 'ligne', 'Recette : retour a la lecture FOKAL');
+param_oublier();
+cas('La granularite de Koule Ki Pale est rendue a la ligne',
+    param('granularite_variation') === 'ligne', (string)param('granularite_variation'));
+
 $ligneKeskle = budget_ligne('1.1', 1);
 $r = budget_controle_imputation((int)$ligneKeskle['id'], 1000.0, 1.0);
 cas('Imputer sur la ligne d\'un autre projet est refuse', refuse($r, 'cloisonnement'), messages($r));

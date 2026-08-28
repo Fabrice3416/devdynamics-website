@@ -79,8 +79,6 @@ page_start('Tableau de bord', 'dashboard');
     <div class="col-6 col-lg-3"><div class="card card-indicateur border-0 shadow-sm"><div class="card-body">
         <div class="libelle">Plafond contractuel</div>
         <div class="valeur fs-5"><?= $plafond === null ? 'À saisir' : e(htg($plafond)) ?></div>
-        <?php $bd = db()->prepare('SELECT SUM(montant) FROM lignes_budgetaires WHERE projet_id = ? AND nature = \'calculee\' AND parent_code IS NULL');
-              $bd->execute([projet_id()]); ?>
         <small class="text-muted"><?php $nl = db()->prepare('SELECT COUNT(*) FROM lignes_budgetaires WHERE projet_id = ?'); $nl->execute([projet_id()]);
             echo (int)$nl->fetchColumn(); ?> lignes chargées</small></div></div></div>
     <div class="col-6 col-lg-3"><div class="card card-indicateur border-0 shadow-sm"><div class="card-body">

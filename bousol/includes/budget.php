@@ -140,7 +140,19 @@ function budget_couts_indirects_constates(?int $projetId = null): array
     $pid = $projetId ?? projet_id();
     $provision = budget_ligne_provision($pid);
     $indirect  = budget_ligne_couts_indirects($pid);
-    $exclus = array_filter([$provision['id'] ?? null, $indirect['id'] ?? null]);
+
+    // Les couts indirects ne s'assoient pas sur eux-memes. La provision, en
+    // revanche, ne sort de l'assiette que lorsqu'elle a sa ligne dediee : sur
+    // Koule Ki Pale elle partage sa ligne avec les frais bancaires, qui sont une
+    // charge directe et reelle - les 910 800 gourdes de couts directs du contrat
+    // incluent bien ces 40 000.
+    $exclus = [];
+    if ($indirect !== null) {
+        $exclus[] = (int)$indirect['id'];
+    }
+    if ($provision !== null && $provision['nature'] !== 'imputable') {
+        $exclus[] = (int)$provision['id'];
+    }
 
     $sql = "SELECT COALESCE(SUM(i.montant),0) FROM imputations i
              WHERE i.projet_id = ? AND i.nature = 'consommation'";
@@ -262,19 +274,28 @@ function budget_variations(?int $projetId = null, array $deltas = []): array
         }
         $groupes[$cle]['contractuel'] += (float)($l['montant'] ?? 0);
         $groupes[$cle]['gestion']     += (float)($l['montant_gestion'] ?? 0) + (float)($deltas[$code] ?? 0);
+        $groupes[$cle]['mouvement']    = ($groupes[$cle]['mouvement'] ?? 0.0) + (float)($deltas[$code] ?? 0);
     }
 
     // A la granularite rubrique, la reference est le sous-total du contrat lui-meme :
-    // le detail par ligne n'est pas toujours communique (Koule Ki Pale).
+    // le detail par ligne n'est pas toujours communique (Koule Ki Pale). Tant qu'il
+    // ne l'est pas, la rubrique vaut son sous-total des deux cotes, sinon un budget
+    // non ventile afficherait 100 % de variation et bloquerait tout mouvement.
     if ($granularite !== 'ligne') {
         foreach (budget_lignes($pid) as $l) {
-            if ($l['nature'] === 'rubrique' && (int)$l['niveau'] === 1 && $l['montant'] !== null) {
-                $cle = 'R' . ($l['rubrique'] ?? '?');
-                if (isset($groupes[$cle])) {
-                    $groupes[$cle]['contractuel'] = (float)$l['montant'];
-                    $groupes[$cle]['libelle'] = $l['code'] . ' ' . $l['libelle'];
-                }
+            if ($l['nature'] !== 'rubrique' || (int)$l['niveau'] !== 1 || $l['montant'] === null) {
+                continue;
             }
+            $cle = 'R' . ($l['rubrique'] ?? '?');
+            if (!isset($groupes[$cle])) {
+                continue;
+            }
+            $ventilee = abs((float)$l['montant'] - $groupes[$cle]['contractuel']) < 0.01;
+            $groupes[$cle]['libelle'] = $l['code'] . ' ' . $l['libelle'];
+            if (!$ventilee) {
+                $groupes[$cle]['gestion'] = (float)$l['montant'] + ($groupes[$cle]['mouvement'] ?? 0.0);
+            }
+            $groupes[$cle]['contractuel'] = (float)$l['montant'];
         }
     }
 
@@ -458,6 +479,20 @@ function budget_controle_reallocation(array $deltasMontant, array $deltasQuantit
             $refus[] = ['regle' => 'plancher',
                         'message' => sprintf('%s : la quantité de gestion tomberait à %s alors que %s sont déjà imputées.',
                             $code, $apres, $deja['quantite'])];
+        }
+    }
+
+    // « Celle qui libere la provision ne vaut pas accord sur la reallocation »
+    // (CDC 2.3) : deux autorisations exigees separement, donc deux pieces
+    // distinctes. Sans ce controle, televerser deux fois le meme document
+    // suffirait a lever les deux verrous d'un coup.
+    if (!empty($autorisations['provision']) && !empty($autorisations['variation'])) {
+        $a = fichier((int)$autorisations['provision']);
+        $b = fichier((int)$autorisations['variation']);
+        if ($a !== null && $b !== null && $a['empreinte'] === $b['empreinte']) {
+            $refus[] = ['regle' => 'autorisations',
+                        'message' => 'La même pièce est versée pour la mobilisation et pour la variation : '
+                                   . 'les deux autorisations sont exigées séparément.'];
         }
     }
 

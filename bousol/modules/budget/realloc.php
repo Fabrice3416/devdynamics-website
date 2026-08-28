@@ -19,6 +19,7 @@ require_once __DIR__ . '/../../includes/layout.php';
 require_once __DIR__ . '/../../includes/budget.php';
 require_role(['coordinateur']);
 require_module('budget');
+require_phase_execution('Réallouer le budget de gestion');
 
 $erreurs  = [];
 $alertes  = [];

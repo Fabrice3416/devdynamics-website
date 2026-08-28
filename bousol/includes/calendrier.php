@@ -169,6 +169,31 @@ function calendrier_verrouille(?int $projetId = null): bool
     return (int)$stmt->fetchColumn() > 0;
 }
 
+/**
+ * Une ecriture ne se pose que pendant l'execution du projet.
+ *
+ * L'annexe B ferme en phase 2 tout ce qui touche au budget - imputer, mobiliser la
+ * provision - et l'annexe G exige qu'une imputation creee pendant la periode de
+ * regularisation echoue. La regle de phase prime toujours sur l'interrupteur de
+ * module (CDC 7.2) : le module peut etre actif, la phase decide.
+ *
+ * Un projet sans phase enregistree n'est pas un projet clos : on le laisse ouvert.
+ */
+function require_phase_execution(string $operation = 'Cette opération'): void
+{
+    $phase = phase_code();
+    if ($phase === null || $phase === 'projet_actif') {
+        return;
+    }
+    $lib = $phase === 'regularisation' ? 'la période de régularisation' : 'la phase de suivi post-clôture';
+    http_response_code(403);
+    exit('<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Phase close</title></head>'
+       . '<body style="font-family:Candara,sans-serif;padding:3rem;color:#2a2a28">'
+       . '<h1 style="font-family:Georgia,serif;color:#4c5a47">Opération fermée par la phase du projet</h1>'
+       . '<p>' . e($operation) . ' n\'est plus possible pendant ' . e($lib) . '.</p>'
+       . '<p><a href="' . e(base_path('dashboard.php')) . '">Retour au tableau de bord</a></p></body></html>');
+}
+
 /** Phase courante : projet_actif | regularisation | post_cloture (ou null avant initialisation). */
 function phase_courante(?int $projetId = null): ?array
 {
