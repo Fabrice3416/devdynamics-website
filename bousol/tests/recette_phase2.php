@@ -309,11 +309,11 @@ $res = beneficiaire_inscrire(['nom' => 'REC2 En son nom propre', 'sexe' => 'M', 
 cas('Une personne s\'inscrit en son nom propre, sans organisation', !empty($res['success']), $res['error'] ?? '');
 cas('Aucun mineur inscrit sans sa piece', beneficiaires_mineurs_sans_autorisation(1) === [],
     count(beneficiaires_mineurs_sans_autorisation(1)) . ' mineur(s) sans autorisation');
-$colonne = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS
-                              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'beneficiaires'
-                                AND COLUMN_NAME = 'autorisation_parentale_fichier_id'")->fetchColumn();
-cas('La colonne d\'autorisation parentale est en base', $colonne === 1,
-    $colonne === 1 ? '' : 'passer database/migration_autorisation_parentale.sql');
+// SHOW COLUMNS plutot qu'information_schema : cette base est refusee a certaines
+// connexions de cet hebergement, et le controle doit tenir partout.
+$colonne = $pdo->query("SHOW COLUMNS FROM beneficiaires LIKE 'autorisation_parentale_fichier_id'")->fetchAll();
+cas('La colonne d\'autorisation parentale est en base', count($colonne) === 1,
+    $colonne ? '' : 'passer database/migration_autorisation_parentale.sql');
 
 echo "\n== Rendu des ecrans\n";
 // La recette validait la bibliotheque sans jamais rendre une page : un TypeError

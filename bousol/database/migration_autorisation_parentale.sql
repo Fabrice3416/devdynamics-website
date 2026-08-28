@@ -12,23 +12,22 @@
 -- piece. Aucun des deux projets n'en prevoit, mais la regle evite d'avoir a
 -- decider dans l'urgence si le cas se presente.
 --
--- Idempotente : relancable sans dommage.
+-- Idempotente, et sans lecture d'information_schema : la connexion de phpMyAdmin
+-- se voit refuser cette base sur cet hebergement, la ou celle de PHP y accede.
+-- IF NOT EXISTS sur un ALTER est une extension MariaDB, qui est le moteur ici.
+--
+--   Import phpMyAdmin, ou :
 --   mysql -u UTILISATEUR -p u218662965_bousol < migration_autorisation_parentale.sql
 -- =====================================================================
 
-SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'beneficiaires'
-              AND COLUMN_NAME = 'autorisation_parentale_fichier_id');
-SET @s := IF(@c = 0,
-  'ALTER TABLE beneficiaires
-     ADD COLUMN autorisation_parentale_fichier_id INT UNSIGNED NULL
-       COMMENT ''Exigee si tranche_age = moins_18 (CDC 3.2)'' AFTER tranche_age,
-     ADD CONSTRAINT fk_beneficiaires_autorisation
-       FOREIGN KEY (autorisation_parentale_fichier_id) REFERENCES fichiers(id)',
-  'SELECT ''autorisation_parentale_fichier_id deja presente'' AS resultat');
-PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+ALTER TABLE beneficiaires
+  ADD COLUMN IF NOT EXISTS autorisation_parentale_fichier_id INT UNSIGNED NULL
+    COMMENT 'Exigee si tranche_age = moins_18 (CDC 3.2)' AFTER tranche_age;
 
--- Controle : la colonne et sa cle etrangere sont en place.
-SELECT COUNT(*) AS colonne_presente FROM information_schema.COLUMNS
- WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'beneficiaires'
-   AND COLUMN_NAME = 'autorisation_parentale_fichier_id';
+ALTER TABLE beneficiaires
+  ADD CONSTRAINT IF NOT EXISTS fk_beneficiaires_autorisation
+    FOREIGN KEY (autorisation_parentale_fichier_id) REFERENCES fichiers(id);
+
+-- Controle : la ligne suivante doit apparaitre. Rien ne s'affiche si la colonne
+-- manque, et l'ALTER ci-dessus aura alors signale son erreur.
+SHOW COLUMNS FROM beneficiaires LIKE 'autorisation_parentale_fichier_id';
