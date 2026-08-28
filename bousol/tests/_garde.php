@@ -106,7 +106,20 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE FROM rapprochements WHERE date_releve = '2026-06-30'",
         "DELETE FROM arretes_caisse WHERE commentaire LIKE 'REC3-%' OR date = '2026-06-30'",
 
-        // Depenses : les imputations de toutes les recettes, quel que soit leur prefixe.
+        // Depenses. Les dossiers de la phase 4 portent un numero DOS-, comme les
+        // vrais : on les retrouve par leur objet, sans risquer d'emporter un
+        // dossier reel de la base de test.
+        "DELETE v FROM validations_reglement v JOIN reglements r ON r.id = v.reglement_id WHERE r.objet LIKE '%REC4-%'",
+        "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id
+           JOIN reglements r ON r.id = e.reglement_id WHERE r.objet LIKE '%REC4-%'",
+        "DELETE e FROM ecritures e JOIN reglements r ON r.id = e.reglement_id WHERE r.objet LIKE '%REC4-%'",
+        "DELETE FROM reglements WHERE objet LIKE '%REC4-%'",
+        "DELETE p FROM pieces p JOIN dossiers d ON d.id = p.dossier_id WHERE d.objet LIKE 'REC4-%'",
+        "DELETE p FROM proformas p JOIN dossiers d ON d.id = p.dossier_id WHERE d.objet LIKE 'REC4-%'",
+        "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id WHERE d.objet LIKE 'REC4-%'",
+        "DELETE FROM dossiers WHERE objet LIKE 'REC4-%'",
+
+        // Les imputations de toutes les recettes, quel que soit leur prefixe.
         "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id WHERE d.numero LIKE 'REC%'",
         "DELETE FROM dossiers WHERE numero LIKE 'REC%'",
 
