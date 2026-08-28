@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="text-center mb-4">
                         <i class="bi bi-compass fs-1" style="color:var(--bsl-olive)"></i>
                         <h4 class="mt-2 mb-0">Bousòl</h4>
-                        <small class="text-muted">Pilotage du projet KèsKlè</small>
+                        <small class="text-muted">Pilotage des projets subventionnés</small>
                     </div>
                     <?php if ($expired): ?><div class="alert alert-warning">Votre session a expiré. Reconnectez-vous.</div><?php endif; ?>
                     <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>

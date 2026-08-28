@@ -32,13 +32,26 @@ final class PdfService
     }
 
     /** En-tete commun a tous les documents generes (organisation, projet, bailleur, contrat). */
+    /**
+     * En-tete commun a tous les documents generes. Le projet et son bailleur se
+     * lisent dans la table des projets et non dans une constante : le meme gabarit
+     * sert KesKle et Koule Ki Pale, et un document qui annoncerait le mauvais
+     * bailleur serait irrecevable. La mention longue exigee par certains contrats
+     * - « financé par l'Union européenne » - se met dans le parametre du projet.
+     */
     public static function entete(): array
     {
+        $projet = null;
+        if (projet_id() !== null) {
+            $st = db()->prepare('SELECT intitule, bailleur FROM projets WHERE id = ?');
+            $st->execute([projet_id()]);
+            $projet = $st->fetch() ?: null;
+        }
         return [
             'organisation'  => param('nom_organisation', 'DÉVELOPPEMENT ET DYNAMISME'),
-            'projet'        => param('nom_projet', 'KèsKlè'),
+            'projet'        => $projet['intitule'] ?? (projet_intitule() ?? ''),
             'contrat'       => param('numero_contrat') ?? '________________',
-            'bailleur'      => 'Programme d\'Appui aux Initiatives Émergentes de la Société Civile (PAIESC) — financé par l\'Union européenne',
+            'bailleur'      => param('mention_bailleur') ?? ($projet['bailleur'] ?? ''),
             'compte'        => param('compte_bancaire', ''),
             'debut'         => date_debut(),
             'fin'           => date_fin(),

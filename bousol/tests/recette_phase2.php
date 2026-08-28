@@ -121,6 +121,12 @@ cas('Taux des couts indirects deduit du contrat', abs(budget_taux_indirect(1) - 
     (string)budget_taux_indirect(1));
 cas('Part des ressources humaines a 24,29 %', abs((float)budget_part_rh(1) - 24.29) < 0.01,
     (string)budget_part_rh(1));
+// Une rubrique non ventilee vaut son sous-total : sans cela le projet tomberait a
+// 103 756 gourdes pour un plafond de 974 556, et la part RH afficherait 231 %.
+cas('Total contractuel de Koule Ki Pale malgre son detail manquant',
+    abs(budget_total_contractuel(2) - 974556.00) < 0.01, (string)budget_total_contractuel(2));
+cas('Part des ressources humaines de Koule Ki Pale a 24,63 %',
+    abs((float)budget_part_rh(2) - 24.63) < 0.01, (string)budget_part_rh(2));
 cas('Detail de KesKle complet, detail de Koule Ki Pale a saisir',
     budget_detail_manquant(1) === [] && budget_detail_manquant(2) !== [],
     count(budget_detail_manquant(2)) . ' rubrique(s) KKP non ventilees');

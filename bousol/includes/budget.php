@@ -180,12 +180,42 @@ function budget_total(string $colonne = 'montant_gestion', ?int $projetId = null
             $enveloppes[$l['code']] = true;
         }
     }
+
+    $detail = [];        // rubrique => somme des lignes, colonne demandee
+    $contractuel = [];   // rubrique => somme des lignes au contrat, pour juger de la ventilation
     $total = 0.0;
     foreach ($lignes as $code => $l) {
-        if ($l['nature'] !== 'imputable' && !isset($enveloppes[$code])) {
+        if ($l['nature'] === 'imputable') {
+            $r = (string)($l['rubrique'] ?? '?');
+            $detail[$r] = ($detail[$r] ?? 0.0) + (float)($l[$colonne] ?? 0) + (float)($deltas[$code] ?? 0);
+            $contractuel[$r] = ($contractuel[$r] ?? 0.0) + (float)($l['montant'] ?? 0);
+        } elseif (isset($enveloppes[$code])) {
+            // Une enveloppe qui n'est pas une ligne imputable s'ajoute telle quelle.
+            $total += (float)($l[$colonne] ?? 0) + (float)($deltas[$code] ?? 0);
+        }
+    }
+
+    // Une rubrique dont le detail n'est pas encore saisi vaut son sous-total au
+    // contrat, et non zero : le budget approuve de Koule Ki Pale ne communique que
+    // les six sous-totaux, et compter ses onze lignes vides ramenerait le projet a
+    // 103 756 gourdes pour un plafond de 974 556. Le controle du plafond serait
+    // alors sans effet, et la part des ressources humaines afficherait 231 %.
+    $rubriques = [];
+    foreach ($lignes as $l) {
+        if ($l['nature'] !== 'rubrique' || (int)$l['niveau'] !== 1) {
             continue;
         }
-        $total += (float)($l[$colonne] ?? 0) + (float)($deltas[$code] ?? 0);
+        $r = (string)($l['rubrique'] ?? '?');
+        $rubriques[$r] = true;
+        $sousTotal = $l['montant'] === null ? null : (float)$l['montant'];
+        $ventilee = $sousTotal === null || abs($sousTotal - ($contractuel[$r] ?? 0.0)) < 0.01;
+        $total += $ventilee ? ($detail[$r] ?? 0.0) : $sousTotal;
+    }
+    // Une ligne imputable sans rubrique de premier niveau compte pour elle-meme.
+    foreach ($detail as $r => $montant) {
+        if (empty($rubriques[$r])) {
+            $total += $montant;
+        }
     }
     return round($total, 2);
 }

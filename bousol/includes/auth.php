@@ -19,6 +19,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/audit.php';
+require_once __DIR__ . '/erreurs.php';   // capture a la frontiere du module (CDC 7.2)
 
 const SESSION_NAME = 'BOUSOL_SID';
 const ROLES = ['coordinateur', 'raf', 'mandataire'];
