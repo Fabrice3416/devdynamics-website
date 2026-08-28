@@ -10,7 +10,7 @@ INSERT INTO module_etats (module, libelle, version, critique) VALUES
 ('signature',    'Signature',    '1.0.0', 0),
 ('tiers',        'Tiers',        '1.0.0', 0),
 ('budget',       'Budget',       '1.0.0', 1),
-('comptes',      'Comptes',      '0.1.0', 0),
+('comptes',      'Comptes',      '1.0.0', 0),
 ('activites',    'Activités',    '0.1.0', 0),
 ('depenses',     'Dépenses',     '0.1.0', 0),
 ('remuneration', 'Rémunération', '0.1.0', 0),

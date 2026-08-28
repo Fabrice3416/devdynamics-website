@@ -571,21 +571,25 @@ function budget_appliquer_reallocation(array $deltasMontant, array $deltasQuanti
             $maj->execute([$apresM, $apresQ, (int)$l['id'], projet_id()]);
             $trace[] = sprintf('%s %s -> %s', $code, htg($avantM), htg($apresM));
         }
+
+        $piece = [];
+        foreach (['provision' => 'autorisation de mobilisation', 'variation' => 'autorisation de variation'] as $k => $lib) {
+            if (!empty($autorisations[$k])) {
+                $f = fichier((int)$autorisations[$k]);
+                $piece[] = $lib . ' fichier #' . (int)$autorisations[$k] . ($f ? ' empreinte ' . substr($f['empreinte'], 0, 12) : '');
+            }
+        }
+        $provision = budget_ligne_provision();
+        $mobilisation = $provision !== null && ($deltasMontant[$provision['code']] ?? 0) < 0;
+
+        // La trace est dans la transaction : le budget ne bouge pas sans elle,
+        // puisque c'est elle qui tient lieu d'historique (CDC 2.2).
+        audit_strict('budget', $mobilisation ? 'provision_mobilisee' : 'budget_realloue', 'budget', projet_id(),
+            implode(' ; ', $trace) . ' · ' . $motif . ($piece ? ' · ' . implode(' ; ', $piece) : ''));
+
         $pdo->commit();
     } catch (Throwable $e) {
         $pdo->rollBack();
         throw $e;
     }
-
-    $piece = [];
-    foreach (['provision' => 'autorisation de mobilisation', 'variation' => 'autorisation de variation'] as $k => $lib) {
-        if (!empty($autorisations[$k])) {
-            $f = fichier((int)$autorisations[$k]);
-            $piece[] = $lib . ' fichier #' . (int)$autorisations[$k] . ($f ? ' empreinte ' . substr($f['empreinte'], 0, 12) : '');
-        }
-    }
-    $provision = budget_ligne_provision();
-    $mobilisation = $provision !== null && ($deltasMontant[$provision['code']] ?? 0) < 0;
-    audit('budget', $mobilisation ? 'provision_mobilisee' : 'budget_realloue', 'budget', projet_id(),
-        implode(' ; ', $trace) . ' · ' . $motif . ($piece ? ' · ' . implode(' ; ', $piece) : ''));
 }
