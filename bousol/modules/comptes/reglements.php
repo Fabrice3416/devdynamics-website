@@ -6,8 +6,10 @@ declare(strict_types=1);
  *
  * Le reglement appartient a ce module et non a Depenses : le dossier demande son
  * execution, Comptes le produit, l'enregistre et l'ecrit en partie double
- * (CDC 4.9). Tant que Depenses n'est pas livre, la demande se saisit ici, et son
- * origine reste libre - c'est le champ que Depenses remplira demain.
+ * (CDC 4.9). Cet ecran-ci sert les reglements qui ne viennent d'aucun dossier :
+ * un versement a la DGI, un renflouement de caisse, une regularisation. Un
+ * reglement adosse a un dossier de depense se demande depuis ce dossier, ou le
+ * controle des pieces prealables au paiement s'applique.
  */
 
 require_once __DIR__ . '/../../includes/layout.php';
@@ -36,6 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $fichierTaux = (int)$up['id'];
         }
+    }
+
+    // Comptes ne lit pas les pieces d'un dossier : la dependance va de Depenses
+    // vers Comptes et non l'inverse (CDC 7.2). L'ecran refuse donc cette origine
+    // plutot que de laisser passer un reglement qui echapperait au controle des
+    // pieces prealables au paiement.
+    if ($erreur === null && str_starts_with(trim((string)($_POST['origine_ref'] ?? '')), 'dossier:')) {
+        $erreur = 'Un règlement adossé à un dossier de dépense se demande depuis ce dossier, '
+                . 'où le contrôle des pièces préalables au paiement s\'applique.';
     }
 
     if ($erreur === null) {
@@ -159,7 +170,8 @@ require __DIR__ . '/_nav.php';
             </div>
             <div class="col-md-3">
                 <label class="form-label small mb-1">Origine <span class="text-muted">module:référence</span></label>
-                <input class="form-control form-control-sm" name="origine_ref" placeholder="dossier:12" maxlength="40">
+                <input class="form-control form-control-sm" name="origine_ref" placeholder="financement:3" maxlength="40">
+                <div class="form-text">Un règlement de dossier se demande depuis le dossier.</div>
             </div>
             <div class="col-12"><hr class="my-2"></div>
             <div class="col-md-2">

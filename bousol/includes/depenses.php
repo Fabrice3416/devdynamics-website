@@ -249,9 +249,34 @@ function piece_verser(int $pieceId, array $fichier, ?string $datePiece = null): 
     }
     db()->prepare("UPDATE pieces SET fichier_id = ?, statut = 'recue', date_piece = ? WHERE id = ?")
         ->execute([(int)$up['id'], $datePiece ?? date('Y-m-d'), $pieceId]);
+    dossier_avancer_sur_piece((int)$piece['dossier_id'], (string)$piece['type']);
     audit('depenses', 'piece_versee', 'dossier', (int)$piece['dossier_id'],
         $piece['numero'] . ' · ' . $piece['libelle'] . ' · fichier #' . (int)$up['id']);
     return ['success' => true];
+}
+
+/**
+ * Deux des neuf etapes du cycle ne se declarent pas : elles se constatent a
+ * l'arrivee de leur piece. Le bon de commande fait passer le dossier a l'etat
+ * commande, le bon de reception a l'etat receptionne. Les etats posterieurs -
+ * approuve, regle, clos - ne redescendent jamais.
+ */
+function dossier_avancer_sur_piece(int $dossierId, string $typePiece): void
+{
+    $etape = match ($typePiece) {
+        'bon_commande'  => 'commande',
+        'bon_reception' => 'receptionne',
+        default         => null,
+    };
+    if ($etape === null) {
+        return;
+    }
+    $anterieurs = $etape === 'commande'
+        ? ['brouillon', 'impute', 'en_concurrence']
+        : ['brouillon', 'impute', 'en_concurrence', 'commande'];
+    $in = implode(',', array_fill(0, count($anterieurs), '?'));
+    db()->prepare("UPDATE dossiers SET statut = ? WHERE id = ? AND statut IN ($in)")
+        ->execute([$etape, $dossierId, ...$anterieurs]);
 }
 
 /** Une piece que le type prevoit mais que ce dossier-ci n'appelle pas. */
@@ -289,11 +314,16 @@ function piece_sans_objet(int $pieceId, string $motif): array
  * @return array{success: bool, error?: string, alertes?: string[]}
  */
 function dossier_imputer(int $dossierId, int $ligneId, float $quantite, float $valeurUnitaire,
-                         string $unite, ?string $derogationMotif = null, string $nature = 'consommation'): array
+                         string $unite, string $nature = 'consommation'): array
 {
     $d = dossier($dossierId);
     if ($d === null) {
         return ['success' => false, 'error' => 'Dossier inconnu dans ce projet.'];
+    }
+    // « Imputer au budget : Coordinateur L, RAF E » (annexe B).
+    if (user_role() !== 'raf') {
+        return ['success' => false, 'error' => 'L\'imputation revient au Responsable Administratif et Financier ; '
+            . 'le Coordinateur en a la lecture, et la dérogation de quantité.'];
     }
     if (in_array($d['statut'], ['clos', 'abandonne', 'regle'], true)) {
         return ['success' => false, 'error' => 'Un dossier ' . $d['statut'] . ' ne se réimpute pas.'];
@@ -307,11 +337,9 @@ function dossier_imputer(int $dossierId, int $ligneId, float $quantite, float $v
     $montant = round($quantite * $valeurUnitaire, 2);
 
     // La derogation ne leve que le controle de quantite, et sur motif ecrit
-    // enregistre : le Coordinateur seul en dispose (CDC 2.3, annexe H).
-    $derogation = $derogationMotif !== null && trim($derogationMotif) !== '';
-    if ($derogation && user_role() !== 'coordinateur') {
-        return ['success' => false, 'error' => 'La dérogation au contrôle de quantité appartient au Coordinateur.'];
-    }
+    // enregistre. Elle a ete accordee en amont par le Coordinateur : le RAF la
+    // trouve posee sur le dossier, il ne se l'accorde pas a lui-meme.
+    $derogation = trim((string)($d['derogation_quantite_motif'] ?? '')) !== '';
 
     $refus = budget_controle_imputation($ligneId, $montant, $quantite, $derogation);
     if ($refus) {
@@ -332,21 +360,48 @@ function dossier_imputer(int $dossierId, int $ligneId, float $quantite, float $v
         if ($d['statut'] === 'brouillon') {
             $pdo->prepare("UPDATE dossiers SET statut = 'impute' WHERE id = ?")->execute([$dossierId]);
         }
-        if ($derogation) {
-            $pdo->prepare('UPDATE dossiers SET derogation_quantite_motif = ? WHERE id = ?')
-                ->execute([trim($derogationMotif), $dossierId]);
+        // Le montant prevu a l'ouverture n'etait qu'une estimation ; c'est
+        // l'imputation qui donne le montant reel. Si elle franchit le seuil, la
+        // mise en concurrence redevient exigible.
+        if (concurrence_requise($montant, (string)$d['type'])) {
+            $pdo->prepare("UPDATE pieces SET obligatoire = 1, statut = 'attendue'
+                            WHERE dossier_id = ? AND type = 'proforma' AND statut = 'sans_objet'")
+                ->execute([$dossierId]);
         }
         $ligne = budget_ligne_par_id($ligneId);
         audit_strict('depenses', 'dossier_impute', 'dossier', $dossierId,
             $d['numero'] . ' · ligne ' . ($ligne['code'] ?? $ligneId) . ' · ' . $quantite . ' ' . UNITES[$unite]
             . ' × ' . htg($valeurUnitaire) . ' = ' . htg($montant)
-            . ($derogation ? ' · dérogation quantité : ' . trim($derogationMotif) : ''));
+            . ($derogation ? ' · sous dérogation de quantité' : ''));
         $pdo->commit();
     } catch (Throwable $e) {
         $pdo->rollBack();
         error_log('dossier_imputer: ' . $e->getMessage());
         return ['success' => false, 'error' => 'Imputation impossible : ' . $e->getMessage()];
     }
+    return ['success' => true];
+}
+
+/**
+ * Le Coordinateur accorde la derogation au controle de quantite, sur motif ecrit
+ * et enregistre (CDC 2.3, annexe H). C'est un acte distinct de l'imputation, qui
+ * revient au RAF : celui qui leve le controle n'est pas celui qui en profite.
+ */
+function dossier_deroger_quantite(int $dossierId, string $motif): array
+{
+    $d = dossier($dossierId);
+    if ($d === null) {
+        return ['success' => false, 'error' => 'Dossier inconnu dans ce projet.'];
+    }
+    if (user_role() !== 'coordinateur') {
+        return ['success' => false, 'error' => 'La dérogation au contrôle de quantité appartient au Coordinateur.'];
+    }
+    if (trim($motif) === '') {
+        return ['success' => false, 'error' => 'La dérogation exige un motif écrit.'];
+    }
+    db()->prepare('UPDATE dossiers SET derogation_quantite_motif = ? WHERE id = ? AND projet_id = ?')
+        ->execute([mb_substr(trim($motif), 0, 1000), $dossierId, projet_id()]);
+    audit('depenses', 'derogation_quantite', 'dossier', $dossierId, $d['numero'] . ' · ' . trim($motif));
     return ['success' => true];
 }
 
@@ -480,7 +535,7 @@ function dossier_approuver(int $dossierId): array
     if (imputation_dossier($dossierId) === null) {
         return ['success' => false, 'error' => 'Un dossier s\'impute avant d\'être approuvé.'];
     }
-    if (in_array($d['statut'], ['clos', 'abandonne', 'regle'], true)) {
+    if (in_array($d['statut'], ['clos', 'abandonne', 'regle', 'approuve'], true)) {
         return ['success' => false, 'error' => 'Un dossier ' . $d['statut'] . ' ne s\'approuve plus.'];
     }
     db()->prepare("UPDATE dossiers SET statut = 'approuve', approuve_par = ?, approuve_le = NOW() WHERE id = ?")
@@ -518,6 +573,10 @@ function dossier_demander_reglement(int $dossierId, array $reglement): array
         return ['success' => false, 'error' => 'Pièces préalables au paiement manquantes : '
             . implode(', ', $manquantes) . '. Aucun rôle ne peut lever cette règle.'];
     }
+    $concurrence = concurrence_incomplete($dossierId, (float)$imputation['montant'], (string)$d['type']);
+    if ($concurrence !== null) {
+        return ['success' => false, 'error' => $concurrence];
+    }
 
     $res = reglement_creer([
         'mode'            => (string)($reglement['mode'] ?? param('mode_reglement_defaut', 'virement')),
@@ -539,6 +598,31 @@ function dossier_demander_reglement(int $dossierId, array $reglement): array
     db()->prepare('UPDATE dossiers SET reglement_ref = ? WHERE id = ?')->execute([$res['numero'], $dossierId]);
     audit('depenses', 'reglement_demande', 'dossier', $dossierId, $d['numero'] . ' · règlement ' . $res['numero']);
     return $res + ['alertes' => ecart_recu_reglement($dossierId, date('Y-m-d'))];
+}
+
+/**
+ * « Au-dessus du seuil, trois proformas sont exiges, et le choix d'une offre autre
+ * que la moins-disante impose un motif ecrit » (CDC 4.3). Le motif se verifie a la
+ * selection ; le nombre d'offres, lui, ne peut se verifier qu'au moment de payer,
+ * puisque les offres arrivent une a une.
+ *
+ * @return string|null le motif du refus, ou null si la concurrence est en regle
+ */
+function concurrence_incomplete(int $dossierId, float $montant, string $typeDossier): ?string
+{
+    if (!concurrence_requise($montant, $typeDossier)) {
+        return null;
+    }
+    $offres = proformas_dossier($dossierId);
+    if (count($offres) < 3) {
+        return sprintf('Ce dossier dépasse le seuil de mise en concurrence : trois proformas sont exigés, %d versé(s).',
+            count($offres));
+    }
+    $retenues = array_filter($offres, fn($o) => (int)$o['retenu'] === 1);
+    if (!$retenues) {
+        return 'Aucune offre n\'est retenue : le choix doit être arrêté avant le règlement.';
+    }
+    return null;
 }
 
 /**

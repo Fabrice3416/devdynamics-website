@@ -76,8 +76,15 @@ cas('Chaque case nait attendue et vide',
 
 echo "\n== Mise en concurrence\n";
 $seuil = param('seuil_proformas');
+if ($seuil === null) {
+    // Sans seuil, aucune mise en concurrence n'est exigible et la moitie de cette
+    // section ne testerait rien. On le pose une fois : les parametres sont
+    // historises, cette version-la reste et c'est ce que le CDC veut.
+    param_set('seuil_proformas', '10000', 'Valeur posee par la recette de la phase 4');
+    $seuil = param('seuil_proformas');
+}
 cas('Le seuil de mise en concurrence est un parametre du projet',
-    $seuil === null || (float)$seuil > 0, 'seuil ' . ($seuil ?? 'a definir'));
+    $seuil !== null && (float)$seuil > 0, 'seuil ' . ($seuil ?? 'a definir'));
 proforma_ajouter($dos, 2, 18000);
 proforma_ajouter($dos, 3, 20000);
 $props = proformas_dossier($dos);
@@ -105,9 +112,17 @@ refuse_avec('Imputer sur la ligne d\'un autre projet est refuse',
 refuse_avec('Imputer au-dela du solde de la ligne est refuse',
     dossier_imputer($dos, (int)$l21['id'], 10, 20000, 'unite'), 'solde');
 
+// « Imputer au budget : Coordinateur L, RAF E » (annexe B), et la derogation de
+// quantite est un acte du Coordinateur, anterieur et distinct.
 $_SESSION['role_projet'] = 'raf';
-refuse_avec('La derogation de quantite n\'appartient pas au RAF',
-    dossier_imputer($dos, (int)$l21['id'], 1, 20000, 'unite', 'je passe outre'), 'Coordinateur');
+refuse_avec('Le RAF ne s\'accorde pas la derogation de quantite',
+    dossier_deroger_quantite($dos, 'je passe outre'), 'Coordinateur');
+$_SESSION['role_projet'] = 'coordinateur';
+refuse_avec('Le Coordinateur n\'impute pas, il en a la lecture',
+    dossier_imputer($dos, (int)$l21['id'], 1, 20000, 'unite'), 'Responsable Administratif');
+refuse_avec('Une derogation sans motif ecrit est refusee',
+    dossier_deroger_quantite($dos, ''), 'motif');
+$_SESSION['role_projet'] = 'raf';
 
 $res = dossier_imputer($dos, (int)$l21['id'], 1, 20000, 'unite');
 cas('Une imputation conforme aboutit', !empty($res['success']), $res['error'] ?? '');
@@ -121,13 +136,29 @@ cas('Reimputer remplace au lieu d\'ajouter', !empty($res['success'])
     && (int)$pdo->query("SELECT COUNT(*) FROM imputations WHERE dossier_id = $dos")->fetchColumn() === 1);
 dossier_imputer($dos, (int)$l21['id'], 1, 20000, 'unite');
 
+$proformaCase = null;
+foreach (pieces_dossier($dos) as $p) {
+    if ($p['type'] === 'proforma') { $proformaCase = $p; }
+}
+cas('Une imputation qui franchit le seuil rearme la mise en concurrence',
+    $proformaCase !== null && (int)$proformaCase['obligatoire'] === 1,
+    $proformaCase['statut'] ?? 'case absente');
+
+echo "\n== Etats du cycle constates sur les pieces\n";
+dossier_avancer_sur_piece($dos, 'bon_commande');
+cas('Le bon de commande fait passer le dossier a l\'etat commande',
+    (dossier($dos)['statut'] ?? '') === 'commande', dossier($dos)['statut'] ?? '');
+dossier_avancer_sur_piece($dos, 'bon_reception');
+cas('Le bon de reception fait passer le dossier a l\'etat receptionne',
+    (dossier($dos)['statut'] ?? '') === 'receptionne', dossier($dos)['statut'] ?? '');
+
 echo "\n== Approbation\n";
 $res = dossier_approuver($dos);
 cas('Le RAF n\'approuve pas un dossier', empty($res['success']), $res['error'] ?? 'accepte');
-$_SESSION['role_projet'] = 'coordinateur';
 $rSoi = dossier_ouvrir(['type' => 'frais_voyage', 'tiers_id' => 1, 'objet' => 'REC4-mes propres frais']);
 $dosSoi = (int)($rSoi['id'] ?? 0);
 dossier_imputer($dosSoi, (int)$l11['id'], 1, 1000, 'forfait');
+$_SESSION['role_projet'] = 'coordinateur';
 refuse_avec('Approuver un dossier dont on est le beneficiaire est refuse',
     dossier_approuver($dosSoi), 'suppléant');
 $res = dossier_approuver($dos);
@@ -141,8 +172,18 @@ $manquantes = dossier_pieces_manquantes($dos, 'avant');
 cas('Les pieces prealables au paiement sont nommees', $manquantes !== [], implode(', ', $manquantes));
 
 poser_toutes_pieces($pdo, $dos, 'avant');
+refuse_avec('Au-dela du seuil, moins de trois proformas bloque le reglement',
+    dossier_demander_reglement($dos, ['compte_id' => (int)$banque['id']]), 'trois proformas');
+proforma_ajouter($dos, 4, 22000);
+// Une offre a deja ete retenue plus haut : on la libere pour eprouver le cas.
+$pdo->prepare('UPDATE proformas SET retenu = 0, motif_choix = NULL WHERE dossier_id = ?')->execute([$dos]);
+refuse_avec('Trois offres sans choix arrete bloquent encore',
+    dossier_demander_reglement($dos, ['compte_id' => (int)$banque['id']]), 'retenue');
+$offres = proformas_dossier($dos);
+proforma_retenir((int)$offres[0]['id']);
 $res = dossier_demander_reglement($dos, ['compte_id' => (int)$banque['id']]);
-cas('Le reglement se demande une fois les pieces reunies', !empty($res['success']), $res['error'] ?? '');
+cas('Le reglement se demande une fois les pieces et la concurrence reunies',
+    !empty($res['success']), $res['error'] ?? '');
 $regId = (int)($res['id'] ?? 0);
 $reg = reglement($regId);
 cas('Le reglement porte le montant impute',
@@ -192,6 +233,7 @@ cas('Clore un dossier dont une piece posterieure manque est refuse', empty($res[
 poser_toutes_pieces($pdo, $dos, 'apres');
 $res = dossier_clore($dos);
 cas('Le dossier se clot une fois toutes ses pieces reunies', !empty($res['success']), $res['error'] ?? '');
+$_SESSION['role_projet'] = 'raf';
 $res = dossier_imputer($dos, (int)$l21['id'], 1, 100, 'unite');
 cas('Un dossier clos ne se reimpute plus', empty($res['success']), $res['error'] ?? 'accepte');
 

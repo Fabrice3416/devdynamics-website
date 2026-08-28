@@ -43,8 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $res = dossier_imputer($id, (int)($_POST['ligne_id'] ?? 0),
             (float)str_replace([' ', ','], ['', '.'], (string)($_POST['quantite'] ?? '0')),
             (float)str_replace([' ', ','], ['', '.'], (string)($_POST['valeur_unitaire'] ?? '0')),
-            (string)($_POST['unite'] ?? 'forfait'),
-            trim((string)($_POST['derogation'] ?? '')) ?: null);
+            (string)($_POST['unite'] ?? 'forfait'));
+    } elseif ($action === 'deroger') {
+        $res = dossier_deroger_quantite($id, (string)($_POST['motif'] ?? ''));
     } elseif ($action === 'piece') {
         $res = piece_verser((int)($_POST['piece_id'] ?? 0), $_FILES['scan'] ?? [],
             (string)($_POST['date_piece'] ?? '') ?: null);
@@ -134,7 +135,7 @@ require __DIR__ . '/_nav.php';
                 <?php else: ?>
                 <p class="small text-muted">Non imputé. L'imputation est bloquante : les sept contrôles budgétaires s'y appliquent.</p>
                 <?php endif; ?>
-                <?php if ($peutSaisir && !in_array($d['statut'], ['clos', 'abandonne', 'regle'], true)): ?>
+                <?php if (user_role() === 'raf' && !in_array($d['statut'], ['clos', 'abandonne', 'regle'], true)): ?>
                 <form method="post" class="row g-2">
                     <?= csrf_field() ?>
                     <input type="hidden" name="action" value="imputer">
@@ -165,14 +166,24 @@ require __DIR__ . '/_nav.php';
                         <input class="form-control form-control-sm text-end" name="valeur_unitaire" inputmode="decimal" required
                                value="<?= $imputation ? e(number_format((float)$imputation['valeur_unitaire'], 2, '.', '')) : '' ?>">
                     </div>
-                    <?php if (user_role() === 'coordinateur'): ?>
-                    <div class="col-12">
-                        <label class="form-label small mb-1">Dérogation au contrôle de quantité
-                            <span class="text-muted">— motif écrit, enregistré au journal</span></label>
-                        <input class="form-control form-control-sm" name="derogation" maxlength="255">
-                    </div>
-                    <?php endif; ?>
                     <div class="col-12"><button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Imputer</button></div>
+                </form>
+                <?php endif; ?>
+
+                <?php if (user_role() === 'coordinateur' && !in_array($d['statut'], ['clos', 'abandonne', 'regle'], true)): ?>
+                <hr>
+                <form method="post" class="row g-2 align-items-end">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="action" value="deroger">
+                    <div class="col-8">
+                        <label class="form-label small mb-1">Déroger au contrôle de quantité
+                            <span class="text-muted">— motif écrit</span></label>
+                        <input class="form-control form-control-sm" name="motif" maxlength="255"
+                               value="<?= e($d['derogation_quantite_motif'] ?? '') ?>">
+                    </div>
+                    <div class="col-4"><button class="btn btn-outline-secondary btn-sm w-100">Accorder</button></div>
+                    <div class="col-12"><div class="form-text">La dérogation s'accorde avant l'imputation.
+                        Celui qui lève le contrôle n'est pas celui qui impute.</div></div>
                 </form>
                 <?php endif; ?>
             </div>
