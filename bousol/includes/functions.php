@@ -5,9 +5,15 @@ declare(strict_types=1);
  * Helpers transverses (affichage, formats, redirections, flash).
  */
 
-function e(?string $s): string
+/**
+ * Echappement HTML. Accepte les nombres autant que les chaines : sous
+ * declare(strict_types=1), une cle de tableau numerique - PHP transforme '1' et
+ * '10' en entiers - ferait sinon tomber la page entiere sur un TypeError, muet
+ * en production ou display_errors est a Off.
+ */
+function e(string|int|float|null $s): string
 {
-    return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    return htmlspecialchars((string)($s ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
 /** Montant en gourdes : 1 234 567,89 HTG */

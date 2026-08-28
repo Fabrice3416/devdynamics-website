@@ -237,5 +237,42 @@ $ligneKeskle = budget_ligne('1.1', 1);
 $r = budget_controle_imputation((int)$ligneKeskle['id'], 1000.0, 1.0);
 cas('Imputer sur la ligne d\'un autre projet est refuse', refuse($r, 'cloisonnement'), messages($r));
 
+echo "\n== Rendu des ecrans\n";
+// La recette validait la bibliotheque sans jamais rendre une page : un TypeError
+// dans un gabarit passait donc inapercu, et coupait l'ecran en plein milieu sans
+// rien afficher en production, ou display_errors est a Off. On rend chaque page
+// et on verifie qu'elle va jusqu'au bout de son document.
+$_SERVER['REQUEST_METHOD'] = 'GET';
+$ecrans = [
+    'Budget - nomenclature'     => 'modules/budget/index.php',
+    'Budget - reallocation'     => 'modules/budget/realloc.php',
+    'Budget - detail du contrat' => 'modules/budget/nomenclature.php',
+    'Tiers - referentiel'       => 'modules/tiers/index.php',
+    'Tiers - contrats'          => 'modules/tiers/contrats.php',
+    'Tiers - beneficiaires'     => 'modules/tiers/beneficiaires.php',
+];
+$rendre = function (string $page): array {
+    ob_start();
+    try {
+        require __DIR__ . '/../' . $page;
+        $html = (string)ob_get_clean();
+    } catch (Throwable $e) {
+        ob_end_clean();
+        return [false, get_class($e) . ' : ' . $e->getMessage() . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ')'];
+    }
+    // Une page tronquee est le symptome exact du TypeError avale : elle commence
+    // normalement et s'arrete au milieu du tableau.
+    return [str_contains($html, '</html>'), strlen($html) . ' octets'];
+};
+foreach ([1 => 'KESKLE', 2 => 'KKP'] as $pid => $code) {
+    $_SESSION['projet_id'] = $pid;
+    $_SESSION['projet_code'] = $code;
+    param_oublier();
+    foreach ($ecrans as $lib => $page) {
+        [$ok2, $detail] = $rendre($page);
+        cas($lib . ' (' . $code . ')', $ok2, $detail);
+    }
+}
+
 echo "\n$ok OK, $ko ECHEC\n";
 exit($ko > 0 ? 1 : 0);

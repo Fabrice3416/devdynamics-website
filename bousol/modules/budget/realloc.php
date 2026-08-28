@@ -154,14 +154,14 @@ require __DIR__ . '/_nav.php';
                 if ($l['nature'] !== 'imputable' && !$estProvision) continue;
                 $c = $consomme[(int)$l['id']] ?? ['montant' => 0.0, 'quantite' => 0.0]; ?>
                 <tr>
-                    <td><span class="text-muted small me-2"><?= e($code) ?></span><?= e($l['libelle']) ?>
+                    <td><span class="text-muted small me-2"><?= e($l["code"]) ?></span><?= e($l['libelle']) ?>
                         <?php if ($estProvision): ?><span class="badge text-bg-light border">provision</span><?php endif; ?></td>
                     <td class="text-end text-muted small"><?= e(htg($c['montant'])) ?></td>
                     <td class="text-end"><?= e(htg((float)($l['montant_gestion'] ?? 0))) ?></td>
-                    <td><input class="form-control form-control-sm text-end" name="montant[<?= e($code) ?>]"
+                    <td><input class="form-control form-control-sm text-end" name="montant[<?= e($l["code"]) ?>]"
                                value="<?= e((string)($saisie[$code] ?? '')) ?>" placeholder="inchangé" inputmode="decimal"></td>
                     <td><?php if ($l['quantite_gestion'] !== null): ?>
-                        <input class="form-control form-control-sm text-end" name="quantite[<?= e($code) ?>]"
+                        <input class="form-control form-control-sm text-end" name="quantite[<?= e($l["code"]) ?>]"
                                value="" placeholder="<?= e(rtrim(rtrim(number_format((float)$l['quantite_gestion'], 2, ',', ' '), '0'), ',')) ?>" inputmode="decimal">
                         <?php endif; ?></td>
                 </tr>

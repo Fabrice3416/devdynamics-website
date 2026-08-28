@@ -207,22 +207,22 @@ require __DIR__ . '/_nav.php';
             <?php foreach ($lignes as $code => $l):
                 if ($l['nature'] === 'imputable'): ?>
                 <tr>
-                    <td><span class="text-muted small me-2"><?= e($code) ?></span><?= e($l['libelle']) ?></td>
-                    <td><select class="form-select form-select-sm" name="unite[<?= e($code) ?>]">
+                    <td><span class="text-muted small me-2"><?= e($l["code"]) ?></span><?= e($l['libelle']) ?></td>
+                    <td><select class="form-select form-select-sm" name="unite[<?= e($l["code"]) ?>]">
                         <?php foreach (UNITES as $u => $lib): ?>
                         <option value="<?= e($u) ?>" <?= (string)$l['unite'] === $u ? 'selected' : '' ?>><?= e($lib) ?></option>
                         <?php endforeach; ?>
                     </select></td>
-                    <td><input class="form-control form-control-sm text-end" name="quantite[<?= e($code) ?>]" inputmode="decimal"
+                    <td><input class="form-control form-control-sm text-end" name="quantite[<?= e($l["code"]) ?>]" inputmode="decimal"
                                value="<?= $l['quantite'] === null ? '' : e(rtrim(rtrim(number_format((float)$l['quantite'], 2, '.', ''), '0'), '.')) ?>"></td>
-                    <td><input class="form-control form-control-sm text-end" name="valeur_unitaire[<?= e($code) ?>]" inputmode="decimal"
+                    <td><input class="form-control form-control-sm text-end" name="valeur_unitaire[<?= e($l["code"]) ?>]" inputmode="decimal"
                                value="<?= $l['valeur_unitaire'] === null ? '' : e(number_format((float)$l['valeur_unitaire'], 2, '.', '')) ?>"></td>
                     <td class="text-end"><?= $l['montant'] === null ? '<span class="text-muted">à saisir</span>' : e(htg((float)$l['montant'])) ?></td>
                 </tr>
             <?php else: ?>
                 <tr class="fw-semibold">
                     <td colspan="4" style="padding-left:<?= (int)$l['niveau'] * 0.9 ?>rem">
-                        <span class="text-muted small me-2"><?= e($code) ?></span><?= e($l['libelle']) ?></td>
+                        <span class="text-muted small me-2"><?= e($l["code"]) ?></span><?= e($l['libelle']) ?></td>
                     <td class="text-end"><?= $l['montant'] === null ? '' : e(htg((float)$l['montant'])) ?></td>
                 </tr>
             <?php endif; endforeach; ?>

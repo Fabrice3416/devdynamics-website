@@ -120,7 +120,7 @@ require __DIR__ . '/_nav.php';
         ?>
             <tr class="<?= $imputable ? '' : 'fw-semibold' ?>">
                 <td style="padding-left:<?= (int)$l['niveau'] * 0.9 ?>rem">
-                    <span class="text-muted small me-2"><?= e($code) ?></span><?= e($l['libelle']) ?>
+                    <span class="text-muted small me-2"><?= e($l["code"]) ?></span><?= e($l['libelle']) ?>
                     <?php if ($estProvision): ?><span class="badge text-bg-light border" title="Mobilisation sur autorisation">provision</span><?php endif; ?>
                     <?php if ($l['nature'] === 'calculee'): ?><span class="badge text-bg-light border">calculée</span><?php endif; ?>
                 </td>
