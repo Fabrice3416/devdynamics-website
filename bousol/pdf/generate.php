@@ -77,6 +77,9 @@ final class PdfService
     {
         $autoload = root_dir() . '/lib/mpdf/autoload.php';
         if (!is_file($autoload)) {
+            // Un null silencieux a deja coute une demi-journee : la bibliotheque
+            // n'est pas dans le depot et ne se deploie pas par git pull.
+            error_log('PdfService : mPDF absent, ' . $autoload . ' introuvable (voir DEPLOIEMENT.md §5)');
             return null;
         }
         require_once $autoload;

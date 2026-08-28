@@ -90,7 +90,11 @@ $_SESSION['admin_outil'] = true;
 echo "\n== Signature\n";
 $svc = new PdfService();
 $bin = $svc->rendre_binaire('acte_depot', ['titulaire' => 'Recette', 'fonction' => 'Test', 'role' => 'Test', 'mandataire' => false, 'email' => 'x@y']);
-cas('mPDF disponible pour le rendu', $bin !== null);
+cas('mPDF disponible pour le rendu', $bin !== null,
+    $bin !== null ? strlen($bin) . ' octets'
+        : (is_file(root_dir() . '/lib/mpdf/autoload.php')
+            ? 'autoload present, le rendu leve une exception : voir le log serveur'
+            : 'bousol/lib/mpdf/ absent, a copier a la main (DEPLOIEMENT.md §5)'));
 
 revoquer_specimen(1, 'recette');
 $doc = fn(string $type, int $objet) => (function () use ($pdo, $svc, $bin, $type, $objet) {
@@ -126,14 +130,30 @@ cas('Deuxieme apposition du meme compte refusee', !$r2['success'], $r2['error'] 
 $d2 = $doc('fiche_imputation', 2);
 $r = apposer($d2, 'approbation', $mdp);
 cas('Premiere signature sur la fiche d\'imputation', $r['success'], $r['error'] ?? '');
-$pdo->exec("INSERT INTO tiers (type, nom, fonction) VALUES ('personne', 'RAF Recette', 'RAF')");
-$t2 = (int)$pdo->lastInsertId();
-$pdo->prepare("INSERT INTO utilisateurs (tiers_id, email, mot_de_passe, doit_changer_mdp) VALUES (?, 'raf-recette@test', ?, 0)")
-    ->execute([$t2, hash_password($mdp)]);
-$u2 = (int)$pdo->lastInsertId();
-$img2 = enregistrer_contenu($png, 'png', 'image/png', 'coffre', 'RECETTE-specimen2.png', true);
-$pdo->prepare('INSERT INTO specimens (titulaire_id, image_fichier_id, acte_depot_fichier_id, date_depot) VALUES (?, ?, ?, CURDATE())')
-    ->execute([$u2, $img2['id'], $acte['id']]);
+// Ce compte-la survit d'une recette a l'autre : ses appositions sont immuables,
+// donc l'utilisateur ne peut pas etre supprime, et son email est unique. On le
+// reprend s'il existe deja plutot que de buter sur la contrainte au second
+// passage.
+$sr = $pdo->prepare("SELECT id, tiers_id FROM utilisateurs WHERE email = 'raf-recette@test'");
+$sr->execute();
+$existant = $sr->fetch();
+if ($existant !== false) {
+    $u2 = (int)$existant['id'];
+    $t2 = (int)$existant['tiers_id'];
+    $pdo->prepare('UPDATE utilisateurs SET mot_de_passe = ?, doit_changer_mdp = 0, actif = 1 WHERE id = ?')
+        ->execute([hash_password($mdp), $u2]);
+} else {
+    $pdo->exec("INSERT INTO tiers (type, nom, fonction) VALUES ('personne', 'RAF Recette', 'RAF')");
+    $t2 = (int)$pdo->lastInsertId();
+    $pdo->prepare("INSERT INTO utilisateurs (tiers_id, email, mot_de_passe, doit_changer_mdp) VALUES (?, 'raf-recette@test', ?, 0)")
+        ->execute([$t2, hash_password($mdp)]);
+    $u2 = (int)$pdo->lastInsertId();
+}
+if (specimen_actif($u2) === null) {
+    $img2 = enregistrer_contenu($png, 'png', 'image/png', 'coffre', 'RECETTE-specimen2.png', true);
+    $pdo->prepare('INSERT INTO specimens (titulaire_id, image_fichier_id, acte_depot_fichier_id, date_depot) VALUES (?, ?, ?, CURDATE())')
+        ->execute([$u2, $img2['id'], $acte['id']]);
+}
 $_SESSION['user_id'] = $u2; $_SESSION['role_projet'] = 'raf'; $_SESSION['est_mandataire'] = false;
 $r = apposer($d2, 'approbation', $mdp);
 cas('Deux appositions depuis la meme session refusees', !$r['success'], $r['error'] ?? '');
