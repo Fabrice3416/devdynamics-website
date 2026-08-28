@@ -16,6 +16,9 @@
 -- se voit refuser cette base sur cet hebergement, la ou celle de PHP y accede.
 -- IF NOT EXISTS sur un ALTER est une extension MariaDB, qui est le moteur ici.
 --
+-- Rejouable telle quelle : les deux instructions passent si la colonne ou la cle
+-- existent deja, ce qui est le cas si un import precedent s'est arrete en chemin.
+--
 --   Import phpMyAdmin, ou :
 --   mysql -u UTILISATEUR -p u218662965_bousol < migration_autorisation_parentale.sql
 -- =====================================================================
@@ -24,9 +27,11 @@ ALTER TABLE beneficiaires
   ADD COLUMN IF NOT EXISTS autorisation_parentale_fichier_id INT UNSIGNED NULL
     COMMENT 'Exigee si tranche_age = moins_18 (CDC 3.2)' AFTER tranche_age;
 
+-- MariaDB attend IF NOT EXISTS apres FOREIGN KEY, et non apres CONSTRAINT :
+--   ADD [CONSTRAINT [symbole]] FOREIGN KEY [IF NOT EXISTS] (colonnes) REFERENCES ...
 ALTER TABLE beneficiaires
-  ADD CONSTRAINT IF NOT EXISTS fk_beneficiaires_autorisation
-    FOREIGN KEY (autorisation_parentale_fichier_id) REFERENCES fichiers(id);
+  ADD CONSTRAINT fk_beneficiaires_autorisation
+    FOREIGN KEY IF NOT EXISTS (autorisation_parentale_fichier_id) REFERENCES fichiers(id);
 
 -- Controle : la ligne suivante doit apparaitre. Rien ne s'affiche si la colonne
 -- manque, et l'ALTER ci-dessus aura alors signale son erreur.
