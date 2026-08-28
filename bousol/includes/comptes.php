@@ -191,7 +191,13 @@ function ecriture_poser(array $entete, array $mouvements): int
     $periode = periode_pour_date($date);
 
     $pdo = db();
-    $pdo->beginTransaction();
+    // MySQL ne connait pas les transactions imbriquees : si l'appelant en a deja
+    // ouvert une - c'est le cas de l'execution d'un reglement -, l'ecriture s'y
+    // inscrit au lieu d'en ouvrir une seconde qui validerait trop tot.
+    $transactionExterne = $pdo->inTransaction();
+    if (!$transactionExterne) {
+        $pdo->beginTransaction();
+    }
     try {
         $pdo->prepare(
             'INSERT INTO ecritures (projet_id, date, periode_id, libelle, type, origine_module, origine_ref, reglement_id, created_by)
@@ -214,9 +220,13 @@ function ecriture_poser(array $entete, array $mouvements): int
         // La trace accompagne le mouvement d'argent ou rien ne bouge.
         audit_strict('comptes', 'ecriture_posee', 'ecriture', $ecritureId,
             $entete['type'] . ' · ' . $entete['libelle'] . ' · ' . htg($debit) . ' · origine ' . $entete['origine_module'] . ':' . $entete['origine_ref']);
-        $pdo->commit();
+        if (!$transactionExterne) {
+            $pdo->commit();
+        }
     } catch (Throwable $e) {
-        $pdo->rollBack();
+        if (!$transactionExterne) {
+            $pdo->rollBack();
+        }
         throw $e;
     }
     return $ecritureId;
@@ -278,19 +288,55 @@ function ecriture_facture(int $ligneId, int $fournisseurId, float $montant, stri
     );
 }
 
-/** 3. Le reglement debite le fournisseur et credite la tresorerie. */
+/**
+ * 3. Le reglement debite le fournisseur et credite la tresorerie.
+ *
+ * Une exception : le renflouement de la petite caisse ne paie personne, il
+ * deplace de l'argent d'un compte de tresorerie a l'autre. Le cheque est bien
+ * emis au nom du detenteur du fonds - jamais au porteur - mais celui-ci n'est pas
+ * un beneficiaire au sens comptable, et la contrepartie est la caisse.
+ */
 function ecriture_reglement(array $reglement): int
 {
-    $tiers = compte_par_code('TI');
-    if ($tiers === null) {
-        throw new RuntimeException('Plan de comptes incomplet : compte de tiers absent.');
+    $origine = (string)$reglement['origine_ref'];
+    if (str_starts_with($origine, 'renflouement:')) {
+        $type = 'caisse';
+        $debit = ['compte_id' => (int)substr($origine, 13), 'sens' => 'D', 'montant' => (float)$reglement['montant']];
+    } else {
+        $tiers = compte_par_code('TI');
+        if ($tiers === null) {
+            throw new RuntimeException('Plan de comptes incomplet : compte de tiers absent.');
+        }
+        $type = 'reglement';
+        $debit = ['compte_id' => (int)$tiers['id'], 'sens' => 'D', 'montant' => (float)$reglement['montant'],
+                  'tiers_id' => (int)$reglement['beneficiaire_id']];
     }
     return ecriture_poser(
         ['date' => (string)$reglement['date_reglement'], 'libelle' => 'Règlement ' . $reglement['numero'] . ' — ' . $reglement['objet'],
-         'type' => 'reglement', 'origine_module' => 'comptes', 'origine_ref' => 'reglement:' . $reglement['id'],
+         'type' => $type, 'origine_module' => 'comptes', 'origine_ref' => 'reglement:' . $reglement['id'],
          'reglement_id' => (int)$reglement['id']],
-        [['compte_id' => (int)$tiers['id'], 'sens' => 'D', 'montant' => (float)$reglement['montant'], 'tiers_id' => (int)$reglement['beneficiaire_id']],
+        [$debit,
          ['compte_id' => (int)$reglement['compte_id'], 'sens' => 'C', 'montant' => (float)$reglement['montant']]]
+    );
+}
+
+/**
+ * Recette du projet. « Les recettes, notamment les interets crediteurs du compte,
+ * sont enregistrees et declarees, une recette non communiquee figurant parmi les
+ * causes d'inegibilite » (CDC 4.1). Elle debite la tresorerie et credite le
+ * compte de produits.
+ */
+function ecriture_recette(int $compteTresorerieId, float $montant, string $date, string $libelle, string $origineRef): int
+{
+    $produit = compte_par_code('PROD');
+    if ($produit === null) {
+        throw new RuntimeException('Plan de comptes incomplet : compte de produits financiers absent.');
+    }
+    return ecriture_poser(
+        ['date' => $date, 'libelle' => $libelle, 'type' => 'produit',
+         'origine_module' => 'comptes', 'origine_ref' => $origineRef],
+        [['compte_id' => $compteTresorerieId, 'sens' => 'D', 'montant' => $montant],
+         ['compte_id' => (int)$produit['id'], 'sens' => 'C', 'montant' => $montant]]
     );
 }
 
@@ -617,7 +663,16 @@ function reglement_valider(int $reglementId, int $mandataireTiersId, string $nat
     return ['success' => true, 'autorise' => $autorise];
 }
 
-/** L'execution produit exactement une ecriture, et une seule (CDC 8.3). */
+/**
+ * L'execution produit exactement une ecriture, et une seule (CDC 8.3), et
+ * attribue le numero de piece comptable - « le numero de piece est attribue au
+ * reglement, conformement au guide qui le definit comme le numero de la preuve de
+ * paiement » (CDC 4.3).
+ *
+ * Le changement de statut, l'ecriture et la numerotation tiennent dans une seule
+ * transaction : un reglement marque execute sans son ecriture serait de l'argent
+ * sorti sans trace comptable.
+ */
 function reglement_executer(int $reglementId, ?string $date = null): array
 {
     $r = reglement($reglementId);
@@ -628,18 +683,56 @@ function reglement_executer(int $reglementId, ?string $date = null): array
         return ['success' => false, 'error' => 'Seul un règlement autorisé par deux mandataires s\'exécute.'];
     }
     $date = $date ?? date('Y-m-d');
+    $pdo = db();
+    $pdo->beginTransaction();
     try {
-        db()->prepare("UPDATE reglements SET statut = 'execute', date_reglement = ? WHERE id = ?")->execute([$date, $reglementId]);
+        $pdo->prepare("UPDATE reglements SET statut = 'execute', date_reglement = ? WHERE id = ?")->execute([$date, $reglementId]);
         $r['statut'] = 'execute';
         $r['date_reglement'] = $date;
         $ecriture = ecriture_reglement($r);
+        $piece = reglement_numeroter_piece($r);
+        $pdo->commit();
     } catch (Throwable $e) {
-        db()->prepare("UPDATE reglements SET statut = 'autorise', date_reglement = NULL WHERE id = ?")->execute([$reglementId]);
+        $pdo->rollBack();
         error_log('reglement_executer: ' . $e->getMessage());
         return ['success' => false, 'error' => 'Exécution impossible : ' . $e->getMessage()];
     }
-    audit('comptes', 'reglement_execute', 'reglement', $reglementId, $r['numero'] . ' · écriture ' . $ecriture);
-    return ['success' => true, 'ecriture_id' => $ecriture];
+    audit('comptes', 'reglement_execute', 'reglement', $reglementId,
+        $r['numero'] . ' · écriture ' . $ecriture . ($piece !== null ? ' · pièce ' . $piece : ''));
+    return ['success' => true, 'ecriture_id' => $ecriture, 'numero_piece' => $piece];
+}
+
+/**
+ * Attribue le numero de piece a l'imputation du dossier regle. Un dossier
+ * abandonne avant reglement ne consomme aucun numero, et un reglement annule
+ * apres coup conserve le sien, qui reste inutilise : une sequence trouee et
+ * documentee vaut mieux qu'une renumerotation (CDC 4.3).
+ *
+ * Rend null quand le reglement n'a pas de dossier d'origine - un versement a la
+ * DGI ou un renflouement de caisse n'imputent rien.
+ */
+function reglement_numeroter_piece(array $reglement): ?string
+{
+    $origine = (string)$reglement['origine_ref'];
+    if (!str_starts_with($origine, 'dossier:')) {
+        return null;
+    }
+    $st = db()->prepare(
+        'SELECT i.id, i.numero_piece, l.rubrique
+           FROM imputations i JOIN lignes_budgetaires l ON l.id = i.ligne_id
+          WHERE i.dossier_id = ? AND i.projet_id = ?'
+    );
+    $st->execute([(int)substr($origine, 8), (int)$reglement['projet_id']]);
+    $imputation = $st->fetch();
+    if ($imputation === false || $imputation['rubrique'] === null) {
+        return null;
+    }
+    if ($imputation['numero_piece'] !== null) {
+        return (string)$imputation['numero_piece'];   // un reglement en deux temps ne renumerote pas
+    }
+    $numero = numero_piece_suivant((int)$imputation['rubrique'], (int)$reglement['projet_id']);
+    db()->prepare('UPDATE imputations SET numero_piece = ? WHERE id = ?')->execute([$numero, (int)$imputation['id']]);
+    return $numero;
 }
 
 /**
@@ -1003,4 +1096,55 @@ function arretes_caisse(int $compteId, int $limit = 24): array
     );
     $st->execute([$compteId]);
     return $st->fetchAll();
+}
+
+/**
+ * Renfloue la petite caisse. « L'approvisionnement se fait par cheque emis au nom
+ * d'une personne intermediaire nommement designee, jamais par un cheque au
+ * porteur. Le renflouement n'est possible qu'apres justification des depenses
+ * anterieures et arrete de caisse date et signe » (CDC 4.6).
+ *
+ * Le renflouement est une sortie de fonds de la banque : il suit donc le circuit
+ * normal du reglement, deux mandataires compris. Son execution debite la caisse
+ * au lieu d'un tiers.
+ *
+ * @return array{success: bool, id?: int, numero?: string, error?: string}
+ */
+function caisse_renflouer(int $compteCaisseId, float $montant, int $detenteurId, string $numeroCheque): array
+{
+    $st = db()->prepare("SELECT * FROM comptes WHERE id = ? AND projet_id = ? AND type = 'caisse'");
+    $st->execute([$compteCaisseId, projet_id()]);
+    $caisse = $st->fetch();
+    if ($caisse === false) {
+        return ['success' => false, 'error' => 'Compte de caisse inconnu dans ce projet.'];
+    }
+    $sd = db()->prepare("SELECT nom FROM tiers WHERE id = ? AND type = 'personne'");
+    $sd->execute([$detenteurId]);
+    $detenteur = $sd->fetchColumn();
+    if ($detenteur === false) {
+        return ['success' => false, 'error' => 'Le chèque d\'approvisionnement est émis au nom d\'une personne nommément désignée, jamais au porteur.'];
+    }
+    $possible = caisse_renflouement_possible($compteCaisseId, $montant);
+    if (!$possible['ok']) {
+        return ['success' => false, 'error' => $possible['motif']];
+    }
+    $banque = compte_par_code('BQ');
+    if ($banque === null) {
+        return ['success' => false, 'error' => 'Plan de comptes incomplet : compte bancaire absent.'];
+    }
+    $r = reglement_creer([
+        'mode'            => 'cheque',
+        'numero_cheque'   => $numeroCheque,
+        'beneficiaire_id' => $detenteurId,
+        'compte_id'       => (int)$banque['id'],
+        'montant'         => $montant,
+        'objet'           => 'Renflouement de la petite caisse — ' . $detenteur,
+        'origine_module'  => 'comptes',
+        'origine_ref'     => 'renflouement:' . $compteCaisseId,
+    ]);
+    if (!empty($r['success'])) {
+        audit('comptes', 'renflouement_demande', 'reglement', (int)$r['id'],
+            $r['numero'] . ' · ' . htg($montant) . ' · chèque ' . $numeroCheque . ' au nom de ' . $detenteur);
+    }
+    return $r;
 }

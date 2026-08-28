@@ -18,7 +18,23 @@ require_module('comptes');
 $compte = compte_caisse();
 $erreur = null;
 
-if ($compte !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($compte !== null && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'renflouer') {
+    verify_csrf();
+    require_phase_execution('Renflouer la caisse');
+    $res = caisse_renflouer(
+        (int)$compte['id'],
+        (float)str_replace([' ', ','], ['', '.'], (string)($_POST['montant'] ?? '0')),
+        (int)($_POST['detenteur_id'] ?? 0),
+        trim((string)($_POST['numero_cheque'] ?? ''))
+    );
+    if (!$res['success']) {
+        $erreur = $res['error'];
+    } else {
+        flash_set('success', 'Renflouement ' . $res['numero'] . ' enregistré. Comme toute sortie de fonds, '
+            . 'il attend deux autorisations de mandataires avant d\'être exécuté.');
+        redirect(base_path('modules/comptes/reglement.php?id=' . (int)$res['id']));
+    }
+} elseif ($compte !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
     require_phase_execution('Arrêter la caisse');
     $res = arrete_caisse_creer(
@@ -153,6 +169,41 @@ require __DIR__ . '/_nav.php';
                     </div>
                     <button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Enregistrer l'arrêté</button>
                 </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white fw-semibold"><i class="bi bi-arrow-down-circle"></i> Renflouer</div>
+            <div class="card-body">
+                <?php $possible = caisse_renflouement_possible((int)$compte['id'], 0.0); ?>
+                <?php if (!$possible['ok']): ?>
+                <p class="small text-muted mb-0"><i class="bi bi-lock"></i> <?= e($possible['motif']) ?></p>
+                <?php else: ?>
+                <p class="small text-muted">Le chèque est émis au nom d'une personne nommément désignée,
+                    jamais au porteur. Comme toute sortie de fonds, le renflouement attend deux autorisations.</p>
+                <form method="post">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="action" value="renflouer">
+                    <div class="mb-2">
+                        <label class="form-label small mb-1">Montant</label>
+                        <input class="form-control form-control-sm text-end" name="montant" inputmode="decimal" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-1">Détenteur, au nom de qui le chèque est émis</label>
+                        <select class="form-select form-select-sm" name="detenteur_id" required>
+                            <option value="">—</option>
+                            <?php foreach ($personnes as $p): ?>
+                            <option value="<?= (int)$p['id'] ?>"><?= e($p['nom']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small mb-1">Numéro du chèque</label>
+                        <input class="form-control form-control-sm" name="numero_cheque" required maxlength="25">
+                    </div>
+                    <button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Demander le renflouement</button>
+                </form>
+                <?php endif; ?>
             </div>
         </div>
 

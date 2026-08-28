@@ -53,10 +53,12 @@ function nettoyer_traces3(PDO $pdo): void
     $etapes = [
         "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id WHERE e.origine_ref LIKE 'REC3-%' OR e.libelle LIKE 'REC3-%'",
         "DELETE FROM ecritures WHERE origine_ref LIKE 'REC3-%' OR libelle LIKE 'REC3-%'",
-        "DELETE v FROM validations_reglement v JOIN reglements r ON r.id = v.reglement_id WHERE r.objet LIKE 'REC3-%'",
-        "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id JOIN reglements r ON r.id = e.reglement_id WHERE r.objet LIKE 'REC3-%'",
-        "DELETE e FROM ecritures e JOIN reglements r ON r.id = e.reglement_id WHERE r.objet LIKE 'REC3-%'",
-        "DELETE FROM reglements WHERE objet LIKE 'REC3-%'",
+        // Le renflouement ne porte pas le prefixe : son objet est fixe par la
+        // bibliotheque. On le retrouve par son origine.
+        "DELETE v FROM validations_reglement v JOIN reglements r ON r.id = v.reglement_id WHERE r.objet LIKE 'REC3-%' OR r.origine_ref LIKE 'renflouement:%'",
+        "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id JOIN reglements r ON r.id = e.reglement_id WHERE r.objet LIKE 'REC3-%' OR r.origine_ref LIKE 'renflouement:%'",
+        "DELETE e FROM ecritures e JOIN reglements r ON r.id = e.reglement_id WHERE r.objet LIKE 'REC3-%' OR r.origine_ref LIKE 'renflouement:%'",
+        "DELETE FROM reglements WHERE objet LIKE 'REC3-%' OR origine_ref LIKE 'renflouement:%'",
         "DELETE FROM lignes_rapprochement WHERE objet LIKE 'REC3-%'",
         "DELETE lr FROM lignes_rapprochement lr JOIN rapprochements ra ON ra.id = lr.rapprochement_id WHERE ra.date_releve = '2026-06-30'",
         "DELETE FROM rapprochements WHERE date_releve = '2026-06-30'",
@@ -192,6 +194,45 @@ refuse_avec('Un troisieme reglement au-dela de l\'enveloppe est refuse',
                      'montant' => 1, 'objet' => 'REC3-de trop', 'origine_ref' => 'dossier:' . $dossier]),
     'reste');
 
+echo "\n== Numero de piece comptable\n";
+// Les deux mandataires deja crees suffisent : ni l'un ni l'autre n'est beneficiaire
+// de ces reglements-la, ni le preparateur.
+$autoriser = function (int $regId) use ($mA, $mB) {
+    reglement_valider($regId, $mA, 'signature_bancaire');
+    reglement_valider($regId, $mB, 'signature_bancaire');
+};
+$autoriser((int)$avance['id']);
+$res = reglement_executer((int)$avance['id'], '2026-06-11');
+cas('L\'execution attribue le numero de piece',
+    !empty($res['success']) && preg_match('/^\d{2}-\d{3}$/', (string)($res['numero_piece'] ?? '')),
+    (string)($res['numero_piece'] ?? ($res['error'] ?? '')));
+$piece = (string)($res['numero_piece'] ?? '');
+cas('Le numero de piece porte le numero de la rubrique',
+    str_starts_with($piece, '02-'), $piece . ' pour la ligne 2.2');
+$autoriser((int)$solde['id']);
+$res2 = reglement_executer((int)$solde['id'], '2026-06-12');
+cas('Un reglement en deux temps ne renumerote pas la piece',
+    ($res2['numero_piece'] ?? '') === $piece, (string)($res2['numero_piece'] ?? ($res2['error'] ?? '')));
+$sansDossier = reglement_creer(['mode' => 'virement', 'beneficiaire_id' => $simple, 'compte_id' => (int)$banque['id'],
+                                'montant' => 500, 'objet' => 'REC3-sans dossier']);
+$autoriser((int)$sansDossier['id']);
+$res3 = reglement_executer((int)$sansDossier['id'], '2026-06-13');
+cas('Un reglement sans dossier n\'attribue aucun numero de piece',
+    !empty($res3['success']) && ($res3['numero_piece'] ?? null) === null, $res3['error'] ?? 'ok');
+
+echo "\n== Recettes du projet\n";
+$prod = compte_par_code('PROD');
+cas('Le plan porte un compte de produits financiers', $prod !== null);
+$avantProd = solde_compte((int)$banque['id']);
+$idRecette = ecriture_recette((int)$banque['id'], 1250.00, '2026-06-14', 'REC3-interets crediteurs', 'REC3-r1');
+cas('Une recette est enregistrable', $idRecette > 0);
+cas('La recette augmente la tresorerie',
+    abs((solde_compte((int)$banque['id']) - $avantProd) - 1250.0) < 0.01);
+$mv = mouvements_ecriture($idRecette);
+$d = $c = 0.0;
+foreach ($mv as $m) { $m['sens'] === 'D' ? $d += (float)$m['montant'] : $c += (float)$m['montant']; }
+cas('La recette est equilibree', abs($d - $c) < 0.01 && count($mv) === 2, htg($d));
+
 $r = reglement_creer(['mode' => 'virement', 'beneficiaire_id' => $mA, 'compte_id' => (int)$banque['id'],
                       'montant' => 50000, 'objet' => 'REC3-reglement nominal']);
 cas('Un reglement conforme est enregistre', !empty($r['success']), $r['numero'] ?? ($r['error'] ?? ''));
@@ -253,6 +294,32 @@ cas('Un arrete sans ecart n\'exige aucun commentaire', !empty($res['success']), 
 $plafond = param('plafond_petite_caisse');
 cas('Le plafond du fonds fixe est un parametre du projet, non une constante',
     $plafond === null || (float)$plafond > 0, 'plafond ' . ($plafond ?? 'a definir'));
+
+refuse_avec('Un cheque de renflouement au porteur est refuse',
+    caisse_renflouer((int)$caisse['id'], 5000, 0, '000900'), 'nommément désignée');
+$renf = caisse_renflouer((int)$caisse['id'], 5000, 1, '000901');
+cas('Un renflouement au nom d\'une personne designee est accepte', !empty($renf['success']), $renf['error'] ?? '');
+if (!empty($renf['success'])) {
+    $r = reglement((int)$renf['id']);
+    cas('Le renflouement suit le circuit du reglement : il attend deux autorisations',
+        $r['statut'] === 'demande', $r['statut']);
+    $avantCaisse = solde_compte((int)$caisse['id']);
+    $autoriser((int)$renf['id']);
+    $res = reglement_executer((int)$renf['id'], '2026-06-15');
+    cas('Le renflouement execute alimente la caisse',
+        !empty($res['success']) && abs((solde_compte((int)$caisse['id']) - $avantCaisse) - 5000.0) < 0.01,
+        $res['error'] ?? htg(solde_compte((int)$caisse['id'])));
+    $mvR = mouvements_ecriture((int)$res['ecriture_id']);
+    $comptesTouches = array_column($mvR, 'type');
+    cas('Le renflouement debite la caisse et non un tiers',
+        in_array('caisse', $comptesTouches, true) && !in_array('tiers', $comptesTouches, true),
+        implode(' / ', $comptesTouches));
+}
+$b2 = balance();
+$td2 = $tc2 = 0.0;
+foreach ($b2 as $l) { $td2 += $l['debit']; $tc2 += $l['credit']; }
+cas('La balance reste equilibree apres recettes et renflouement',
+    abs($td2 - $tc2) < 0.01, htg($td2) . ' / ' . htg($tc2));
 
 echo "\n== Rapprochement d'un compte partage\n";
 $compteBancaire = (int)$banque['compte_bancaire_id'];
