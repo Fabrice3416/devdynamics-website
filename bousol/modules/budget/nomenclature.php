@@ -95,21 +95,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // La somme des lignes d'une rubrique doit retomber sur le sous-total du contrat.
+    // Le controle ne porte que sur les rubriques entamees : une rubrique dont aucune
+    // ligne n'est encore chiffree n'est pas fausse, elle est a saisir - sans quoi la
+    // premiere rubrique ventilee serait refusee tant que les trois autres ne le
+    // seraient pas, et le travail deviendrait indivisible.
     if (!$erreurs) {
         $parRubrique = [];
+        $entamee = [];
         foreach ($lignes as $code => $l) {
             if ($l['nature'] !== 'imputable') {
                 continue;
             }
             $r = (string)($l['rubrique'] ?? '?');
-            $parRubrique[$r] = ($parRubrique[$r] ?? 0.0)
-                + (isset($nouveau[$code]) ? $nouveau[$code]['montant'] : (float)($l['montant'] ?? 0));
+            $montant = isset($nouveau[$code]) ? $nouveau[$code]['montant'] : ($l['montant'] === null ? null : (float)$l['montant']);
+            $parRubrique[$r] = ($parRubrique[$r] ?? 0.0) + (float)($montant ?? 0);
+            if ($montant !== null) {
+                $entamee[$r] = true;
+            }
         }
         foreach ($lignes as $l) {
             if ($l['nature'] !== 'rubrique' || (int)$l['niveau'] !== 1 || $l['montant'] === null) {
                 continue;
             }
             $r = (string)($l['rubrique'] ?? '?');
+            if (empty($entamee[$r])) {
+                continue;
+            }
             $ecart = round((float)$l['montant'] - ($parRubrique[$r] ?? 0.0), 2);
             if (abs($ecart) >= 0.01) {
                 $erreurs[] = sprintf('Rubrique %s « %s » : le détail totalise %s pour un sous-total contractuel de %s (écart %s).',
