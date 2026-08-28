@@ -69,3 +69,62 @@ function etape(string $lib, callable $f): mixed
         return null;
     }
 }
+
+/**
+ * Nettoyage commun a toutes les recettes.
+ *
+ * Chacune nettoyait ses propres traces, ce qui ne suffit pas : elles partagent une
+ * base et se marchent dessus. La recette de la phase 3 impute 3 325 gourdes sur la
+ * ligne 2.2 et laisse cette imputation derriere elle ; la recette de la phase 2,
+ * lancee ensuite, trouve alors 5 325 gourdes consommees sur une ligne qui en porte
+ * 3 325, et son cas « second versement sur une ligne au forfait » echoue pour une
+ * raison qui n'a rien a voir avec ce qu'il teste.
+ *
+ * Une recette doit pouvoir se lancer dans n'importe quel ordre, autant de fois
+ * qu'on veut. Le nettoyage est donc commun et couvre les trois phases.
+ *
+ * Le journal d'audit garde ses entrees : il est en ajout seul, et c'est voulu.
+ */
+function recette_nettoyer(PDO $pdo): void
+{
+    $etapes = [
+        // Comptes : les mouvements avant les ecritures, les ecritures avant les reglements.
+        "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id
+          WHERE e.origine_ref LIKE 'REC3-%' OR e.libelle LIKE 'REC3-%'",
+        "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id
+           JOIN reglements r ON r.id = e.reglement_id
+          WHERE r.objet LIKE 'REC3-%' OR r.origine_ref LIKE 'renflouement:%'",
+        "DELETE FROM ecritures WHERE origine_ref LIKE 'REC3-%' OR libelle LIKE 'REC3-%'",
+        "DELETE e FROM ecritures e JOIN reglements r ON r.id = e.reglement_id
+          WHERE r.objet LIKE 'REC3-%' OR r.origine_ref LIKE 'renflouement:%'",
+        "DELETE v FROM validations_reglement v JOIN reglements r ON r.id = v.reglement_id
+          WHERE r.objet LIKE 'REC3-%' OR r.origine_ref LIKE 'renflouement:%'",
+        "DELETE FROM reglements WHERE objet LIKE 'REC3-%' OR origine_ref LIKE 'renflouement:%'",
+        "DELETE FROM lignes_rapprochement WHERE objet LIKE 'REC3-%'",
+        "DELETE lr FROM lignes_rapprochement lr JOIN rapprochements ra ON ra.id = lr.rapprochement_id
+          WHERE ra.date_releve = '2026-06-30'",
+        "DELETE FROM rapprochements WHERE date_releve = '2026-06-30'",
+        "DELETE FROM arretes_caisse WHERE commentaire LIKE 'REC3-%' OR date = '2026-06-30'",
+
+        // Depenses : les imputations de toutes les recettes, quel que soit leur prefixe.
+        "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id WHERE d.numero LIKE 'REC%'",
+        "DELETE FROM dossiers WHERE numero LIKE 'REC%'",
+
+        // Tiers : beneficiaires puis personnes.
+        "DELETE FROM beneficiaires WHERE nom LIKE 'REC2 %'",
+        "DELETE FROM tiers WHERE nom LIKE 'REC3 %'",
+        "DELETE FROM tiers WHERE nom IN ('Fournisseur Recette', 'Doublon Recette', 'Sans NIF 1', 'Sans NIF 2')",
+        "UPDATE tiers SET nif = NULL WHERE nif = '001-234-567-8'",
+
+        // Budget : le budget de gestion repart du contractuel, comme au chargement du seed.
+        'UPDATE lignes_budgetaires SET montant_gestion = montant, quantite_gestion = quantite',
+    ];
+    foreach ($etapes as $q) {
+        try {
+            $pdo->exec($q);
+        } catch (Throwable $e) {
+            // Une trace absente est le cas nominal, et une cle etrangere qui retient
+            // une ligne se verra a l'etape suivante.
+        }
+    }
+}

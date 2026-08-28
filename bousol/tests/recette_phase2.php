@@ -41,37 +41,6 @@ function doit_echouer(string $lib, callable $f): void
     }
 }
 
-/**
- * La recette part d'un etat connu. Plutot que d'exiger un rechargement du seed
- * entre deux passages, elle retire ses propres traces : les dossiers REC2-*, leurs
- * imputations, les tiers qu'elle cree, et les mouvements qu'elle a appliques au
- * budget de gestion. Le journal d'audit, lui, est en ajout seul : ses entrees
- * restent, et c'est exactement ce qu'on attend de lui.
- */
-function nettoyer_traces(PDO $pdo): void
-{
-    $etapes = [
-        "DELETE FROM imputations WHERE dossier_id IN (SELECT id FROM dossiers WHERE numero LIKE 'REC2-%')",
-        "DELETE FROM dossiers WHERE numero LIKE 'REC2-%'",
-        "DELETE FROM beneficiaires WHERE nom LIKE 'REC2 %'",
-        "DELETE FROM tiers WHERE nom IN ('Fournisseur Recette', 'Doublon Recette', 'Sans NIF 1', 'Sans NIF 2')",
-        // Les fichiers ne se suppriment pas (trg_fichiers_no_delete) : on les
-        // renomme pour que le passage suivant reprenne les siens sans ambiguite.
-        "UPDATE fichiers SET nom_genere = CONCAT('ANCIEN-', id, '-', nom_genere) WHERE nom_genere LIKE 'REC2-AUTORISATION-%'",
-        // Si une cle etrangere retient le tiers, liberer au moins son NIF suffit.
-        "UPDATE tiers SET nif = NULL WHERE nif = '001-234-567-8'",
-        // Le budget de gestion repart du contractuel, comme au chargement du seed.
-        'UPDATE lignes_budgetaires SET montant_gestion = montant, quantite_gestion = quantite WHERE projet_id = 1',
-    ];
-    foreach ($etapes as $q) {
-        try {
-            $pdo->exec($q);
-        } catch (Throwable $e) {
-            // Une trace absente n'est pas une anomalie : c'est le cas nominal.
-        }
-    }
-}
-
 /** Un refus attendu, exprime par sa regle : budget_controle_* rend une liste. */
 function refuse(array $refus, string $regle): bool
 {
@@ -93,7 +62,7 @@ $_SESSION['user_id'] = 1; $_SESSION['user_nom'] = 'Recette'; $_SESSION['tiers_id
 $_SESSION['admin_outil'] = true; $_SESSION['projet_id'] = 1;
 $_SESSION['projet_code'] = 'KESKLE'; $_SESSION['role_projet'] = 'coordinateur';
 param_oublier();
-nettoyer_traces($pdo);
+recette_nettoyer($pdo);
 
 echo "== Tiers : unicite du NIF\n";
 $tiersA = (int)etape('Creer un tiers avec un NIF neuf', function () use ($pdo) {

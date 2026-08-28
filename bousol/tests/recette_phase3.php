@@ -44,44 +44,12 @@ function refuse_avec(string $lib, array $resultat, string $attendu = ''): void
         $resultat['error'] ?? 'accepte');
 }
 
-/**
- * La recette repose sur un etat de depart connu. Le journal d'audit, lui, garde
- * ses entrees : il est en ajout seul, et c'est voulu.
- */
-function nettoyer_traces3(PDO $pdo): void
-{
-    $etapes = [
-        "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id WHERE e.origine_ref LIKE 'REC3-%' OR e.libelle LIKE 'REC3-%'",
-        "DELETE FROM ecritures WHERE origine_ref LIKE 'REC3-%' OR libelle LIKE 'REC3-%'",
-        // Le renflouement ne porte pas le prefixe : son objet est fixe par la
-        // bibliotheque. On le retrouve par son origine.
-        "DELETE v FROM validations_reglement v JOIN reglements r ON r.id = v.reglement_id WHERE r.objet LIKE 'REC3-%' OR r.origine_ref LIKE 'renflouement:%'",
-        "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id JOIN reglements r ON r.id = e.reglement_id WHERE r.objet LIKE 'REC3-%' OR r.origine_ref LIKE 'renflouement:%'",
-        "DELETE e FROM ecritures e JOIN reglements r ON r.id = e.reglement_id WHERE r.objet LIKE 'REC3-%' OR r.origine_ref LIKE 'renflouement:%'",
-        "DELETE FROM reglements WHERE objet LIKE 'REC3-%' OR origine_ref LIKE 'renflouement:%'",
-        "DELETE FROM lignes_rapprochement WHERE objet LIKE 'REC3-%'",
-        "DELETE lr FROM lignes_rapprochement lr JOIN rapprochements ra ON ra.id = lr.rapprochement_id WHERE ra.date_releve = '2026-06-30'",
-        "DELETE FROM rapprochements WHERE date_releve = '2026-06-30'",
-        "DELETE FROM arretes_caisse WHERE commentaire LIKE 'REC3-%' OR date = '2026-06-30'",
-        "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id WHERE d.numero LIKE 'REC3-%'",
-        "DELETE FROM dossiers WHERE numero LIKE 'REC3-%'",
-        "DELETE FROM tiers WHERE nom LIKE 'REC3 %'",
-    ];
-    foreach ($etapes as $q) {
-        try {
-            $pdo->exec($q);
-        } catch (Throwable $e) {
-            // Une trace absente est le cas nominal.
-        }
-    }
-}
-
 $_SESSION['user_id'] = 1; $_SESSION['user_nom'] = 'Recette'; $_SESSION['tiers_id'] = 1;
 $_SESSION['admin_outil'] = true; $_SESSION['projet_id'] = 1;
 $_SESSION['projet_code'] = 'KESKLE'; $_SESSION['role_projet'] = 'raf';
 $_SESSION['est_mandataire'] = false;
 param_oublier();
-nettoyer_traces3($pdo);
+recette_nettoyer($pdo);
 
 echo "== Plan de comptes\n";
 $banque = compte_par_code('BQ');

@@ -18,7 +18,7 @@ require_once __DIR__ . '/../pdf/generate.php';
 require_once __DIR__ . '/_garde.php';
 
 recette_garde('Recette de la phase 1 - socle, Noyau, Signature, cloisonnement');
-$pdo = db();
+recette_nettoyer($pdo = db());
 $ok = 0; $ko = 0;
 
 function cas(string $lib, bool $reussi, string $detail = ''): void
