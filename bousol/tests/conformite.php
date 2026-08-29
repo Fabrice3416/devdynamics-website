@@ -108,6 +108,7 @@ $note('Fonctions de bibliothèque sans appelant applicatif', $sansAppelant, [
     // tenant, pas au fil des modules.
     'ecriture_encaissement_tranche' => 'attend Financement, phase 7',
     'numero_piece_suivant'          => 'appelée par reglement_numeroter_piece',
+    'cadre_version_figer'           => 'appelée par Restitution : le rapport transmis fige le cadre qui l\'accompagne',
     // Deux fonctions du socle qui attendent leur module. Le rendu documentaire
     // n'a aucune donnee propre et n'est pas un module (CDC 7.2) : il sera cable
     // par Depenses et Restitution, qui produisent les documents de l'annexe E.
@@ -132,7 +133,7 @@ $seed   = (string)file_get_contents($racine . '/database/seed.sql');
  * le code, ce que le CDC assume. Cette liste s'allonge a chaque phase, et c'est
  * elle qui fait entrer un module dans le perimetre du controle.
  */
-const MODULES_LIVRES = ['NOYAU', 'SIGNATURE', 'TIERS', 'BUDGET', 'COMPTES', 'DEPENSES', 'REMUNERATION'];
+const MODULES_LIVRES = ['NOYAU', 'SIGNATURE', 'TIERS', 'BUDGET', 'COMPTES', 'DEPENSES', 'REMUNERATION', 'ACTIVITES'];
 
 // Chaque table appartient a la section de schema.sql qui la precede.
 $tablesSurveillees = [];
@@ -159,8 +160,14 @@ foreach (explode("\n", $schema) as $ligne) {
         continue;
     }
     [$tout, $colonne, $valeurs] = $m;
+    // Une valeur posee par le DEFAULT de la colonne est ecrite a chaque insertion,
+    // par la base et non par le code : elle n'a pas a figurer dans les sources.
+    $defaut = preg_match("/DEFAULT\s+'([^']+)'/i", $ligne, $dm) ? $dm[1] : null;
     preg_match_all("/'([^']+)'/", $valeurs, $vm);
     foreach ($vm[1] as $valeur) {
+        if ($valeur === $defaut) {
+            continue;
+        }
         $trouve = str_contains($seed, "'" . $valeur . "'");
         foreach ($corpus as $texte) {
             if ($trouve) {

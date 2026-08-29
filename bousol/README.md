@@ -80,7 +80,8 @@ nettoie pas. Elles exigent `BOUSOL_RECETTE=oui` et annoncent la base qu'elles vi
 | `recette_phase2.php` | Tiers, Budget, les sept contrôles du CDC 2.3, bénéficiaires | 67 |
 | `recette_phase3.php` | Comptes, partie double, règlements, rapprochement, caisse | 68 |
 | `recette_phase4.php` | Dépenses, checklist de pièces, cycle en neuf étapes | 54 |
-| `recette_phase5.php` | Rémunération, honoraires, acompte fiscal, DGI, rendu documentaire | 50 |
+| `recette_phase5.php` | Rémunération, honoraires, acompte fiscal, DGI, rendu documentaire | 51 |
+| `recette_phase6.php` | Activités, cadre logique versionné, formations, registre des versions | 56 |
 
 Elles rendent aussi chaque écran et vérifient qu'il va jusqu'au bout de son document : une page
 tronquée par une erreur de gabarit est invisible en production, où `display_errors` est à Off.
