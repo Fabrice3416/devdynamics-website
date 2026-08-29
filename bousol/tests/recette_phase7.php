@@ -126,10 +126,14 @@ if ($controles['ok']) {
 cas('La periode est figee', periode_est_figee((int)$p1['id']));
 
 echo "\n== Ce que le figement interdit\n";
-$pdo->exec("INSERT INTO dossiers (projet_id, numero, type, tiers_id, objet, periode_id, created_by)
-            VALUES (1, 'REC7-D1', 'achat_bien', 2, 'REC7 dossier fige', " . (int)$p1['id'] . ", 1)");
-$dosFige = (int)$pdo->lastInsertId();
+// Le dossier s'ouvre par la fonction du module, sans quoi sa checklist n'existe
+// pas : c'est elle qui porte la distinction entre pieces avant et apres paiement.
 $_SESSION['role_projet'] = 'raf';
+$ouv = dossier_ouvrir(['type' => 'achat_bien', 'tiers_id' => 2, 'objet' => 'REC7 dossier figé']);
+$dosFige = (int)($ouv['id'] ?? 0);
+$pdo->prepare('UPDATE dossiers SET periode_id = ? WHERE id = ?')->execute([(int)$p1['id'], $dosFige]);
+cas('Le dossier de contrôle porte sa checklist',
+    count(pieces_dossier($dosFige)) > 0, count(pieces_dossier($dosFige)) . ' case(s)');
 $l21 = budget_ligne('2.1');
 refuse_avec('Une imputation dans une periode figee est refusee',
     dossier_imputer($dosFige, (int)$l21['id'], 1, 1000, 'unite'), 'figée');
