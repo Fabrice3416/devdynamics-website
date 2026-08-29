@@ -273,13 +273,30 @@ function valider_param(string $cle, ?string $valeur): ?string
  * prestation rendue pendant la periode eligible mais dont aucun dossier n'a ete
  * ouvert a temps ne trouvera plus ou s'imputer.
  */
-function require_creation_depense(string $operation = 'Cette création'): void
+function creation_depense_fermee(): ?string
 {
     $phase = phase_code();
     if ($phase === null || $phase === 'projet_actif') {
+        return null;
+    }
+    return $phase === 'regularisation'
+        ? 'La période de régularisation ne laisse que mener à terme les dossiers déjà ouverts : '
+          . 'tout engagement devait être ouvert avant la fin d\'exécution, même sans sa facture.'
+        : 'La phase de suivi post-clôture ne crée plus aucune dépense : la période contractuelle est close '
+          . 'et toute dépense postérieure est inéligible par nature.';
+}
+
+/**
+ * La meme regle, en garde de page. Les bibliotheques rendent un refus par
+ * creation_depense_fermee() ; seuls les ecrans s'arretent.
+ */
+function require_creation_depense(string $operation = 'Cette création'): void
+{
+    $motif = creation_depense_fermee();
+    if ($motif === null) {
         return;
     }
-    $lib = $phase === 'regularisation'
+    $lib = phase_code() === 'regularisation'
         ? 'la période de régularisation, qui ne laisse que mener à terme les dossiers déjà ouverts'
         : 'la phase de suivi post-clôture';
     http_response_code(403);

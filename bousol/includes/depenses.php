@@ -79,7 +79,9 @@ function dossier_ouvrir(array $d): array
     if ($objet === '') {
         return ['success' => false, 'error' => 'L\'objet du dossier est obligatoire.'];
     }
-    require_creation_depense('Ouvrir un dossier de dépense');
+    if (($ferme = creation_depense_fermee()) !== null) {
+        return ['success' => false, 'error' => $ferme];
+    }
 
     // Le seuil de mise en concurrence porte une devise et un perimetre, non un
     // simple montant : le guide REVIV l'exprime en euros et ne vise que les
@@ -339,7 +341,9 @@ function dossier_imputer(int $dossierId, int $ligneId, float $quantite, float $v
     if (in_array($d['statut'], ['clos', 'abandonne', 'regle'], true)) {
         return ['success' => false, 'error' => 'Un dossier ' . $d['statut'] . ' ne se réimpute pas.'];
     }
-    require_creation_depense('Imputer une dépense');
+    if (($ferme = creation_depense_fermee()) !== null) {
+        return ['success' => false, 'error' => $ferme];
+    }
     if (periode_est_figee($d['periode_id'] === null ? null : (int)$d['periode_id'])) {
         return ['success' => false, 'error' => 'La période de ce dossier est figée par un rapport validé : '
             . 'ses dépenses ne se modifient plus. Une correction passe par la réouverture exceptionnelle.'];

@@ -69,13 +69,21 @@ refuse_avec('La regularisation ne s\'ouvre pas deux fois',
 echo "\n== Ce que la regularisation ferme, et ce qu'elle laisse\n";
 $_SESSION['role_projet'] = 'raf';
 $avantDossiers = (int)$pdo->query("SELECT COUNT(*) FROM dossiers WHERE projet_id = 1")->fetchColumn();
-$ouv = dossier_ouvrir(['type' => 'achat_bien', 'tiers_id' => 2, 'objet' => 'REC9 dossier tardif']);
-$apresDossiers = (int)$pdo->query("SELECT COUNT(*) FROM dossiers WHERE projet_id = 1")->fetchColumn();
-cas('Aucun dossier nouveau ne s\'ouvre pendant la regularisation',
-    $apresDossiers === $avantDossiers, $avantDossiers . ' → ' . $apresDossiers);
-cas('Le refus est un arret de page, non un message',
-    empty($ouv['success']) || $apresDossiers === $avantDossiers,
-    'require_creation_depense arrête la requête');
+refuse_avec('Aucun dossier nouveau ne s\'ouvre pendant la regularisation',
+    dossier_ouvrir(['type' => 'achat_bien', 'tiers_id' => 2, 'objet' => 'REC9 dossier tardif']),
+    'mener à terme les dossiers déjà ouverts');
+cas('Rien n\'a ete cree',
+    (int)$pdo->query("SELECT COUNT(*) FROM dossiers WHERE projet_id = 1")->fetchColumn() === $avantDossiers,
+    (string)$avantDossiers . ' dossier(s)');
+$dossierOuvert = $pdo->query("SELECT id FROM dossiers WHERE projet_id = 1
+                               AND statut NOT IN ('clos','abandonne') LIMIT 1")->fetchColumn();
+if ($dossierOuvert !== false) {
+    refuse_avec('Une imputation nouvelle est fermee, meme sur un dossier deja ouvert',
+        dossier_imputer((int)$dossierOuvert, (int)budget_ligne('2.1')['id'], 1, 100, 'unite'),
+        'régularisation');
+} else {
+    cas('Aucun dossier ouvert : le cas de l\'imputation est saute', true, '');
+}
 
 echo "\n== Bascule\n";
 $_SESSION['role_projet'] = 'coordinateur';
@@ -132,10 +140,9 @@ cas('La reouverture s\'ouvre, motivee et bornee', !empty($reo['success']), $reo[
 cas('Elle ne rouvre que l\'etat de regularisation',
     phase_code() === 'regularisation', (string)phase_code());
 $_SESSION['role_projet'] = 'raf';
-$avant2 = (int)$pdo->query("SELECT COUNT(*) FROM dossiers WHERE projet_id = 1")->fetchColumn();
-dossier_ouvrir(['type' => 'achat_bien', 'tiers_id' => 2, 'objet' => 'REC9 dossier apres reouverture']);
-cas('Elle ne rouvre jamais la creation de depense',
-    (int)$pdo->query("SELECT COUNT(*) FROM dossiers WHERE projet_id = 1")->fetchColumn() === $avant2);
+refuse_avec('Elle ne rouvre jamais la creation de depense',
+    dossier_ouvrir(['type' => 'achat_bien', 'tiers_id' => 2, 'objet' => 'REC9 dossier apres reouverture']),
+    'mener à terme les dossiers déjà ouverts');
 $_SESSION['role_projet'] = 'coordinateur';
 refuse_avec('Deux reouvertures ne cohabitent pas',
     reouverture_ouvrir('REC9 seconde', date('Y-m-d', strtotime('+10 days'))), 'déjà en cours');
