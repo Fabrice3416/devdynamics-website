@@ -106,6 +106,17 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE FROM rapprochements WHERE date_releve = '2026-06-30'",
         "DELETE FROM arretes_caisse WHERE commentaire LIKE 'REC3-%' OR date = '2026-06-30'",
 
+        // Financement : les pieces avant les demandes, et les tranches se rouvrent.
+        "DELETE p FROM pieces_demande p JOIN demandes_paiement d ON d.id = p.demande_id
+          WHERE d.projet_id = 1",
+        "DELETE FROM demandes_paiement WHERE projet_id = 1",
+        "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id WHERE e.origine_ref LIKE 'tranche:%'",
+        "DELETE FROM ecritures WHERE origine_ref LIKE 'tranche:%'",
+        "UPDATE tranches SET montant_recu = NULL, date_reception = NULL, avis_credit_fichier_id = NULL,
+                             ecriture_ref = NULL WHERE projet_id = 1",
+        "UPDATE sources_revenu SET montant_acquis = 0, statut = 'en_cours' WHERE projet_id = 1",
+        "DELETE FROM sources_revenu WHERE libelle LIKE 'REC8 %'",
+
         // Restitution : les lignes avant les rapports, les liasses avant tout.
         "DELETE FROM liasses WHERE fichier_id IN (SELECT id FROM fichiers WHERE nom_genere LIKE '%LIASSE%')",
         "DELETE lf FROM lignes_financieres lf JOIN rapports r ON r.id = lf.rapport_id

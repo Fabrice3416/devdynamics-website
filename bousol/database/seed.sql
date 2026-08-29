@@ -15,7 +15,7 @@ INSERT INTO module_etats (module, libelle, version, critique) VALUES
 ('depenses',     'Dépenses',     '1.0.0', 0),
 ('remuneration', 'Rémunération', '1.0.0', 0),
 ('restitution',  'Restitution',  '1.0.0', 0),
-('financement',  'Financement',  '0.1.0', 0);
+('financement',  'Financement',  '1.0.0', 0);
 
 -- 2. Projets -----------------------------------------------------------
 -- Le projet est une dimension de toute donnee d'execution (addendum 1, section 2).

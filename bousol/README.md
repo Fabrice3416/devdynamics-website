@@ -82,7 +82,8 @@ nettoie pas. Elles exigent `BOUSOL_RECETTE=oui` et annoncent la base qu'elles vi
 | `recette_phase4.php` | Dépenses, checklist de pièces, cycle en neuf étapes | 54 |
 | `recette_phase5.php` | Rémunération, honoraires, acompte fiscal, DGI, rendu documentaire | 51 |
 | `recette_phase6.php` | Activités, cadre logique versionné, formations, registre des versions | 59 |
-| `recette_phase7.php` | Restitution, clôture conditionnée, annexe G, figement, rectification | ~50 |
+| `recette_phase7.php` | Restitution, clôture conditionnée, annexe G, figement, rectification | 46 |
+| `recette_phase8.php` | Financement, trésorerie, tranches, demandes de versement | ~40 |
 
 Elles rendent aussi chaque écran et vérifient qu'il va jusqu'au bout de son document : une page
 tronquée par une erreur de gabarit est invisible en production, où `display_errors` est à Off.

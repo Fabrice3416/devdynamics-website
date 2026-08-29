@@ -203,6 +203,30 @@ const DOCUMENTS_GENERES = [
 /** Tranches de prefinancement (contrat art. 4.1) : numero => taux sur le total hors reserve. */
 const TRANCHES = [1 => 50.00, 2 => 45.00, 3 => 5.00];
 
+/**
+ * Pieces d'une demande de versement (CDC 4.10).
+ *
+ * « La troisieme etape n'existe pas pour la premiere tranche, qui ne demande que
+ * le contrat signe, la demande de paiement, la fiche signaletique validee par la
+ * banque et la photocopie des pieces d'identite des signataires. » Les tranches
+ * suivantes y ajoutent les rapports figes de la periode.
+ */
+const PIECES_DEMANDE = [
+    'premiere' => [
+        ['contrat_signe',      'Contrat de subvention signé'],
+        ['demande_paiement',   'Demande de paiement au modèle de l\'UGP'],
+        ['fiche_signaletique', 'Fiche signalétique validée par la banque'],
+        ['identite_signataires', 'Photocopie des pièces d\'identité des signataires'],
+    ],
+    'suivante' => [
+        ['demande_paiement',   'Demande de paiement au modèle de l\'UGP'],
+        ['rapport_narratif',   'Rapport narratif figé, modèle Annexe 4'],
+        ['rapport_financier',  'Rapport financier figé, modèle Annexe G'],
+        ['rapprochement',      'Rapprochement bancaire de la période'],
+        ['ventilation',        'Ventilation détaillée des dépenses'],
+    ],
+];
+
 /** Impression papier : mentions d'exemplaire (CDC 1.8). */
 const EXEMPLAIRES = ['Exemplaire 1 - Organisation', 'Exemplaire 2 - Bailleur', 'Exemplaire 3 - Bailleur'];
 

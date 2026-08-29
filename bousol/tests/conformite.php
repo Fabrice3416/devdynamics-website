@@ -132,7 +132,7 @@ $seed   = (string)file_get_contents($racine . '/database/seed.sql');
  * le code, ce que le CDC assume. Cette liste s'allonge a chaque phase, et c'est
  * elle qui fait entrer un module dans le perimetre du controle.
  */
-const MODULES_LIVRES = ['NOYAU', 'SIGNATURE', 'TIERS', 'BUDGET', 'COMPTES', 'DEPENSES', 'REMUNERATION', 'ACTIVITES', 'RESTITUTION'];
+const MODULES_LIVRES = ['NOYAU', 'SIGNATURE', 'TIERS', 'BUDGET', 'COMPTES', 'DEPENSES', 'REMUNERATION', 'ACTIVITES', 'RESTITUTION', 'FINANCEMENT'];
 
 // Chaque table appartient a la section de schema.sql qui la precede.
 $tablesSurveillees = [];

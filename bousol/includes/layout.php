@@ -150,26 +150,3 @@ function page_end(): void
 </html>
     <?php
 }
-
-/** Page "module en construction" partagee par les modules non encore livres. */
-function page_module_stub(string $module, string $phaseLivraison, array $contenu): void
-{
-    $lib = MODULES[$module][0] ?? $module;
-    page_start($lib, $module);
-    ?>
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <h1 class="h4 mb-1"><i class="bi bi-cone-striped text-warning"></i> Module <?= e($lib) ?></h1>
-                    <p class="text-muted">Livraison prévue : <?= e($phaseLivraison) ?>.</p>
-                    <ul class="mb-0">
-                        <?php foreach ($contenu as $c): ?><li><?= e($c) ?></li><?php endforeach; ?>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-    <?php
-    page_end();
-}
