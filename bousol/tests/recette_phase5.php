@@ -33,7 +33,7 @@ function refuse_avec(string $lib, array $resultat, string $attendu = ''): void
 /** Le televersement exige un vrai POST : on pose le rapport en base pour la suite. */
 function poser_rapport(PDO $pdo, int $contratId, int $mois, string $autorite = 'coordinateur'): int
 {
-    $f = enregistrer_contenu('rapport ' . $contratId . '-' . $mois . '-' . random_int(1, 1e9),
+    $f = enregistrer_contenu('rapport ' . $contratId . '-' . $mois . '-' . random_int(1, 999999999),
         'pdf', 'application/pdf', 'scans', 'REC5-RAPPORT-' . $contratId . '-' . $mois . '.pdf');
     $pdo->prepare('INSERT INTO rapports_execution (projet_id, contrat_id, mois, date_remise, date_versement, fichier_id, autorite)
                    VALUES (?,?,?,CURDATE(),CURDATE(),?,?)')
