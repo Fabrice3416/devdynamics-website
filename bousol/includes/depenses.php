@@ -19,6 +19,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/budget.php';
 require_once __DIR__ . '/comptes.php';
 require_once __DIR__ . '/uploads.php';
+require_once __DIR__ . '/documents.php';   // rendu des pieces que l'outil produit (annexe E)
 
 const STATUTS_DOSSIER = [
     'brouillon'      => 'Ouvert',
@@ -184,8 +185,10 @@ function dossiers(?string $statut = null, ?int $projetId = null): array
 function pieces_dossier(int $dossierId): array
 {
     $st = db()->prepare(
-        'SELECT p.*, f.nom_genere, f.empreinte FROM pieces p
+        'SELECT p.*, f.nom_genere, f.empreinte, d.fichier_id AS document_fichier_id, d.statut AS document_statut
+           FROM pieces p
            LEFT JOIN fichiers f ON f.id = p.fichier_id
+           LEFT JOIN documents d ON d.id = p.document_id
           WHERE p.dossier_id = ? ORDER BY p.ordre'
     );
     $st->execute([$dossierId]);
@@ -766,6 +769,28 @@ function dossier_abandonner(int $dossierId, string $motif): array
     return ['success' => true];
 }
 
+/**
+ * En regime electronique, une case de checklist est satisfaite quand toutes les
+ * appositions attendues sont posees sur son document : il n'y a rien a scanner,
+ * la signature est dans l'outil. En regime papier la fonction ne fait rien, et
+ * c'est le scan qui satisfait la case.
+ */
+function dossier_constater_signatures(int $dossierId): void
+{
+    foreach (pieces_dossier($dossierId) as $p) {
+        if ($p['statut'] !== 'attendue' || empty($p['document_id'])) {
+            continue;
+        }
+        $doc = document_de((string)$p['type'], 'dossier', $dossierId);
+        if ($doc !== null && document_signe($doc)) {
+            db()->prepare("UPDATE pieces SET statut = 'recue', fichier_id = ?, date_piece = CURDATE() WHERE id = ?")
+                ->execute([$doc['fichier_id'], (int)$p['id']]);
+            audit('depenses', 'piece_signee', 'dossier', $dossierId,
+                $p['libelle'] . ' · toutes les appositions attendues sont posées');
+        }
+    }
+}
+
 /** Passe le dossier a l'etat regle quand son reglement a ete execute par Comptes. */
 function dossier_constater_reglement(int $dossierId): void
 {
@@ -776,4 +801,99 @@ function dossier_constater_reglement(int $dossierId): void
     if ((int)$st->fetchColumn() > 0) {
         db()->prepare("UPDATE dossiers SET statut = 'regle' WHERE id = ? AND statut = 'approuve'")->execute([$dossierId]);
     }
+}
+
+// ---------------------------------------------------------------------
+// Rendu documentaire des pieces que l'outil produit lui-meme
+// ---------------------------------------------------------------------
+
+/**
+ * Genere la piece d'un dossier quand l'outil sait la produire.
+ *
+ * Six des huit cases d'un dossier d'achat sortent de Bousol : la fiche
+ * d'imputation, le bon de commande, le bon de decaissement, le bon de reception,
+ * l'ordre de mission et la fiche de calcul. Les deux autres - la facture et le
+ * recu - sont etablies par un tiers et reviennent numerisees. « L'outil ne les
+ * genere pas et ne pourrait pas les generer sans les fabriquer. »
+ *
+ * En regime papier, le document produit s'imprime, se signe a la main et revient
+ * scanne : la case reste attendue jusqu'a ce scan. En regime electronique, il
+ * entre dans la file de signature.
+ *
+ * @return array{success: bool, document_id?: int, error?: string}
+ */
+function dossier_generer_piece(int $pieceId): array
+{
+    $st = db()->prepare('SELECT * FROM pieces WHERE id = ? AND projet_id = ?');
+    $st->execute([$pieceId, projet_id()]);
+    $piece = $st->fetch();
+    if ($piece === false) {
+        return ['success' => false, 'error' => 'Pièce inconnue dans ce projet.'];
+    }
+    if (!piece_generable((string)$piece['type'])) {
+        return ['success' => false, 'error' => 'Cette pièce est établie par un tiers : l\'outil la reçoit numérisée, il ne la produit pas.'];
+    }
+    $d = dossier((int)$piece['dossier_id']);
+    if ($d === null) {
+        return ['success' => false, 'error' => 'Dossier inconnu.'];
+    }
+    $imputation = imputation_dossier((int)$d['id']);
+    if ($imputation === null && $piece['type'] !== 'ordre_mission') {
+        return ['success' => false, 'error' => 'Le dossier doit être imputé avant de produire cette pièce.'];
+    }
+
+    $sb = db()->prepare('SELECT nom, nif, adresse, fonction FROM tiers WHERE id = ?');
+    $sb->execute([(int)$d['tiers_id']]);
+    $tiers = $sb->fetch() ?: ['nom' => '', 'nif' => null, 'adresse' => null, 'fonction' => null];
+
+    $donnees = ['dossier' => $d, 'imputation' => $imputation];
+    switch ($piece['type']) {
+        case 'fiche_imputation':
+            $ligne = budget_ligne_par_id((int)$imputation['ligne_id']);
+            $consomme = budget_consomme_ligne((int)$imputation['ligne_id']);
+            $donnees += [
+                'solde_avant' => (float)($ligne['montant_gestion'] ?? 0),
+                'consomme'    => $consomme['montant'],
+                'solde_apres' => round((float)($ligne['montant_gestion'] ?? 0) - $consomme['montant'], 2),
+                'derogation'  => $d['derogation_quantite_motif'],
+            ];
+            break;
+        case 'bon_commande':
+            $offres = proformas_dossier((int)$d['id']);
+            $retenue = null;
+            foreach ($offres as $o) {
+                if ((int)$o['retenu'] === 1) {
+                    $retenue = $o;
+                }
+            }
+            $donnees += ['fournisseur' => $tiers, 'offres' => $offres, 'offre_retenue' => $retenue];
+            break;
+        case 'bon_reception':
+            $donnees += ['fournisseur' => $tiers];
+            break;
+        case 'ordre_mission':
+        case 'fiche_calcul':
+            $donnees += ['missionnaire' => $tiers];
+            break;
+        case 'bon_decaissement':
+            $sr = db()->prepare("SELECT r.mode, c.code, c.libelle FROM reglements r JOIN comptes c ON c.id = r.compte_id
+                                  WHERE r.projet_id = ? AND r.origine_ref IN (?, ?) AND r.statut <> 'annule' ORDER BY r.id DESC LIMIT 1");
+            $sr->execute([projet_id(), 'dossier:' . $d['id'], 'dossier_avance:' . $d['id']]);
+            $reglement = $sr->fetch();
+            $donnees += [
+                'beneficiaire' => $tiers,
+                'montant'      => (float)$imputation['montant'],
+                'mode'         => MODES_REGLEMENT[$reglement['mode'] ?? param('mode_reglement_defaut', 'virement')]
+                                  ?? 'Virement',
+                'compte'       => $reglement ? $reglement['code'] . ' — ' . $reglement['libelle'] : '—',
+            ];
+            break;
+    }
+
+    $res = document_generer((string)$piece['type'], $donnees, 'dossier', (int)$d['id'], 'depenses');
+    if (empty($res['success'])) {
+        return $res;
+    }
+    db()->prepare('UPDATE pieces SET document_id = ? WHERE id = ?')->execute([(int)$res['document_id'], $pieceId]);
+    return $res;
 }

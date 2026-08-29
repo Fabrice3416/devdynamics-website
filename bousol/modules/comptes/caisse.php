@@ -18,7 +18,16 @@ require_module('comptes');
 $compte = compte_caisse();
 $erreur = null;
 
-if ($compte !== null && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'renflouer') {
+if ($compte !== null && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'journal') {
+    verify_csrf();
+    $res = document_journal_caisse((int)$compte['id'], (string)($_POST['debut'] ?? date('Y-m-01')),
+        (string)($_POST['fin'] ?? date('Y-m-t')));
+    if (empty($res['success'])) {
+        $erreur = $res['error'];
+    } else {
+        redirect(base_path('pdf/serve.php?id=' . (int)$res['fichier_id']));
+    }
+} elseif ($compte !== null && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'renflouer') {
     verify_csrf();
     require_phase_execution('Renflouer la caisse');
     $res = caisse_renflouer(
@@ -107,8 +116,17 @@ require __DIR__ . '/_nav.php';
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white fw-semibold d-flex justify-content-between">
                 <span><i class="bi bi-cash-coin"></i> Journal de caisse</span>
-                <form method="get"><input type="month" class="form-control form-control-sm" name="mois"
-                    value="<?= e($mois) ?>" onchange="this.form.submit()"></form>
+                <span class="d-flex gap-2 align-items-center">
+                    <form method="post" class="d-inline"><?= csrf_field() ?>
+                        <input type="hidden" name="action" value="journal">
+                        <input type="hidden" name="debut" value="<?= e($debut) ?>">
+                        <input type="hidden" name="fin" value="<?= e($fin) ?>">
+                        <button class="btn btn-sm btn-link p-0" title="Journal au format PAIESC">
+                            <i class="bi bi-file-earmark-pdf"></i> produire</button>
+                    </form>
+                    <form method="get"><input type="month" class="form-control form-control-sm" name="mois"
+                        value="<?= e($mois) ?>" onchange="this.form.submit()"></form>
+                </span>
             </div>
             <div class="table-responsive">
             <table class="table table-sm mb-0">

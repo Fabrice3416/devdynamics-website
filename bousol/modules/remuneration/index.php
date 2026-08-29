@@ -49,7 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($res['success'])) {
         $erreur = $res['error'];
     } else {
-        flash_set('success', 'Enregistré.');
+        flash_set('success', $action === 'accepter' && !empty($res['document_id'])
+            ? 'Certificat d\'acceptation délivré et produit.'
+            : 'Enregistré.');
         redirect(base_path('modules/remuneration/index.php?mois=' . $mois));
     }
 }
@@ -106,7 +108,12 @@ require __DIR__ . '/_nav.php';
             <td><?= e($r['intervenant']) ?><br><small class="text-muted"><?= e($r['fonction']) ?></small></td>
             <td class="small text-muted"><?= e(date_fr($r['date_remise'])) ?>
                 <br>versé le <?= e(date_fr($r['date_versement'])) ?></td>
-            <td class="small text-muted"><?= e(AUTORITES_ACCEPTATION[$r['autorite']] ?? $r['autorite']) ?></td>
+            <td class="small text-muted"><?= e(AUTORITES_ACCEPTATION[$r['autorite']] ?? $r['autorite']) ?>
+                <?php $cert = document_de('certificat_acceptation', 'rapport_execution', (int)$r['id']);
+                      if ($cert !== null && $cert['fichier_id']): ?>
+                <br><a href="<?= e(base_path('pdf/serve.php?id=' . (int)$cert['fichier_id'])) ?>">
+                    <i class="bi bi-file-earmark-pdf"></i> certificat</a>
+                <?php endif; ?></td>
             <td><span class="badge text-bg-light border"><?= e(STATUTS_RAPPORT[$r['statut']] ?? $r['statut']) ?></span>
                 <?php if ($r['ratification'] === 'provisoire'): ?><br><span class="badge text-bg-light border">provisoire</span><?php endif; ?></td>
             <td class="text-end small">

@@ -22,6 +22,7 @@ if ($d === null) {
     http_response_code(404);
     exit('404 - Dossier inconnu');
 }
+dossier_constater_signatures($id);
 dossier_constater_reglement($id);
 $d = dossier($id);
 
@@ -49,6 +50,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'piece') {
         $res = piece_verser((int)($_POST['piece_id'] ?? 0), $_FILES['scan'] ?? [],
             (string)($_POST['date_piece'] ?? '') ?: null);
+    } elseif ($action === 'generer') {
+        $res = dossier_generer_piece((int)($_POST['piece_id'] ?? 0));
+        if (!empty($res['success'])) {
+            flash_set('success', $res['statut'] === 'a_signer'
+                ? 'Document produit et entré dans la file de signature.'
+                : 'Document produit. À imprimer, signer à la main, puis verser numérisé.');
+            redirect(base_path('modules/depenses/dossier.php?id=' . $id));
+        }
     } elseif ($action === 'sans_objet') {
         $res = piece_sans_objet((int)($_POST['piece_id'] ?? 0), (string)($_POST['motif'] ?? ''));
     } elseif ($action === 'proforma') {
@@ -259,12 +268,28 @@ require __DIR__ . '/_nav.php';
                         <?php if ($p['date_piece']): ?><br><small class="text-muted"><?= e(date_fr($p['date_piece'])) ?></small><?php endif; ?>
                     </td>
                     <td class="text-end" style="width:20rem">
+                        <?php if (!empty($p['document_fichier_id']) && $p['statut'] !== 'recue'): ?>
+                            <a class="small" href="<?= e(base_path('pdf/serve.php?id=' . (int)$p['document_fichier_id'])) ?>">
+                                <i class="bi bi-file-earmark-pdf"></i> document produit</a>
+                            <?php if ($p['document_statut'] === 'a_signer'): ?>
+                            <span class="badge text-bg-light border">en attente de signature</span>
+                            <?php endif; ?><br>
+                        <?php endif; ?>
                         <?php if ($p['statut'] === 'recue'): ?>
                             <span class="text-success"><i class="bi bi-check2"></i> reçue</span>
                             <?php if ($p['empreinte']): ?><br><small class="text-muted"><?= e(substr($p['empreinte'], 0, 12)) ?>…</small><?php endif; ?>
                         <?php elseif ($p['statut'] === 'sans_objet'): ?>
                             <span class="text-muted">sans objet</span>
                         <?php elseif ($peutSaisir && !in_array($d['statut'], ['clos', 'abandonne'], true)): ?>
+                            <?php if (piece_generable((string)$p['type'])): ?>
+                            <form method="post" class="d-inline"><?= csrf_field() ?>
+                                <input type="hidden" name="action" value="generer">
+                                <input type="hidden" name="piece_id" value="<?= (int)$p['id'] ?>">
+                                <button class="btn btn-sm btn-link p-0 me-2" title="Produire le document">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                    <?= $p['document_id'] ? 'régénérer' : 'produire' ?></button>
+                            </form>
+                            <?php endif; ?>
                             <form method="post" enctype="multipart/form-data" class="d-flex gap-1 justify-content-end">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="action" value="piece">

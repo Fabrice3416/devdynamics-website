@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/depenses.php';
 require_once __DIR__ . '/comptes.php';
+require_once __DIR__ . '/documents.php';   // certificat d'acceptation, etat recapitulatif
 
 const AUTORITES_ACCEPTATION = [
     'coordinateur'       => 'Coordinateur du projet',
@@ -175,7 +176,15 @@ function rapport_accepter(int $rapportId): array
         ->execute([user_id(), $rapportId]);
     audit('remuneration', 'certificat_acceptation', 'rapport_execution', $rapportId,
         $r['intervenant'] . ' · mois ' . $r['mois'] . ' · autorité ' . AUTORITES_ACCEPTATION[$r['autorite']]);
-    return ['success' => true];
+
+    $r['statut'] = 'accepte';
+    $doc = document_generer('certificat_acceptation', ['rapport' => $r, 'prestation' => null],
+        'rapport_execution', $rapportId, 'remuneration');
+    if (!empty($doc['success'])) {
+        db()->prepare('UPDATE rapports_execution SET certificat_document_id = ? WHERE id = ?')
+            ->execute([(int)$doc['document_id'], $rapportId]);
+    }
+    return ['success' => true, 'document_id' => $doc['document_id'] ?? null];
 }
 
 function rapport_refuser(int $rapportId, string $motif): array
@@ -584,6 +593,10 @@ function versement_dgi_preparer(int $mois): array
             ? 'Le mois ' . $mois . ' a déjà son versement à la DGI.'
             : 'Enregistrement impossible.'];
     }
+
+    document_generer('etat_recap_acomptes',
+        ['mois' => $mois, 'acomptes' => $acomptes, 'total' => $total],
+        'versement_dgi', $id, 'remuneration');
 
     $res = dossier_ouvrir([
         'type'          => 'versement_dgi',

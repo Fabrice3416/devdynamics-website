@@ -92,6 +92,13 @@ if ($compte !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         trim((string)($_POST['motif'] ?? '')) ?: null]);
             redirect(base_path('modules/comptes/rapprochement.php?compte=' . $compteId . '&mois=' . urlencode($mois)));
         }
+    } elseif ($action === 'document' && $existant !== null) {
+        $res = document_rapprochement((int)$existant['id']);
+        if (empty($res['success'])) {
+            $erreur = $res['error'];
+        } else {
+            redirect(base_path('pdf/serve.php?id=' . (int)$res['fichier_id']));
+        }
     } elseif ($action === 'valider' && $existant !== null) {
         $res = rapprochement_valider((int)$existant['id']);
         if (!$res['success']) {
@@ -253,6 +260,14 @@ require __DIR__ . '/_nav.php';
                     <?= csrf_field() ?>
                     <input type="hidden" name="action" value="valider">
                     <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-lock"></i> Valider le rapprochement</button>
+                </form>
+                <?php endif; ?>
+                <?php if ($rappro !== null): ?>
+                <form method="post" class="mt-2">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="action" value="document">
+                    <button class="btn btn-link btn-sm p-0"><i class="bi bi-file-earmark-pdf"></i>
+                        Produire le rapprochement à joindre au rapport</button>
                 </form>
                 <?php endif; ?>
             </div>

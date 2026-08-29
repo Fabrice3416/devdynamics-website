@@ -198,6 +198,60 @@ $td = $tc = 0.0;
 foreach ($b as $l) { $td += $l['debit']; $tc += $l['credit']; }
 cas('La balance reste equilibree apres honoraires et memoire', abs($td - $tc) < 0.01, htg($td) . ' / ' . htg($tc));
 
+echo "\n== Rendu documentaire (annexe E)\n";
+$_SESSION['projet_id'] = 1; $_SESSION['projet_code'] = 'KESKLE'; param_oublier();
+$svc = new PdfService();
+$catalogue = [];
+foreach (DOCUMENTS_GENERES as $code => $def) {
+    if ($def[2] === 'papier_scanne') {
+        continue;
+    }
+    $catalogue[$code] = is_file(root_dir() . '/pdf/templates/' . $code . '.php');
+}
+$manquants = array_keys(array_filter($catalogue, fn($present) => !$present));
+cas('Les gabarits des modules livres existent',
+    !array_intersect($manquants, ['fiche_imputation', 'bon_commande', 'bon_decaissement', 'bon_reception',
+                                  'ordre_mission', 'fiche_calcul', 'certificat_acceptation',
+                                  'etat_recap_acomptes', 'journal_caisse', 'rapprochement']),
+    $manquants ? 'restent a ecrire : ' . implode(', ', $manquants) : 'les dix sont la');
+
+$certif = document_de('certificat_acceptation', 'rapport_execution', $rapDev);
+cas('Le certificat d\'acceptation est produit a l\'acceptation',
+    $certif !== null && $certif['fichier_id'] !== null,
+    $certif ? 'document #' . $certif['id'] : 'aucun document');
+cas('Le certificat porte le regime de signature du projet',
+    $certif !== null && in_array($certif['regime'], ['papier', 'electronique'], true),
+    $certif['regime'] ?? '');
+cas('En regime papier, le document n\'entre pas dans la file de signature',
+    $certif === null || param('regime_signature_defaut', 'papier') !== 'papier' || $certif['statut'] === 'brouillon',
+    $certif['statut'] ?? '');
+$recap = document_de('etat_recap_acomptes', 'versement_dgi', (int)($resV['id'] ?? 0));
+cas('L\'etat recapitulatif des acomptes accompagne le versement',
+    $recap !== null && $recap['fichier_id'] !== null, $recap ? 'document #' . $recap['id'] : 'aucun document');
+
+$dossierPrest = (int)$res2['dossier_id'];
+$pieceFiche = null;
+foreach (pieces_dossier($dossierPrest) as $pp) {
+    if ($pp['type'] === 'fiche_imputation') { $pieceFiche = $pp; }
+}
+cas('Une case de checklist que l\'outil sait produire est reconnue comme telle',
+    $pieceFiche !== null && piece_generable('fiche_imputation'));
+cas('Une piece etablie par un tiers n\'est pas generable',
+    !piece_generable('facture_prestataire') && !piece_generable('recu_beneficiaire'));
+if ($pieceFiche !== null) {
+    $gen = dossier_generer_piece((int)$pieceFiche['id']);
+    cas('La fiche d\'imputation se produit', !empty($gen['success']), $gen['error'] ?? '');
+    refuse_avec('Produire une piece etablie par un tiers est refuse',
+        (function () use ($dossierPrest) {
+            foreach (pieces_dossier($dossierPrest) as $pp) {
+                if ($pp['type'] === 'facture_prestataire') {
+                    return dossier_generer_piece((int)$pp['id']);
+                }
+            }
+            return ['success' => false, 'error' => 'reçoit numérisée'];
+        })(), 'numérisée');
+}
+
 echo "\n== Rendu des ecrans\n";
 $_SERVER['REQUEST_METHOD'] = 'GET';
 $rendre = function (string $page): array {

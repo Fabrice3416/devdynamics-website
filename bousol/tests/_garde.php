@@ -106,6 +106,17 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE FROM rapprochements WHERE date_releve = '2026-06-30'",
         "DELETE FROM arretes_caisse WHERE commentaire LIKE 'REC3-%' OR date = '2026-06-30'",
 
+        // Documents produits par les recettes : le fichier ne se supprime pas, mais
+        // le document, lui, n'est qu'un rattachement.
+        "DELETE FROM documents WHERE objet_type IN ('rapport_execution','versement_dgi')
+          AND objet_id NOT IN (SELECT id FROM rapports_execution) AND objet_type = 'rapport_execution'",
+        "DELETE d FROM documents d JOIN rapports_execution r ON r.id = d.objet_id
+          JOIN contrats c ON c.id = r.contrat_id JOIN tiers t ON t.id = c.tiers_id
+          WHERE d.objet_type = 'rapport_execution' AND t.nom LIKE 'REC5 %'",
+        "DELETE d FROM documents d JOIN dossiers dd ON dd.id = d.objet_id
+          WHERE d.objet_type = 'dossier' AND (dd.objet LIKE 'REC4-%' OR dd.objet LIKE '%REC5 %'
+             OR dd.objet LIKE 'Acomptes retenus du mois 9%')",
+
         // Remuneration : prestations, rapports et versements avant les contrats.
         "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id WHERE e.origine_ref LIKE 'prestation:%'",
         "DELETE FROM ecritures WHERE origine_ref LIKE 'prestation:%'",

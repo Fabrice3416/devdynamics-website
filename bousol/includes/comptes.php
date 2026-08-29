@@ -21,6 +21,7 @@ require_once __DIR__ . '/calendrier.php';
 require_once __DIR__ . '/budget.php';
 require_once __DIR__ . '/uploads.php';
 require_once __DIR__ . '/audit.php';
+require_once __DIR__ . '/documents.php';   // journal de caisse, rapprochement (annexe E)
 
 const FAMILLES_COMPTES = [
     'banque'      => 'Trésorerie — banque',
@@ -1182,4 +1183,53 @@ function caisse_renflouer(int $compteCaisseId, float $montant, int $detenteurId,
             $r['numero'] . ' · ' . htg($montant) . ' · chèque ' . $numeroCheque . ' au nom de ' . $detenteur);
     }
     return $r;
+}
+
+// ---------------------------------------------------------------------
+// Rendu documentaire (annexe E)
+// ---------------------------------------------------------------------
+
+/** Le journal de caisse au format du formulaire PAIESC, avec son arrete du moment. */
+function document_journal_caisse(int $compteId, string $debut, string $fin): array
+{
+    $journal = caisse_journal($compteId, $debut, $fin);
+    $arrete = dernier_arrete_caisse($compteId);
+    $detenteur = null;
+    if ($arrete !== null && $arrete['detenteur_id'] !== null) {
+        $st = db()->prepare('SELECT nom FROM tiers WHERE id = ?');
+        $st->execute([(int)$arrete['detenteur_id']]);
+        $detenteur = $st->fetchColumn() ?: null;
+    }
+    return document_generer('journal_caisse',
+        ['debut' => $debut, 'fin' => $fin, 'journal' => $journal, 'arrete' => $arrete, 'detenteur' => $detenteur],
+        'compte', $compteId, 'comptes');
+}
+
+/** L'extrait d'un projet, avec l'etat consolide du compte qui le porte. */
+function document_rapprochement(int $rapprochementId): array
+{
+    $st = db()->prepare('SELECT r.*, c.libelle AS compte_libelle, c.compte_bancaire_id
+                           FROM rapprochements r JOIN comptes c ON c.id = r.compte_id
+                          WHERE r.id = ? AND r.projet_id = ?');
+    $st->execute([$rapprochementId, projet_id()]);
+    $r = $st->fetch();
+    if ($r === false) {
+        return ['success' => false, 'error' => 'Rapprochement inconnu dans ce projet.'];
+    }
+    $lignes = lignes_rapprochement($rapprochementId);
+    $etat = rapprochement_consolide((int)$r['compte_bancaire_id'], (string)$r['date_releve'],
+        (float)$r['solde_releve'], $lignes);
+    $res = document_generer('rapprochement', [
+        'compte'       => $r['compte_libelle'],
+        'date_releve'  => $r['date_releve'],
+        'etat'         => $etat,
+        'lignes'       => $lignes,
+        'commentaire'  => $r['commentaire_ecart'],
+        'partage'      => count(projets_du_compte_bancaire((int)$r['compte_bancaire_id'])) > 1,
+    ], 'rapprochement', $rapprochementId, 'comptes');
+    if (!empty($res['success'])) {
+        db()->prepare('UPDATE rapprochements SET document_id = ? WHERE id = ?')
+            ->execute([(int)$res['document_id'], $rapprochementId]);
+    }
+    return $res;
 }
