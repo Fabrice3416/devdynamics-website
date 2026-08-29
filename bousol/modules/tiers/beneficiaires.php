@@ -107,6 +107,15 @@ require __DIR__ . '/_nav.php';
 
 <?php if ($erreur): ?><div class="alert alert-danger py-2"><i class="bi bi-x-octagon"></i> <?= e($erreur) ?></div><?php endif; ?>
 
+<?php $mineursSansPiece = beneficiaires_mineurs_sans_autorisation(); if ($mineursSansPiece): ?>
+<div class="alert alert-danger py-2"><i class="bi bi-shield-exclamation"></i>
+    <strong>Autorisation parentale manquante</strong> pour
+    <?= e(implode(', ', array_column($mineursSansPiece, 'nom'))) ?>.
+    L'inscription d'un mineur exige cette pièce ; ces enregistrements sont antérieurs à la règle
+    ou ont été saisis hors application.
+</div>
+<?php endif; ?>
+
 <div class="row g-3 mb-4">
     <div class="col-6 col-lg-3"><div class="card card-indicateur border-0 shadow-sm"><div class="card-body">
         <div class="libelle">Ventilation par sexe</div>

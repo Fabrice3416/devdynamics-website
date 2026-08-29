@@ -279,11 +279,6 @@ function reauthenticate(string $password): bool
     return false;
 }
 
-function reauth_valid(): bool
-{
-    $ttl = (int)(config()['security']['reauth_ttl'] ?? 120);
-    return (time() - (int)($_SESSION['reauth_at'] ?? 0)) <= $ttl;
-}
 
 function hash_password(string $plain): string
 {

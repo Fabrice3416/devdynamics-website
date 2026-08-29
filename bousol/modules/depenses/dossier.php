@@ -109,7 +109,7 @@ require __DIR__ . '/_nav.php';
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-header bg-white fw-semibold"><i class="bi bi-folder"></i> Le dossier</div>
             <table class="table table-sm mb-0">
-                <tr><td class="text-muted">Type</td><td><?= e(TYPES_DOSSIER[$d['type']]['libelle'] ?? $d['type']) ?></td></tr>
+                <tr><td class="text-muted">Type</td><td><?= e(type_dossier_libelle($d['type'])) ?></td></tr>
                 <tr><td class="text-muted">Objet</td><td><?= e($d['objet']) ?></td></tr>
                 <tr><td class="text-muted">Bénéficiaire</td><td><?= e($d['tiers_nom']) ?>
                     <?php if ($d['nif']): ?><br><small class="text-muted">NIF <?= e($d['nif']) ?></small><?php endif; ?></td></tr>

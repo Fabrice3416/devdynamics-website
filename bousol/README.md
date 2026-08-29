@@ -46,12 +46,12 @@ bousol/
   modules/              un dossier par module (CDC 7.2), chacun possède ses tables
     noyau/ signature/ tiers/ budget/ comptes/ activites/ depenses/ remuneration/ restitution/ financement/
   gabarits/             gabarits Excel des formulaires de gestion (petite_caisse.xlsx)
-  tests/                recette_phase1.php (cas de l'annexe G, à lancer en CLI sur une base de test)
+  tests/                recettes par phase et contrôle de conformité, en CLI sur une base de test
   pdf/
     generate.php        service de rendu (mPDF) -> fichiers
     serve.php           seul point d'accès aux fichiers (droits, coffre, audit)
     templates/          gabarits PHP/HTML (_entete.php commun)
-  database/             schema.sql (49 tables), schema_triggers.sql (8 garde-fous), seed.sql
+  database/             schema.sql (52 tables), schema_triggers.sql (10 garde-fous), seed.sql
   storage/              hors accès web (Deny) : scans/ documents/ coffre/ liasses/ exports/ tmp/
   lib/mpdf/             non versionné
 ```
@@ -70,9 +70,25 @@ bousol/
 | 6 | Financement + Restitution (clôture, Annexe 4, Annexe G, liasses) | À faire |
 | 7 | Hors ligne, bascule phase 2, registres post-clôture, archive | À faire |
 
-Chaque phase est recettée sur ses cas d'échec de l'annexe G avant mise en service :
-`php bousol/tests/recette_phase1.php` sur une base de test — 23 cas couvrant le Noyau,
-la Signature, le cloisonnement par projet et l'habilitation.
+Chaque phase est recettée sur ses cas d'échec de l'annexe G avant mise en service, sur une
+base de test et jamais sur la production — les recettes écrivent, et le journal d'audit ne se
+nettoie pas. Elles exigent `BOUSOL_RECETTE=oui` et annoncent la base qu'elles visent.
+
+| Recette | Couvre | Cas |
+|---|---|---|
+| `recette_phase1.php` | socle, Noyau, Signature, cloisonnement, habilitation | 23 |
+| `recette_phase2.php` | Tiers, Budget, les sept contrôles du CDC 2.3, bénéficiaires | 67 |
+| `recette_phase3.php` | Comptes, partie double, règlements, rapprochement, caisse | 68 |
+| `recette_phase4.php` | Dépenses, checklist de pièces, cycle en neuf étapes | 54 |
+
+Elles rendent aussi chaque écran et vérifient qu'il va jusqu'au bout de son document : une page
+tronquée par une erreur de gabarit est invisible en production, où `display_errors` est à Off.
+
+`php bousol/tests/conformite.php` complète les recettes par ce qu'elles ne peuvent pas voir. Une
+recette vérifie ce que le code fait ; ce contrôle-ci traque ce qu'il aurait dû faire — une fonction
+de bibliothèque que personne n'appelle, un état du modèle jamais posé, un paramètre de l'annexe F
+que personne ne lit. Chaque exception légitime porte sa raison dans son allowlist, et c'est cette
+justification qui est le contrôle. À lancer avant d'annoncer un module livré.
 
 ## Le projet, dimension de toute donnée
 

@@ -79,7 +79,7 @@ require __DIR__ . '/_nav.php';
         <?php foreach ($liste as $d): ?>
         <tr>
             <td><a href="<?= e(base_path('modules/depenses/dossier.php?id=' . (int)$d['id'])) ?>"><?= e($d['numero']) ?></a>
-                <br><small class="text-muted"><?= e(TYPES_DOSSIER[$d['type']]['libelle'] ?? $d['type']) ?></small></td>
+                <br><small class="text-muted"><?= e(type_dossier_libelle($d['type'])) ?></small></td>
             <td class="small"><?= e($d['objet']) ?>
                 <?php if ($d['numero_piece']): ?><br><span class="text-muted">pièce <?= e($d['numero_piece']) ?></span><?php endif; ?></td>
             <td class="small"><?= e($d['tiers_nom']) ?></td>
