@@ -106,6 +106,12 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE FROM rapprochements WHERE date_releve = '2026-06-30'",
         "DELETE FROM arretes_caisse WHERE commentaire LIKE 'REC3-%' OR date = '2026-06-30'",
 
+        // Bascule : le projet revient en execution, ses reouvertures disparaissent.
+        "DELETE FROM reouvertures WHERE projet_id = 1",
+        "DELETE FROM liasses WHERE type = 'classement' AND projet_id = 1",
+        "UPDATE phases SET statut = CASE code WHEN 'projet_actif' THEN 'en_cours' ELSE 'a_venir' END
+          WHERE projet_id = 1",
+
         // Financement : les pieces avant les demandes, et les tranches se rouvrent.
         "DELETE p FROM pieces_demande p JOIN demandes_paiement d ON d.id = p.demande_id
           WHERE d.projet_id = 1",

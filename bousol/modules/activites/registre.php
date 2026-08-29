@@ -50,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $versions = versions_application();
 $listeAnomalies = anomalies();
 $sansAccuse = anomalies_sans_accuse();
+$sansCorrectif = anomalies_sans_correctif();
 $ad = adoption();
 $organisations = db()->query("SELECT id, nom FROM tiers WHERE type = 'organisation' AND actif = 1 ORDER BY nom")->fetchAll();
 
@@ -65,6 +66,13 @@ require __DIR__ . '/_nav.php';
 <div class="alert alert-warning py-2"><i class="bi bi-clock-history"></i>
     <strong><?= count($sansAccuse) ?> signalement(s) sans accusé de réception</strong> au-delà du délai paramétré.
     L'engagement de support est de <?= e(param('delai_accuse_phase2_heures', '48')) ?> heures ouvrables.</div>
+<?php endif; ?>
+
+<?php if ($sansCorrectif): ?>
+<div class="alert alert-warning py-2"><i class="bi bi-wrench"></i>
+    <strong><?= count($sansCorrectif) ?> anomalie(s) non critique(s) sans correctif</strong> au-delà du délai
+    paramétré de <?= e(param('delai_correctif_phase2_jours', '15')) ?> jours. Une anomalie critique n'a pas de
+    délai opposé : elle se traite sans attendre.</div>
 <?php endif; ?>
 
 <div class="row g-3 mb-4">

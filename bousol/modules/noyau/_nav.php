@@ -5,6 +5,7 @@ $onglets = [
     'modules'    => ['modules.php',    'Modules',              ['coordinateur']],
     'sauvegarde' => ['sauvegarde.php', 'Sauvegarde',           ['coordinateur']],
     'audit'      => ['audit.php',      'Journal d\'audit',     ['coordinateur', 'raf', 'mandataire']],
+    'bascule'    => ['bascule.php',    'Bascule',              ['coordinateur']],
 ];
 ?>
 <ul class="nav nav-tabs mb-4">

@@ -271,6 +271,7 @@ const PARAMETRES_REGISTRE = [
     'delai_accuse_phase2_heures'    => ['Délai d\'accusé de réception en phase 2 (h ouvrables)', 'int', null, true],
     'delai_correctif_phase2_jours'  => ['Délai de correctif non critique en phase 2 (jours)', 'int', null, true],
     'delai_alerte_sauvegarde_jours' => ['Délai d\'alerte d\'absence de sauvegarde (jours)', 'int', null, true],
+    'enveloppe_indirecte_figee'     => ['Enveloppe indirecte figée à la bascule (HTG)', 'decimal', null, false],
     'mention_bailleur'              => ['Mention longue du bailleur sur les documents', 'texte', null, true],
     'representant_legal'            => ['Représentant légal (nom et fonction)',       'texte',   null, true],
 ];
@@ -309,6 +310,7 @@ const PARAMETRES_INITIAUX = [
     'delai_accuse_phase2_heures'    => '48',
     'delai_correctif_phase2_jours'  => '15',
     'delai_alerte_sauvegarde_jours' => null,
+    'enveloppe_indirecte_figee'     => null,
     'mention_bailleur'              => null,
     'representant_legal'            => null,
 ];

@@ -931,6 +931,30 @@ function anomalies_sans_accuse(?int $projetId = null): array
     return $st->fetchAll();
 }
 
+/**
+ * « Deux delais sont opposables, un accuse de reception sous quarante-huit heures
+ * ouvrables et un correctif non critique sous quinze jours, l'un et l'autre
+ * parametrables » (CDC 9.2).
+ *
+ * Le second ne vise que les anomalies non critiques : une anomalie critique n'a pas
+ * de delai oppose, elle se traite sans attendre.
+ */
+function anomalies_sans_correctif(?int $projetId = null): array
+{
+    $delai = param('delai_correctif_phase2_jours', null, $projetId);
+    if ($delai === null) {
+        return [];
+    }
+    $st = db()->prepare(
+        "SELECT id, date, description, gravite FROM anomalies
+          WHERE projet_id = ? AND date_resolution IS NULL AND gravite <> 'critique'
+            AND date < DATE_SUB(CURDATE(), INTERVAL ? DAY)
+          ORDER BY date"
+    );
+    $st->execute([$projetId ?? projet_id(), (int)$delai]);
+    return $st->fetchAll();
+}
+
 // ---------------------------------------------------------------------
 // Enquete d'adoption (phase 2)
 // ---------------------------------------------------------------------

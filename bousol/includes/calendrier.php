@@ -179,13 +179,20 @@ function calendrier_verrouille(?int $projetId = null): bool
  *
  * Un projet sans phase enregistree n'est pas un projet clos : on le laisse ouvert.
  */
+/**
+ * Ferme une operation apres la bascule.
+ *
+ * La periode de regularisation reste ouverte : « aucune imputation nouvelle ne
+ * peut y etre creee mais les dossiers deja ouverts peuvent etre menes a leur
+ * terme » (CDC 1.7). C'est require_creation_depense() qui ferme la creation.
+ */
 function require_phase_execution(string $operation = 'Cette opération'): void
 {
     $phase = phase_code();
-    if ($phase === null || $phase === 'projet_actif') {
+    if ($phase === null || $phase === 'projet_actif' || $phase === 'regularisation') {
         return;
     }
-    $lib = $phase === 'regularisation' ? 'la période de régularisation' : 'la phase de suivi post-clôture';
+    $lib = 'la phase de suivi post-clôture';
     http_response_code(403);
     exit('<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Phase close</title></head>'
        . '<body style="font-family:Candara,sans-serif;padding:3rem;color:#2a2a28">'
@@ -254,6 +261,34 @@ function valider_param(string $cle, ?string $valeur): ?string
         default:
             return mb_strlen($valeur) <= 255 ? null : 'Texte trop long.';
     }
+}
+
+/**
+ * « Entre les deux s'intercale une periode de regularisation, pendant laquelle
+ * aucune imputation nouvelle ne peut etre creee mais les dossiers deja ouverts
+ * peuvent etre menes a leur terme » (CDC 1.7).
+ *
+ * D'ou la consigne d'exploitation : tout engagement doit etre ouvert dans Bousol
+ * avant la fin d'execution, meme si la facture n'est pas encore arrivee. Une
+ * prestation rendue pendant la periode eligible mais dont aucun dossier n'a ete
+ * ouvert a temps ne trouvera plus ou s'imputer.
+ */
+function require_creation_depense(string $operation = 'Cette création'): void
+{
+    $phase = phase_code();
+    if ($phase === null || $phase === 'projet_actif') {
+        return;
+    }
+    $lib = $phase === 'regularisation'
+        ? 'la période de régularisation, qui ne laisse que mener à terme les dossiers déjà ouverts'
+        : 'la phase de suivi post-clôture';
+    http_response_code(403);
+    exit('<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Phase close</title></head>'
+       . '<body style="font-family:Candara,sans-serif;padding:3rem;color:#2a2a28">'
+       . '<h1 style="font-family:Georgia,serif;color:#4c5a47">Création fermée par la phase du projet</h1>'
+       . '<p>' . e($operation) . ' n\'est plus possible pendant ' . e($lib) . '.</p>'
+       . '<p>Tout engagement devait être ouvert avant la fin d\'exécution, même sans sa facture.</p>'
+       . '<p><a href="' . e(base_path('dashboard.php')) . '">Retour au tableau de bord</a></p></body></html>');
 }
 
 /**

@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         http_response_code(403);
         exit('403 - Acces refuse');
     }
-    require_phase_execution('Ouvrir un dossier de dépense');
+    require_creation_depense('Ouvrir un dossier de dépense');
     $res = dossier_ouvrir([
         'type'          => (string)($_POST['type'] ?? ''),
         'tiers_id'      => (int)($_POST['tiers_id'] ?? 0),
