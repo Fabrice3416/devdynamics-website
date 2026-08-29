@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../includes/layout.php';
 require_once __DIR__ . '/../../includes/depenses.php';
+require_once __DIR__ . '/../../includes/restitution.php';   // liasse_dossier (CDC 5.4)
 require_projet();
 require_module('depenses');
 
@@ -75,6 +76,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'compte_id'     => (int)($_POST['compte_id'] ?? 0),
         ]);
         $alertes = $res['alertes'] ?? [];
+    } elseif ($action === 'liasse') {
+        $res = liasse_dossier($id);
+        if (!empty($res['success'])) {
+            flash_set('success', 'Liasse du dossier produite, ' . (int)$res['nombre'] . ' pièce(s).');
+            redirect(base_path('modules/depenses/dossier.php?id=' . $id));
+        }
     } elseif ($action === 'clore') {
         $res = dossier_clore($id);
     } elseif ($action === 'abandonner') {
@@ -372,6 +379,17 @@ require __DIR__ . '/_nav.php';
                         <?php if ($manquantes): ?>
                         <span class="form-text ms-2">Encore attendues : <?= e(implode(', ', $manquantes)) ?>.</span>
                         <?php endif; ?>
+                    </form>
+                    <?php endif; ?>
+
+                    <?php if ($peutSaisir): ?>
+                    <form method="post" class="mb-3">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="action" value="liasse">
+                        <button class="btn btn-link btn-sm p-0"><i class="bi bi-archive"></i>
+                            Produire la liasse du dossier</button>
+                        <span class="form-text ms-2">Les pièces dans l'ordre de la checklist, qui est celui du
+                            classement physique.</span>
                     </form>
                     <?php endif; ?>
 

@@ -108,7 +108,6 @@ $note('Fonctions de bibliothèque sans appelant applicatif', $sansAppelant, [
     // tenant, pas au fil des modules.
     'ecriture_encaissement_tranche' => 'attend Financement, phase 7',
     'numero_piece_suivant'          => 'appelée par reglement_numeroter_piece',
-    'cadre_version_figer'           => 'appelée par Restitution : le rapport transmis fige le cadre qui l\'accompagne',
     // Deux fonctions du socle qui attendent leur module. Le rendu documentaire
     // n'a aucune donnee propre et n'est pas un module (CDC 7.2) : il sera cable
     // par Depenses et Restitution, qui produisent les documents de l'annexe E.
@@ -133,7 +132,7 @@ $seed   = (string)file_get_contents($racine . '/database/seed.sql');
  * le code, ce que le CDC assume. Cette liste s'allonge a chaque phase, et c'est
  * elle qui fait entrer un module dans le perimetre du controle.
  */
-const MODULES_LIVRES = ['NOYAU', 'SIGNATURE', 'TIERS', 'BUDGET', 'COMPTES', 'DEPENSES', 'REMUNERATION', 'ACTIVITES'];
+const MODULES_LIVRES = ['NOYAU', 'SIGNATURE', 'TIERS', 'BUDGET', 'COMPTES', 'DEPENSES', 'REMUNERATION', 'ACTIVITES', 'RESTITUTION'];
 
 // Chaque table appartient a la section de schema.sql qui la precede.
 $tablesSurveillees = [];
@@ -188,12 +187,11 @@ $note('Valeurs d\'ENUM jamais écrites, dans les tables des modules livrés', $j
     'phases.statut = close'            => 'clôture de phase, attend la bascule',
     'periodes.statut = en_cloture'     => 'clôture de période, attend Restitution',
     'periodes.statut = figee'          => 'figement de période, attend Restitution',
-    'documents.statut = fige'          => 'figement d\'un document, attend Restitution',
-    'documents.statut = remplace'      => 'version remplacée, attend Restitution',
     'reouvertures.statut = close'      => 'réouverture après bascule, attend la phase 8',
     'projets.statut = creation'        => 'un projet naît actif ; l\'état intermédiaire attend un besoin réel',
     'projets_comptes.role = secondaire' => 'second compte bancaire par projet, aucun bailleur ne l\'impose à ce jour',
     'contrats.type = travail'    => 'contrat de travail, type désactivé par le CDC 4.2',
+    'liasses.type = classement'  => 'liasse de classement général, elle est l\'archive autoportante de la phase 8',
     'contrats.statut = suspendu' => 'suspension d\'un contrat, prévue au modèle, sans écran à ce stade',
     'imputations.nature = memoire' => 'imputation pour mémoire, attend le versement DGI de Rémunération',
     'contrats.autorite_acceptation = assemblee_generale' => 'acceptation du rapport du Coordinateur, attend Rémunération',
@@ -222,7 +220,6 @@ foreach (array_keys(PARAMETRES_REGISTRE) as $cle) {
 }
 
 $note('Paramètres de l\'annexe F que personne ne lit', $nonLus, [
-    'exemplaires_mention'           => 'attend l\'impression des documents, Restitution',
     'delai_accuse_phase2_heures'    => 'attend la phase de suivi post-clôture',
     'delai_correctif_phase2_jours'  => 'attend la phase de suivi post-clôture',
     'representant_legal'            => 'attend les documents générés qui le nomment',

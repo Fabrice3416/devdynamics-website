@@ -256,6 +256,31 @@ function valider_param(string $cle, ?string $valeur): ?string
     }
 }
 
+/**
+ * Une periode figee ne se modifie plus : « un rapport valide fige sa periode, les
+ * depenses de la periode ne sont plus modifiables » (CDC 6.7).
+ *
+ * Le controle vit dans le socle et non dans Restitution, pour que Depenses puisse
+ * l'appeler sans dependre du module qui fige - le graphe des dependances va de
+ * Restitution vers Depenses, jamais l'inverse (CDC 7.2).
+ */
+function periode_est_figee(?int $periodeId): bool
+{
+    if ($periodeId === null) {
+        return false;
+    }
+    $st = db()->prepare("SELECT statut FROM periodes WHERE id = ?");
+    $st->execute([$periodeId]);
+    return $st->fetchColumn() === 'figee';
+}
+
+/** La periode qui couvre une date est-elle figee ? */
+function date_dans_periode_figee(string $date): bool
+{
+    $p = periode_pour_date($date);
+    return $p !== null && $p['statut'] === 'figee';
+}
+
 /** Les periodes (mois de projet) generees depuis la date de debut. */
 function periodes(?int $projetId = null): array
 {

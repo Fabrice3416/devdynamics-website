@@ -227,7 +227,7 @@ function dossier_pieces_manquantes(int $dossierId, ?string $moment = null): arra
 function piece_verser(int $pieceId, array $fichier, ?string $datePiece = null): array
 {
     $st = db()->prepare(
-        'SELECT p.*, d.numero, d.statut AS dossier_statut FROM pieces p
+        'SELECT p.*, d.numero, d.statut AS dossier_statut, d.periode_id AS periode_dossier FROM pieces p
            JOIN dossiers d ON d.id = p.dossier_id
           WHERE p.id = ? AND p.projet_id = ?'
     );
@@ -238,6 +238,13 @@ function piece_verser(int $pieceId, array $fichier, ?string $datePiece = null): 
     }
     if (in_array($piece['dossier_statut'], ['clos', 'abandonne'], true)) {
         return ['success' => false, 'error' => 'Ce dossier est ' . $piece['dossier_statut'] . ' : on n\'y verse plus de pièce.'];
+    }
+    // « Les pieces posterieures peuvent rejoindre leur dossier apres le figement »
+    // (CDC 6.6) : elles ne modifient aucun montant. Les pieces prealables au
+    // paiement, elles, sont arretees avec la periode.
+    if ($piece['moment'] === 'avant' && periode_est_figee($piece['periode_dossier'] === null ? null : (int)$piece['periode_dossier'])) {
+        return ['success' => false, 'error' => 'La période de ce dossier est figée : seules les pièces postérieures '
+            . 'au paiement peuvent encore la rejoindre, puisqu\'elles ne modifient aucun montant.'];
     }
     $up = enregistrer_upload($fichier, 'scans',
         projet_code() . '-' . $piece['numero'] . '-' . strtoupper($piece['type']) . '.pdf',
@@ -330,6 +337,10 @@ function dossier_imputer(int $dossierId, int $ligneId, float $quantite, float $v
     }
     if (in_array($d['statut'], ['clos', 'abandonne', 'regle'], true)) {
         return ['success' => false, 'error' => 'Un dossier ' . $d['statut'] . ' ne se réimpute pas.'];
+    }
+    if (periode_est_figee($d['periode_id'] === null ? null : (int)$d['periode_id'])) {
+        return ['success' => false, 'error' => 'La période de ce dossier est figée par un rapport validé : '
+            . 'ses dépenses ne se modifient plus. Une correction passe par la réouverture exceptionnelle.'];
     }
     if ($quantite <= 0 || $valeurUnitaire < 0) {
         return ['success' => false, 'error' => 'Quantité et valeur unitaire sont obligatoires.'];

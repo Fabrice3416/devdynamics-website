@@ -189,6 +189,10 @@ function ecriture_poser(array $entete, array $mouvements): int
     }
 
     $date = (string)($entete['date'] ?? date('Y-m-d'));
+    if (date_dans_periode_figee($date)) {
+        throw new RuntimeException('La période du ' . date_fr($date) . ' est figée par un rapport validé : '
+            . 'aucune écriture ne s\'y ajoute. Une correction passe par la réouverture exceptionnelle.');
+    }
     $periode = periode_pour_date($date);
 
     $pdo = db();

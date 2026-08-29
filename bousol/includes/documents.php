@@ -28,7 +28,8 @@ require_once __DIR__ . '/../pdf/generate.php';
  * @param int    $objetId   son identifiant
  * @return array{success: bool, document_id?: int, fichier_id?: int, error?: string}
  */
-function document_generer(string $type, array $donnees, string $objetType, int $objetId, string $module): array
+function document_generer(string $type, array $donnees, string $objetType, int $objetId, string $module,
+                          string $exemplaire = ''): array
 {
     $def = DOCUMENTS_GENERES[$type] ?? null;
     if ($def === null) {
@@ -41,8 +42,9 @@ function document_generer(string $type, array $donnees, string $objetType, int $
 
     $regime = param('regime_signature_defaut', 'papier');
     $svc = new PdfService();
-    $nom = projet_code() . '-' . strtoupper($type) . '-' . $objetId . '.pdf';
-    $res = $svc->generer($type, $donnees, $nom);
+    $nom = projet_code() . '-' . strtoupper($type) . '-' . $objetId
+         . ($exemplaire !== '' ? '-' . preg_replace('/[^A-Za-z0-9]+/', '', $exemplaire) : '') . '.pdf';
+    $res = $svc->generer($type, $donnees, $nom, $exemplaire);
     if (empty($res['success'])) {
         return ['success' => false, 'error' => $res['error'] ?? 'Génération impossible.'];
     }
@@ -55,8 +57,33 @@ function document_generer(string $type, array $donnees, string $objetType, int $
 
     audit($module, 'document_genere', 'document', $documentId,
         $def[0] . ' · ' . $objetType . ':' . $objetId . ' · régime ' . $regime
+        . ($exemplaire !== '' ? ' · ' . $exemplaire : '')
         . ($statut === 'a_signer' ? ' · ' . count($signataires) . ' signature(s) attendue(s)' : ''));
     return ['success' => true, 'document_id' => $documentId, 'fichier_id' => (int)$res['id'], 'statut' => $statut];
+}
+
+/**
+ * Les mentions d'exemplaire du projet. « Impression : trois exemplaires avec
+ * mention d'exemplaire » (annexe H), et la mention varie selon le bailleur : un
+ * pour l'organisation et deux pour l'UGP sur KesKle, un pour l'organisation et deux
+ * pour la FOKAL dont un pour l'Union europeenne sur Koule Ki Pale.
+ *
+ * @return string[] les mentions, ou une liste vide si le parametre n'est pas saisi
+ */
+function mentions_exemplaires(?int $projetId = null): array
+{
+    $brut = param('exemplaires_mention', null, $projetId);
+    if ($brut === null || trim($brut) === '') {
+        return [];
+    }
+    $mentions = [];
+    foreach (explode('|', $brut) as $i => $m) {
+        $m = trim($m);
+        if ($m !== '') {
+            $mentions[] = 'Exemplaire ' . ($i + 1) . ' — ' . $m;
+        }
+    }
+    return $mentions;
 }
 
 /** Le dernier document d'un type produit pour un objet. */

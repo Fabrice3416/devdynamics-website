@@ -14,7 +14,7 @@ INSERT INTO module_etats (module, libelle, version, critique) VALUES
 ('activites',    'Activités',    '1.0.0', 0),
 ('depenses',     'Dépenses',     '1.0.0', 0),
 ('remuneration', 'Rémunération', '1.0.0', 0),
-('restitution',  'Restitution',  '0.1.0', 0),
+('restitution',  'Restitution',  '1.0.0', 0),
 ('financement',  'Financement',  '0.1.0', 0);
 
 -- 2. Projets -----------------------------------------------------------

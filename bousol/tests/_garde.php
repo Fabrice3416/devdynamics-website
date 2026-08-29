@@ -106,6 +106,14 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE FROM rapprochements WHERE date_releve = '2026-06-30'",
         "DELETE FROM arretes_caisse WHERE commentaire LIKE 'REC3-%' OR date = '2026-06-30'",
 
+        // Restitution : les lignes avant les rapports, les liasses avant tout.
+        "DELETE FROM liasses WHERE fichier_id IN (SELECT id FROM fichiers WHERE nom_genere LIKE '%LIASSE%')",
+        "DELETE lf FROM lignes_financieres lf JOIN rapports r ON r.id = lf.rapport_id
+          WHERE r.contenu_json LIKE '%REC7%'",
+        "DELETE FROM rapports WHERE contenu_json LIKE '%REC7%'",
+        "UPDATE periodes SET statut = 'ouverte', figee_le = NULL, figee_par = NULL WHERE projet_id = 1",
+        "UPDATE versions_cadre SET figee = 0 WHERE projet_id = 1",
+
         // Activites : participations, sessions, puis ce qui les porte.
         "DELETE p FROM participations p JOIN sessions_formation s ON s.id = p.session_id
           WHERE s.lieu LIKE 'REC6 %'",
