@@ -302,6 +302,25 @@ function ecriture_reglement(array $reglement): int
     if (str_starts_with($origine, 'renflouement:')) {
         $type = 'caisse';
         $debit = ['compte_id' => (int)substr($origine, 13), 'sens' => 'D', 'montant' => (float)$reglement['montant']];
+    } elseif (str_starts_with($origine, 'versement_dgi:')) {
+        // « Le versement a la DGI debite la dette et credite la banque » (CDC 4.8) :
+        // c'est l'ecriture type, a laquelle on delegue plutot que de la refaire ici.
+        return ecriture_versement_dgi((int)$reglement['compte_id'], (float)$reglement['montant'],
+            (string)$reglement['date_reglement'],
+            'Règlement ' . $reglement['numero'] . ' — ' . $reglement['objet'],
+            'reglement:' . $reglement['id'], (int)$reglement['id']);
+    } elseif (str_starts_with($origine, 'dossier_avance:')) {
+        // « Le remboursement de frais avances debite la charge et credite le compte
+        // d'avances, que le reglement solde ensuite » (CDC 4.8). Le reglement est ce
+        // solde : il debite les avances et jamais un compte de tiers, l'avanceur
+        // etant un membre de l'equipe et non un fournisseur.
+        $avances = compte_par_code('AV');
+        if ($avances === null) {
+            throw new RuntimeException('Plan de comptes incomplet : compte d\'avances absent.');
+        }
+        $type = 'remboursement_frais';
+        $debit = ['compte_id' => (int)$avances['id'], 'sens' => 'D', 'montant' => (float)$reglement['montant'],
+                  'tiers_id' => (int)$reglement['beneficiaire_id']];
     } else {
         $tiers = compte_par_code('TI');
         if ($tiers === null) {
@@ -363,7 +382,8 @@ function ecriture_honoraires(int $ligneId, int $prestataireId, float $brut, floa
 }
 
 /** 5. Le versement a la DGI debite la dette et credite la banque. */
-function ecriture_versement_dgi(int $compteBanqueId, float $montant, string $date, string $libelle, string $origineRef): int
+function ecriture_versement_dgi(int $compteBanqueId, float $montant, string $date, string $libelle,
+                                string $origineRef, ?int $reglementId = null): int
 {
     $dgi = compte_par_code('DGI');
     if ($dgi === null) {
@@ -371,7 +391,7 @@ function ecriture_versement_dgi(int $compteBanqueId, float $montant, string $dat
     }
     return ecriture_poser(
         ['date' => $date, 'libelle' => $libelle, 'type' => 'versement_dgi',
-         'origine_module' => 'remuneration', 'origine_ref' => $origineRef],
+         'origine_module' => 'remuneration', 'origine_ref' => $origineRef, 'reglement_id' => $reglementId],
         [['compte_id' => (int)$dgi['id'], 'sens' => 'D', 'montant' => $montant],
          ['compte_id' => $compteBanqueId, 'sens' => 'C', 'montant' => $montant]]
     );
@@ -508,8 +528,8 @@ function reglement_creer(array $d): array
     // reglement en deux temps, avance puis solde, mais la somme des reglements
     // d'un dossier ne depasse pas ce qui y a ete impute.
     $origineRef = (string)($d['origine_ref'] ?? '');
-    if (str_starts_with($origineRef, 'dossier:')) {
-        $dossierId = (int)substr($origineRef, 8);
+    $dossierId = reglement_dossier_id($origineRef);
+    if ($dossierId !== null) {
         $si = db()->prepare('SELECT montant FROM imputations WHERE dossier_id = ? AND projet_id = ?');
         $si->execute([$dossierId, $pid]);
         $impute = $si->fetchColumn();
@@ -549,6 +569,21 @@ function reglement_creer(array $d): array
     audit('comptes', 'reglement_demande', 'reglement', $id,
         $numero . ' · ' . MODES_REGLEMENT[$mode] . ' · ' . htg($montant) . ' · ' . ($d['objet'] ?? ''));
     return ['success' => true, 'id' => $id, 'numero' => $numero];
+}
+
+/**
+ * L'identifiant du dossier qui a demande ce reglement, quelle que soit la forme de
+ * son origine. Un remboursement de frais avances porte un prefixe distinct, parce
+ * que son ecriture debite les avances et non un compte de tiers.
+ */
+function reglement_dossier_id(string $origineRef): ?int
+{
+    foreach (['dossier:', 'dossier_avance:'] as $prefixe) {
+        if (str_starts_with($origineRef, $prefixe)) {
+            return (int)substr($origineRef, strlen($prefixe));
+        }
+    }
+    return null;
 }
 
 function reglement(int $id): ?array
@@ -713,8 +748,8 @@ function reglement_executer(int $reglementId, ?string $date = null): array
  */
 function reglement_numeroter_piece(array $reglement): ?string
 {
-    $origine = (string)$reglement['origine_ref'];
-    if (!str_starts_with($origine, 'dossier:')) {
+    $dossierId = reglement_dossier_id((string)$reglement['origine_ref']);
+    if ($dossierId === null) {
         return null;
     }
     $st = db()->prepare(
@@ -722,7 +757,7 @@ function reglement_numeroter_piece(array $reglement): ?string
            FROM imputations i JOIN lignes_budgetaires l ON l.id = i.ligne_id
           WHERE i.dossier_id = ? AND i.projet_id = ?'
     );
-    $st->execute([(int)substr($origine, 8), (int)$reglement['projet_id']]);
+    $st->execute([$dossierId, (int)$reglement['projet_id']]);
     $imputation = $st->fetch();
     if ($imputation === false || $imputation['rubrique'] === null) {
         return null;

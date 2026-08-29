@@ -107,10 +107,6 @@ $note('Fonctions de bibliothèque sans appelant applicatif', $sansAppelant, [
     // et recettees des maintenant parce que la partie double doit tenir d'un seul
     // tenant, pas au fil des modules.
     'ecriture_encaissement_tranche' => 'attend Financement, phase 7',
-    'ecriture_facture'              => 'attend le circuit facture de Dépenses',
-    'ecriture_honoraires'           => 'attend Rémunération, phase 5',
-    'ecriture_versement_dgi'        => 'attend Rémunération, phase 5',
-    'ecriture_remboursement_frais'  => 'attend le circuit d\'avance de Dépenses',
     'numero_piece_suivant'          => 'appelée par reglement_numeroter_piece',
     // Deux fonctions du socle qui attendent leur module. Le rendu documentaire
     // n'a aucune donnee propre et n'est pas un module (CDC 7.2) : il sera cable
@@ -136,7 +132,7 @@ $seed   = (string)file_get_contents($racine . '/database/seed.sql');
  * le code, ce que le CDC assume. Cette liste s'allonge a chaque phase, et c'est
  * elle qui fait entrer un module dans le perimetre du controle.
  */
-const MODULES_LIVRES = ['NOYAU', 'SIGNATURE', 'TIERS', 'BUDGET', 'COMPTES', 'DEPENSES'];
+const MODULES_LIVRES = ['NOYAU', 'SIGNATURE', 'TIERS', 'BUDGET', 'COMPTES', 'DEPENSES', 'REMUNERATION'];
 
 // Chaque table appartient a la section de schema.sql qui la precede.
 $tablesSurveillees = [];

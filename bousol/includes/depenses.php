@@ -538,10 +538,53 @@ function dossier_approuver(int $dossierId): array
     if (in_array($d['statut'], ['clos', 'abandonne', 'regle', 'approuve'], true)) {
         return ['success' => false, 'error' => 'Un dossier ' . $d['statut'] . ' ne s\'approuve plus.'];
     }
-    db()->prepare("UPDATE dossiers SET statut = 'approuve', approuve_par = ?, approuve_le = NOW() WHERE id = ?")
-        ->execute([user_id(), $dossierId]);
-    audit('depenses', 'dossier_approuve', 'dossier', $dossierId, $d['numero'] . ' · ' . $d['objet']);
+    $imputation = imputation_dossier($dossierId);
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare("UPDATE dossiers SET statut = 'approuve', approuve_par = ?, approuve_le = NOW() WHERE id = ?")
+            ->execute([user_id(), $dossierId]);
+        dossier_poser_ecriture($d, $imputation);
+        audit_strict('depenses', 'dossier_approuve', 'dossier', $dossierId, $d['numero'] . ' · ' . $d['objet']);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        error_log('dossier_approuver: ' . $e->getMessage());
+        return ['success' => false, 'error' => 'Approbation impossible : ' . $e->getMessage()];
+    }
     return ['success' => true];
+}
+
+/**
+ * Pose l'ecriture de la depense au moment de l'approbation.
+ *
+ * Sans elle, le reglement seul ecrivait - le tiers au debit, la banque au credit -
+ * et les comptes de charge restaient a zero : la partie double tenait sans dire ce
+ * que l'argent avait paye. La facture recue debite la charge de la ligne et credite
+ * le fournisseur ; le reglement solde ensuite le fournisseur (CDC 4.8).
+ *
+ * Deux types n'ecrivent rien ici. Un service a un particulier a deja son ecriture
+ * d'honoraires, posee par Remuneration avec sa retenue. Un versement a la DGI
+ * n'impute que pour memoire et ne consomme aucune ligne.
+ */
+function dossier_poser_ecriture(array $d, ?array $imputation): void
+{
+    if ($imputation === null || $imputation['nature'] === 'memoire' || $d['type'] === 'service_particulier') {
+        return;
+    }
+    $sd = db()->prepare("SELECT COUNT(*) FROM ecritures WHERE projet_id = ? AND origine_ref = ?");
+    $sd->execute([projet_id(), 'dossier:' . $d['id']]);
+    if ((int)$sd->fetchColumn() > 0) {
+        return;   // deja posee, l'approbation a ete rejouee
+    }
+    $libelle = $d['numero'] . ' — ' . $d['objet'];
+    if ($d['type'] === 'remboursement_frais') {
+        ecriture_remboursement_frais((int)$imputation['ligne_id'], (int)$d['tiers_id'],
+            (float)$imputation['montant'], date('Y-m-d'), $libelle, 'dossier:' . $d['id']);
+        return;
+    }
+    ecriture_facture((int)$imputation['ligne_id'], (int)$d['tiers_id'],
+        (float)$imputation['montant'], date('Y-m-d'), $libelle, 'dossier:' . $d['id']);
 }
 
 /**
@@ -578,19 +621,31 @@ function dossier_demander_reglement(int $dossierId, array $reglement): array
         return ['success' => false, 'error' => $concurrence];
     }
 
+    // Le montant regle egale l'imputation, sauf sur les honoraires : la ligne est
+    // consommee pour le brut, l'intervenant recoit le net, et la difference part a
+    // la DGI (CDC 4.4). L'appelant peut donc reduire le montant, jamais l'augmenter.
+    $montant = round((float)($reglement['montant'] ?? $imputation['montant']), 2);
+    if ($montant > round((float)$imputation['montant'], 2) + 0.005) {
+        return ['success' => false, 'error' => sprintf('Le règlement demandé (%s) dépasse le montant imputé (%s).',
+            htg($montant), htg((float)$imputation['montant']))];
+    }
+    if ($montant <= 0) {
+        return ['success' => false, 'error' => 'Le montant à régler doit être strictement positif.'];
+    }
+
     $res = reglement_creer([
         'mode'            => (string)($reglement['mode'] ?? param('mode_reglement_defaut', 'virement')),
         'numero_cheque'   => (string)($reglement['numero_cheque'] ?? ''),
-        'beneficiaire_id' => (int)$d['tiers_id'],
+        'beneficiaire_id' => (int)($reglement['beneficiaire_id'] ?? $d['tiers_id']),
         'compte_id'       => (int)($reglement['compte_id'] ?? 0),
-        'montant'         => (float)$imputation['montant'],
+        'montant'         => $montant,
         'devise'          => (string)($reglement['devise'] ?? 'HTG'),
         'montant_devise'  => $reglement['montant_devise'] ?? null,
         'taux_change'     => $reglement['taux_change'] ?? null,
         'preuve_taux_fichier_id' => $reglement['preuve_taux_fichier_id'] ?? null,
         'objet'           => $d['numero'] . ' — ' . $d['objet'],
         'origine_module'  => 'depenses',
-        'origine_ref'     => 'dossier:' . $dossierId,
+        'origine_ref'     => ($d['type'] === 'remboursement_frais' ? 'dossier_avance:' : 'dossier:') . $dossierId,
     ]);
     if (empty($res['success'])) {
         return $res;
@@ -715,9 +770,9 @@ function dossier_abandonner(int $dossierId, string $motif): array
 function dossier_constater_reglement(int $dossierId): void
 {
     $st = db()->prepare(
-        "SELECT COUNT(*) FROM reglements WHERE projet_id = ? AND origine_ref = ? AND statut = 'execute'"
+        "SELECT COUNT(*) FROM reglements WHERE projet_id = ? AND origine_ref IN (?, ?) AND statut = 'execute'"
     );
-    $st->execute([projet_id(), 'dossier:' . $dossierId]);
+    $st->execute([projet_id(), 'dossier:' . $dossierId, 'dossier_avance:' . $dossierId]);
     if ((int)$st->fetchColumn() > 0) {
         db()->prepare("UPDATE dossiers SET statut = 'regle' WHERE id = ? AND statut = 'approuve'")->execute([$dossierId]);
     }

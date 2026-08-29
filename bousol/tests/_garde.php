@@ -106,6 +106,14 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE FROM rapprochements WHERE date_releve = '2026-06-30'",
         "DELETE FROM arretes_caisse WHERE commentaire LIKE 'REC3-%' OR date = '2026-06-30'",
 
+        // Remuneration : prestations, rapports et versements avant les contrats.
+        "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id WHERE e.origine_ref LIKE 'prestation:%'",
+        "DELETE FROM ecritures WHERE origine_ref LIKE 'prestation:%'",
+        "DELETE p FROM prestations p JOIN contrats c ON c.id = p.contrat_id JOIN tiers t ON t.id = c.tiers_id WHERE t.nom LIKE 'REC5 %'",
+        "DELETE r FROM rapports_execution r JOIN contrats c ON c.id = r.contrat_id JOIN tiers t ON t.id = c.tiers_id WHERE t.nom LIKE 'REC5 %'",
+        "DELETE FROM versements_dgi WHERE mois >= 90",
+        "DELETE FROM contrats WHERE fonction LIKE 'REC5 %'",
+
         // Depenses. Les dossiers de la phase 4 portent un numero DOS-, comme les
         // vrais : on les retrouve par leur objet, sans risquer d'emporter un
         // dossier reel de la base de test.
@@ -118,6 +126,9 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE p FROM proformas p JOIN dossiers d ON d.id = p.dossier_id WHERE d.objet LIKE 'REC4-%'",
         "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id WHERE d.objet LIKE 'REC4-%'",
         "DELETE FROM dossiers WHERE objet LIKE 'REC4-%'",
+        "DELETE p FROM pieces p JOIN dossiers d ON d.id = p.dossier_id WHERE d.objet LIKE '%REC5 %' OR d.objet LIKE 'Acomptes retenus du mois 9%'",
+        "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id WHERE d.objet LIKE '%REC5 %' OR d.objet LIKE 'Acomptes retenus du mois 9%'",
+        "DELETE FROM dossiers WHERE objet LIKE '%REC5 %' OR objet LIKE 'Acomptes retenus du mois 9%'",
 
         // Les imputations de toutes les recettes, quel que soit leur prefixe.
         "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id WHERE d.numero LIKE 'REC%'",
@@ -126,6 +137,7 @@ function recette_nettoyer(PDO $pdo): void
         // Tiers : beneficiaires puis personnes.
         "DELETE FROM beneficiaires WHERE nom LIKE 'REC2 %'",
         "DELETE FROM tiers WHERE nom LIKE 'REC3 %'",
+        "DELETE FROM tiers WHERE nom LIKE 'REC5 %'",
         "DELETE FROM tiers WHERE nom IN ('Fournisseur Recette', 'Doublon Recette', 'Sans NIF 1', 'Sans NIF 2')",
         "UPDATE tiers SET nif = NULL WHERE nif = '001-234-567-8'",
 
