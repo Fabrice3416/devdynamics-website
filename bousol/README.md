@@ -84,7 +84,7 @@ nettoie pas. Elles exigent `BOUSOL_RECETTE=oui` et annoncent la base qu'elles vi
 | `recette_phase6.php` | Activités, cadre logique versionné, formations, registre des versions | 59 |
 | `recette_phase7.php` | Restitution, clôture conditionnée, annexe G, figement, rectification | 46 |
 | `recette_phase8.php` | Financement, trésorerie, tranches, demandes de versement | 43 |
-| `recette_phase9.php` | Bascule, régularisation, réouverture, archive définitive | ~40 |
+| `recette_phase9.php` | Bascule, régularisation, réouverture, archive définitive | 42 |
 
 Elles rendent aussi chaque écran et vérifient qu'il va jusqu'au bout de son document : une page
 tronquée par une erreur de gabarit est invisible en production, où `display_errors` est à Off.
