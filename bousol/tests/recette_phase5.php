@@ -191,7 +191,7 @@ cas('Sa fiche d\'imputation est pour memoire, a consommation nulle',
 $soldeApres = dette_dgi_soldee(91);
 cas('La cloture reste bloquee tant que le versement n\'est pas regle',
     $soldeApres['soldee'] === false, $soldeApres['motif'] ?? '');
-refuse_avec('Un mois n\'a qu\'un versement', versement_dgi_preparer(91), 'déjà son versement');
+refuse_avec('Un mois deja verse n\'a plus rien a verser', versement_dgi_preparer(91), 'Aucun acompte');
 
 $b = balance();
 $td = $tc = 0.0;

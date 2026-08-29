@@ -22,6 +22,30 @@ final class PdfService
     private string $tplDir;
     private string $tmpDir;
 
+    /**
+     * Ou trouver mPDF.
+     *
+     * La bibliotheque pese 95 Mo, n'est pas dans le depot, et a disparu trois fois
+     * du serveur en deux jours : un deploiement qui synchronise l'arborescence
+     * emporte tout ce qui n'est pas suivi. La placer hors de la racine web, a cote
+     * du fichier de configuration, la met hors de portee. Le chemin historique
+     * reste accepte pour ne rien casser.
+     */
+    public static function autoload_mpdf(): ?string
+    {
+        $candidats = array_filter([
+            config()['app']['mpdf'] ?? null,
+            dirname(root_dir(), 2) . '/lib/mpdf/autoload.php',
+            root_dir() . '/lib/mpdf/autoload.php',
+        ]);
+        foreach ($candidats as $c) {
+            if (is_file($c)) {
+                return $c;
+            }
+        }
+        return null;
+    }
+
     public function __construct()
     {
         $this->tplDir = __DIR__ . '/templates';
@@ -75,11 +99,11 @@ final class PdfService
     /** PDF en memoire, sans enregistrement dans `fichiers` (impressions a signer, apercus). */
     public function rendre_binaire(string $template, array $data): ?string
     {
-        $autoload = root_dir() . '/lib/mpdf/autoload.php';
-        if (!is_file($autoload)) {
+        $autoload = self::autoload_mpdf();
+        if ($autoload === null) {
             // Un null silencieux a deja coute une demi-journee : la bibliotheque
             // n'est pas dans le depot et ne se deploie pas par git pull.
-            error_log('PdfService : mPDF absent, ' . $autoload . ' introuvable (voir DEPLOIEMENT.md §5)');
+            error_log('PdfService : mPDF absent (voir DEPLOIEMENT.md §5 et la clé app.mpdf)');
             return null;
         }
         require_once $autoload;
@@ -104,9 +128,10 @@ final class PdfService
      */
     public function generer(string $template, array $data, string $nomGenere, string $exemplaire = ''): array
     {
-        $autoload = root_dir() . '/lib/mpdf/autoload.php';
-        if (!is_file($autoload)) {
-            return ['success' => false, 'error' => 'mPDF non installé (bousol/lib/mpdf/)'];
+        $autoload = self::autoload_mpdf();
+        if ($autoload === null) {
+            return ['success' => false, 'error' => 'mPDF non installé : ni la clé app.mpdf de la configuration, '
+                . 'ni ../lib/mpdf/, ni bousol/lib/mpdf/ ne le portent.'];
         }
         require_once $autoload;
         try {

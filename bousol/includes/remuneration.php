@@ -448,23 +448,25 @@ function avance_verser(int $contratId, int $mois, ?array $ententeFichier): array
     if (user_role() !== 'raf') {
         return ['success' => false, 'error' => 'L\'avance est préparée par le Responsable Administratif et Financier.'];
     }
-    if (param('avances_honoraires', '0') !== '1') {
-        return ['success' => false, 'error' => 'Les avances sur honoraires ne sont pas autorisées sur ce projet (annexe F).'];
-    }
     $st = db()->prepare("SELECT * FROM contrats WHERE id = ? AND projet_id = ? AND statut = 'actif'");
     $st->execute([$contratId, projet_id()]);
     $contrat = $st->fetch();
     if ($contrat === false) {
         return ['success' => false, 'error' => 'Contrat inconnu ou clos dans ce projet.'];
     }
-    if (!$contrat['avance_autorisee']) {
-        return ['success' => false, 'error' => 'Ce contrat ne prévoit pas d\'avance.'];
-    }
     // « Elle n'est ouverte a aucun contrat mensuel recurrent, ou la regle du
-    // service fait demeure entiere » (CDC 4.5).
+    // service fait demeure entiere » (CDC 4.5). Cette regle-la tient au contrat et
+    // non au projet : elle est donc verifiee la premiere, pour que le refus dise
+    // ce qui l'empeche vraiment plutot que ce qui l'empeche aussi.
     if ($contrat['unite'] === 'mois') {
         return ['success' => false, 'error' => 'Une avance est interdite sur un contrat mensuel récurrent : '
             . 'la règle du service fait y demeure entière.'];
+    }
+    if (!$contrat['avance_autorisee']) {
+        return ['success' => false, 'error' => 'Ce contrat ne prévoit pas d\'avance.'];
+    }
+    if (param('avances_honoraires', '0') !== '1') {
+        return ['success' => false, 'error' => 'Les avances sur honoraires ne sont pas autorisées sur ce projet (annexe F).'];
     }
     if ($contrat['part_avance'] === null || (float)$contrat['part_avance'] <= 0 || (float)$contrat['part_avance'] >= 100) {
         return ['success' => false, 'error' => 'La part avancée du contrat doit être une fraction du brut, entre 0 et 100 %.'];

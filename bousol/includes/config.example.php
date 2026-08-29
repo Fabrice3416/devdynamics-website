@@ -27,6 +27,13 @@ return [
         'env'         => 'production',          // production | development
         'timezone'    => 'America/Port-au-Prince',
         'session_ttl' => 3600,                  // 60 min d'inactivite
+
+        // Chemin de l'autoload de mPDF. La bibliotheque n'est pas dans le depot
+        // (95 Mo, .gitignore) et un deploiement qui synchronise l'arborescence la
+        // supprime : la placer hors de la racine web, a cote de ce fichier de
+        // configuration, la met hors de portee de tout deploiement.
+        // Laisser null pour la chercher a l'emplacement historique, bousol/lib/mpdf/.
+        'mpdf'        => null,                  // ex. '/home/uXXXX/domains/exemple.org/lib/mpdf/autoload.php'
     ],
 
     'mail' => [

@@ -178,11 +178,12 @@ $cycle = @file_put_contents($temoin, 'test') !== false && @file_get_contents($te
 verifier('Stockage', $cycle ? 'ok' : 'erreur', 'Écriture, lecture, suppression', $cycle ? 'cycle complet vérifié' : 'échec du cycle dans storage/tmp');
 
 // ---------------------------------------------------------------- Rendu documentaire
-$autoload = __DIR__ . '/lib/mpdf/autoload.php';
-if (!is_file($autoload)) {
-    verifier('Documents', 'erreur', 'Bibliothèque mPDF', 'absente : déposer vendor/mpdf dans bousol/lib/mpdf/');
+$autoload = PdfService::autoload_mpdf();
+if ($autoload === null) {
+    verifier('Documents', 'erreur', 'Bibliothèque mPDF',
+        'absente : déposer mPDF hors de la racine web et renseigner app.mpdf, ou dans bousol/lib/mpdf/');
 } else {
-    verifier('Documents', 'ok', 'Bibliothèque mPDF', 'présente');
+    verifier('Documents', 'ok', 'Bibliothèque mPDF', 'présente — ' . $autoload);
     if (!$dbOk) {
         // L'en-tete des documents lit le nom du projet et le numero de contrat en base.
         verifier('Documents', 'avertissement', 'Rendu d\'un PDF', 'non testé : la connexion à la base doit d\'abord fonctionner');

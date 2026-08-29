@@ -118,14 +118,45 @@ sans elle, spécimens, pièces d'identité et exports chiffrés sont illisibles.
 
 ## 5. mPDF
 
-Copier `vendor/mpdf` (composer require mpdf/mpdf en local) vers `bousol/lib/mpdf/`.
-Vérifier `bousol/lib/mpdf/autoload.php`.
+mPDF pèse 95 Mo, n'est pas dans le dépôt (`.gitignore`), et **ne se déploie donc jamais par
+`git pull`**. Il a disparu trois fois du serveur en deux jours : un déploiement qui synchronise
+l'arborescence — celui de hPanel, un `git clean -x`, une restauration — emporte tout ce qui
+n'est pas suivi par git.
+
+**Le placer hors de la racine web**, à côté du fichier de configuration, le met hors de portée :
+
+```bash
+# depuis votre machine, apres composer require mpdf/mpdf
+rsync -avz -e "ssh -p 65002" vendor/mpdf/ \
+  u218662965@185.212.71.154:~/domains/dev-dynamics.org/lib/mpdf/
+```
+
+Puis, dans `../bousol-config.php` :
+
+```php
+'mpdf' => '/home/u218662965/domains/dev-dynamics.org/lib/mpdf/autoload.php',
+```
+
+Le service cherche dans cet ordre : la clé `app.mpdf`, puis `../lib/mpdf/autoload.php` à côté de
+la racine web, puis l'emplacement historique `bousol/lib/mpdf/autoload.php`. Ce dernier reste
+accepté mais reste exposé aux déploiements.
+
+`diagnostic.php` affiche le chemin retenu — c'est le contrôle à faire après chaque déploiement.
+
+## 5 bis. Vérifier ce qui a disparu
+
+Si les documents cessent d'être produits sans qu'aucun code n'ait changé, la cause est presque
+toujours là. Une ligne suffit :
+
+```bash
+php bousol/diagnostic.php | grep -i mpdf
+```
 
 ## 6. Diagnostic automatique
 
 Une fois le code et `config.php` en place, ouvrir **`https://dev-dynamics.org/bousol/diagnostic.php`**.
 La page contrôle en une passe : version de PHP et extensions, permissions et clé du coffre
-(chiffrement testé pour de vrai), connexion à la base, 49 tables, 8 garde-fous et leur efficacité
+(chiffrement testé pour de vrai), connexion à la base, 52 tables, 10 garde-fous et leur efficacité
 réelle, support JSON, nomenclature budgétaire, dossiers de stockage inscriptibles, et génération
 d'un PDF avec l'en-tête. Aucun mot de passe ni clé n'y apparaît.
 
