@@ -97,15 +97,18 @@ function tranche(int $id): ?array
  */
 function tranche_contractualiser(int $trancheId, ?float $montant, string $declencheur = ''): array
 {
-    if (user_role() !== 'coordinateur') {
-        return ['success' => false, 'error' => 'Le montant contractuel d\'une tranche se saisit à la signature, par le Coordinateur.'];
-    }
     $t = tranche($trancheId);
     if ($t === null) {
         return ['success' => false, 'error' => 'Tranche inconnue dans ce projet.'];
     }
+    // L'etat de l'objet prime le role de celui qui demande : une tranche encaissee
+    // ne se recontractualise pour personne, et le refus doit le dire plutot que
+    // d'opposer un droit qui ne serait pas le vrai obstacle.
     if ($t['montant_recu'] !== null) {
         return ['success' => false, 'error' => 'Cette tranche est déjà reçue : son montant contractuel ne se réécrit plus.'];
+    }
+    if (user_role() !== 'coordinateur') {
+        return ['success' => false, 'error' => 'Le montant contractuel d\'une tranche se saisit à la signature, par le Coordinateur.'];
     }
     if ($montant !== null && $montant <= 0) {
         return ['success' => false, 'error' => 'Le montant contractuel doit être strictement positif.'];
