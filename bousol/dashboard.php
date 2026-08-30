@@ -19,15 +19,31 @@ $st = db()->prepare('SELECT * FROM journal_audit WHERE projet_code = ? OR projet
 $st->execute([projet_code()]);
 $audit = $st->fetchAll();
 
+/**
+ * Les parametres de l'annexe F qui restent a saisir sur ce projet.
+ *
+ * La liste se derive du registre et n'est pas tenue a la main : une carte qui en
+ * surveillait huit sur trente-trois annoncait « annexe F » en n'en montrant qu'un
+ * quart, et laissait croire au Coordinateur qu'il n'avait plus rien a saisir.
+ *
+ * Trois familles sont ecartees, non par oubli mais parce qu'elles ne se saisissent
+ * pas : celles que l'outil pose lui-meme (l'enveloppe indirecte figee a la bascule,
+ * le seuil de blocage de variation), la seconde borne quand le projet n'a pas de
+ * phase de suivi, et le couple contrat / date d'ancrage que l'alerte
+ * d'initialisation annonce deja plus haut.
+ */
 $aDefinir = [];
-foreach (['plafond_contractuel' => 'Plafond contractuel du projet', 'plafond_petite_caisse' => 'Plafond de la petite caisse',
-          'plafond_depense_especes' => 'Plafond de dépense en espèces', 'seuil_proformas' => 'Seuil déclenchant trois proformas',
-          'delai_alerte_sauvegarde_jours' => 'Délai d\'alerte d\'absence de sauvegarde',
-          'ligne_provision_code' => 'Ligne portant la provision pour imprévus',
-          'ligne_couts_indirects_code' => 'Ligne des coûts indirects',
-          'representant_legal' => 'Représentant légal'] as $k => $lib) {
+$poseParLOutil = array_keys(array_filter(PARAMETRES_REGISTRE, fn($d) => $d[3] === false));
+$dejaAnnonces  = ['numero_contrat', 'date_debut_execution'];
+foreach (PARAMETRES_REGISTRE as $k => $def) {
+    if (in_array($k, $poseParLOutil, true) || in_array($k, $dejaAnnonces, true)) {
+        continue;
+    }
+    if ($k === 'seconde_borne' && param('suivi_post_cloture', '0') !== '1') {
+        continue;
+    }
     if (param($k) === null) {
-        $aDefinir[] = $lib;
+        $aDefinir[] = $def[0];
     }
 }
 
