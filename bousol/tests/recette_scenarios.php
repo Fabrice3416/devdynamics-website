@@ -363,6 +363,24 @@ if ($signataire === null) {
         echo "  (les appositions sont sautees : sans document rendu, rien a signer)\n";
     } else {
         $doc1 = (int)$v1['document_id'];
+
+        // apposer() ne rend pas la raison technique d'une estampille manquee : elle
+        // va au journal. La sonde l'appelle directement pour que la recette la
+        // nomme - un « Impossible » sans cause a deja coute un aller-retour.
+        $spec = specimen_actif((int)$signataire['id']);
+        try {
+            $estampille = estampiller_pdf(
+                (string)lire_fichier((array)fichier((int)$v1['fichier_id'])),
+                (string)lire_fichier((array)fichier((int)$spec['image_fichier_id'])),
+                ['nom' => 'RECS Signataire', 'qualite' => 'Sonde de recette',
+                 'horodatage' => date('Y-m-d H:i:s'), 'code' => 'RECE-TTE0-01'], 0);
+            cas('L\'estampille se pose sur le PDF rendu', strlen($estampille) > 1000,
+                strlen($estampille) . ' octets');
+        } catch (Throwable $e) {
+            cas('L\'estampille se pose sur le PDF rendu', false,
+                get_class($e) . ' : ' . $e->getMessage());
+        }
+
         $a1 = apposer($doc1, 'approbation', RECS_MOTDEPASSE);
         cas('La premiere apposition est posee', !empty($a1['success']),
             $a1['error'] ?? ('code ' . ($a1['code'] ?? '')));

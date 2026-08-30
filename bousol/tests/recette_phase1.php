@@ -90,11 +90,16 @@ $_SESSION['admin_outil'] = true;
 echo "\n== Signature\n";
 $svc = new PdfService();
 $bin = $svc->rendre_binaire('acte_depot', ['titulaire' => 'Recette', 'fonction' => 'Test', 'role' => 'Test', 'mandataire' => false, 'email' => 'x@y']);
+// Le chemin se resout par le service, et non a l'emplacement historique : c'est
+// ce qui distingue « la bibliotheque manque » de « elle est ailleurs ».
+$autoloadMpdf = PdfService::autoload_mpdf();
 cas('mPDF disponible pour le rendu', $bin !== null,
     $bin !== null ? strlen($bin) . ' octets'
-        : (is_file(root_dir() . '/lib/mpdf/autoload.php')
-            ? 'autoload present, le rendu leve une exception : voir le log serveur'
-            : 'bousol/lib/mpdf/ absent, a copier a la main (DEPLOIEMENT.md §5)'));
+        : ($autoloadMpdf !== null
+            ? 'autoload present (' . $autoloadMpdf . '), le rendu leve une exception : voir le log serveur'
+            : 'mPDF introuvable aux trois emplacements, a deposer a la main (DEPLOIEMENT.md §5)'));
+cas('L\'estampille de signature cherche mPDF au meme endroit que le rendu',
+    $autoloadMpdf !== null, (string)$autoloadMpdf);
 
 revoquer_specimen(1, 'recette');
 $doc = fn(string $type, int $objet) => (function () use ($pdo, $svc, $bin, $type, $objet) {

@@ -17,6 +17,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/uploads.php';
 require_once __DIR__ . '/referentiels.php';
 require_once __DIR__ . '/droits.php';
+require_once __DIR__ . '/../pdf/generate.php';   // PdfService::autoload_mpdf()
 
 function specimen_actif(int $userId): ?array
 {
@@ -286,7 +287,10 @@ function apposer(int $documentId, string $qualite, string $password): array
         ], $position);
     } catch (Throwable $e) {
         error_log('estampiller_pdf: ' . $e->getMessage());
-        return ['success' => false, 'error' => 'Impossible d\'apposer la signature sur le PDF.'];
+        audit('signature', 'apposition_refusee', 'document', $documentId,
+            'Estampille impossible · ' . get_class($e) . ' : ' . mb_substr($e->getMessage(), 0, 180));
+        return ['success' => false, 'error' => 'Impossible d\'apposer la signature sur le PDF. '
+            . 'La raison technique est au journal d\'audit.'];
     }
     $nouveau = enregistrer_contenu($signe, 'pdf', 'application/pdf', 'documents', $fichierCourant['nom_genere'], false, (int)$doc['fichier_id']);
     if (!$nouveau['success']) {
@@ -320,9 +324,13 @@ function apposer(int $documentId, string $qualite, string $password): array
  */
 function estampiller_pdf(string $pdfBytes, string $imgBytes, array $bloc, int $position): string
 {
-    $autoload = root_dir() . '/lib/mpdf/autoload.php';
-    if (!is_file($autoload)) {
-        throw new RuntimeException('mPDF non installé');
+    // mPDF ne vit plus forcement sous la racine web : un deploiement qui synchronise
+    // l'arborescence l'a emporte trois fois, et il a ete mis a cote de la
+    // configuration. Le chemin se resout donc au meme endroit que pour le rendu -
+    // ici il etait reste en dur, et l'estampille echouait la ou le rendu passait.
+    $autoload = PdfService::autoload_mpdf();
+    if ($autoload === null) {
+        throw new RuntimeException('mPDF introuvable : voir DEPLOIEMENT.md §5 et la clé app.mpdf');
     }
     require_once $autoload;
     $tmpDir = root_dir() . '/storage/tmp';
