@@ -140,12 +140,19 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE r FROM releves r JOIN indicateurs i ON i.id = r.indicateur_id WHERE i.libelle LIKE 'REC6 %'",
         "DELETE FROM indicateurs WHERE libelle LIKE 'REC6 %'",
         "DELETE FROM activites WHERE code LIKE 'REC6%'",
-        "DELETE FROM cadre_elements WHERE code LIKE 'REC6%'",
+        // Le cadre logique se rattache a lui-meme : un element porte son parent. Une
+        // suppression en bloc laisse InnoDB choisir l'ordre, et il arrive qu'il retire
+        // l'objectif general avant les resultats qui s'y rattachent - la requete echoue
+        // alors en entier, et le code reste pris au passage suivant. On descend donc
+        // l'arbre par le bas.
+        "DELETE FROM cadre_elements WHERE code LIKE 'REC6%' AND niveau = 'resultat'",
+        "DELETE FROM cadre_elements WHERE code LIKE 'REC6%' AND niveau = 'objectif_specifique'",
+        "DELETE FROM cadre_elements WHERE code LIKE 'REC6%' AND niveau = 'objectif_general'",
         "DELETE FROM releves WHERE version_id IN (SELECT id FROM versions_cadre WHERE motif LIKE 'REC6 %')",
         "DELETE FROM versions_cadre WHERE motif LIKE 'REC6 %'",
-        "DELETE FROM anomalies WHERE description LIKE 'REC6 %'",
-        "DELETE FROM versions_application WHERE numero LIKE 'REC6%'",
-        "DELETE FROM enquetes_adoption WHERE observations LIKE 'REC6 %'",
+        "DELETE FROM anomalies WHERE description LIKE 'REC6 %' OR description LIKE 'REC9 %'",
+        "DELETE FROM versions_application WHERE numero LIKE 'REC6%' OR numero LIKE 'REC9%'",
+        "DELETE FROM enquetes_adoption WHERE observations LIKE 'REC6 %' OR observations LIKE 'REC9 %'",
 
         // Documents produits par les recettes : le fichier ne se supprime pas, mais
         // le document, lui, n'est qu'un rattachement.

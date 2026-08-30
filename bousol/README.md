@@ -86,7 +86,7 @@ nettoie pas. Elles exigent `BOUSOL_RECETTE=oui` et annoncent la base qu'elles vi
 | `recette_phase8.php` | Financement, trésorerie, tranches, demandes de versement | 43 |
 | `recette_phase9.php` | Bascule, régularisation, réouverture, archive définitive | 42 |
 | `recette_scenarios.php` | Les essais de bout en bout de l’annexe G : la matrice des droits parcourue rôle par rôle et phase par phase, un seuil modifié en cours de projet, un document signé puis modifié puis signé de nouveau | 83 |
-| `recette_cycle.php` | Les deux essais de cycle complet : un dossier de chaque type mené de sa création à sa clôture, puis un mois rejoué sur une douzaine de dossiers dont le journal, le rapport financier, la balance et le rapprochement doivent concorder | ≈ 75 |
+| `recette_cycle.php` | Les deux essais de cycle complet : un dossier de chaque type mené de sa création à sa clôture, puis un mois rejoué sur une douzaine de dossiers dont le journal, le rapport financier, la balance et le rapprochement doivent concorder | 78 |
 
 Elles rendent aussi chaque écran et vérifient qu'il va jusqu'au bout de son document : une page
 tronquée par une erreur de gabarit est invisible en production, où `display_errors` est à Off.

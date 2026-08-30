@@ -45,6 +45,16 @@ $_SESSION['est_mandataire'] = false;
 param_oublier();
 recette_nettoyer($pdo);
 
+/**
+ * L'identifiant rendu par une creation, ou zero si elle a echoue. Sans cela, une
+ * etape ratee fait suivre vingt avertissements « Undefined array key » qui noient
+ * la cause : la fonction appelee refuse alors proprement, et le refus se lit.
+ */
+function id_de(?array $res): int
+{
+    return (int)($res['id'] ?? 0);
+}
+
 echo "== Versions du cadre logique\n";
 $_SESSION['role_projet'] = 'raf';
 refuse_avec('Le RAF ne touche pas au cadre logique',
@@ -69,21 +79,21 @@ $og = cadre_element_creer(['niveau' => 'objectif_general', 'code' => 'REC6OG',
                            'attenuation' => 'REC6 attenuation']);
 cas('L\'objectif general se cree sans parent', !empty($og['success']), $og['error'] ?? '');
 $os = cadre_element_creer(['niveau' => 'objectif_specifique', 'code' => 'REC6OS',
-                           'libelle' => 'REC6 objectif specifique', 'parent_id' => (int)$og['id']]);
+                           'libelle' => 'REC6 objectif specifique', 'parent_id' => id_de($og)]);
 $res1 = cadre_element_creer(['niveau' => 'resultat', 'code' => 'REC6R1',
-                             'libelle' => 'REC6 resultat', 'parent_id' => (int)$os['id']]);
+                             'libelle' => 'REC6 resultat', 'parent_id' => id_de($os)]);
 cas('Un seul mecanisme absorbe les trois niveaux',
     !empty($os['success']) && !empty($res1['success']), $res1['error'] ?? '');
 refuse_avec('Un code deja pris est refuse',
     cadre_element_creer(['niveau' => 'resultat', 'code' => 'REC6R1', 'libelle' => 'REC6 doublon',
-                         'parent_id' => (int)$os['id']]), 'existe déjà');
+                         'parent_id' => id_de($os)]), 'existe déjà');
 
 echo "\n== Indicateurs et releves\n";
-$ind = indicateur_creer(['element_id' => (int)$res1['id'], 'libelle' => 'REC6 taux de reussite',
+$ind = indicateur_creer(['element_id' => id_de($res1), 'libelle' => 'REC6 taux de reussite',
                          'cible_valeur' => '80 %', 'echeance_mois' => 6,
                          'verification' => 'Fiches d\'evaluation']);
 cas('Un indicateur se rattache a l\'element qu\'il mesure', !empty($ind['success']), $ind['error'] ?? '');
-$indApres = indicateur_creer(['element_id' => (int)$og['id'], 'libelle' => 'REC6 adoption a trois mois',
+$indApres = indicateur_creer(['element_id' => id_de($og), 'libelle' => 'REC6 adoption a trois mois',
                               'cible_valeur' => '9 sur 12', 'echeance_mois' => 10]);
 $ech = echeance_indicateur(10);
 cas('Une echeance au-dela de la duree tombe apres la cloture',
@@ -92,13 +102,13 @@ $ech6 = echeance_indicateur(6);
 cas('Une echeance en mois se convertit par le calendrier relatif',
     $ech6['apres_cloture'] === false, $ech6['date'] ?? 'sans date, calendrier non initialise');
 
-$rel = releve_poser((int)$ind['id'], '85 %', 'REC6 releve du mois 6');
+$rel = releve_poser(id_de($ind), '85 %', 'REC6 releve du mois 6');
 cas('Le releve se pose', !empty($rel['success']), $rel['error'] ?? '');
-$releves = releves_indicateur((int)$ind['id']);
+$releves = releves_indicateur(id_de($ind));
 cas('Le releve se rattache a la version du cadre en vigueur',
     ($releves[0]['version_numero'] ?? 0) === (int)$v2['numero'],
     'version ' . ($releves[0]['version_numero'] ?? '?'));
-refuse_avec('Un releve sans valeur est refuse', releve_poser((int)$ind['id'], ''), 'obligatoire');
+refuse_avec('Un releve sans valeur est refuse', releve_poser(id_de($ind), ''), 'obligatoire');
 
 echo "\n== Activites et visibilite\n";
 refuse_avec('Une activite du cadre logique sans resultat est refusee',
@@ -106,46 +116,46 @@ refuse_avec('Une activite du cadre logique sans resultat est refusee',
     'se rattache à son résultat');
 refuse_avec('Une activite de visibilite rattachee a un resultat est refusee',
     activite_creer(['code' => 'REC6A2', 'categorie' => 'visibilite', 'libelle' => 'REC6 mal rattachee',
-                    'element_id' => (int)$res1['id']]), 'aucun résultat');
-$a1 = activite_creer(['code' => 'REC6A1', 'categorie' => 'cadre_logique', 'element_id' => (int)$res1['id'],
+                    'element_id' => id_de($res1)]), 'aucun résultat');
+$a1 = activite_creer(['code' => 'REC6A1', 'categorie' => 'cadre_logique', 'element_id' => id_de($res1),
                       'libelle' => 'REC6 formation des organisations', 'mois_debut' => 4, 'mois_fin' => 6,
                       'livrable_attendu' => 'REC6 rapport de formation']);
 cas('Une activite du cadre logique se cree', !empty($a1['success']), $a1['error'] ?? '');
 $lAtelier = budget_ligne('4.2');
 $a2 = activite_creer(['code' => 'REC6A2', 'categorie' => 'visibilite',
-                      'libelle' => 'REC6 atelier de lancement', 'ligne_id' => (int)$lAtelier['id']]);
+                      'libelle' => 'REC6 atelier de lancement', 'ligne_id' => id_de($lAtelier)]);
 cas('Une activite de visibilite se rattache a sa ligne, pas a un resultat',
     !empty($a2['success']), $a2['error'] ?? '');
 
 refuse_avec('Une activite ne se declare pas realisee sans son livrable',
-    activite_avancer((int)$a1['id'], 'realisee'), 'attend son livrable');
+    activite_avancer(id_de($a1), 'realisee'), 'attend son livrable');
 $manquants = livrables_manquants();
 cas('Le registre des livrables nomme ce qui manque',
     count(array_filter($manquants, fn($m) => $m['code'] === 'REC6A1')) === 1, count($manquants) . ' attendu(s)');
 $pdo->prepare('UPDATE activites SET livrable_fichier_id = ? WHERE id = ?')
-    ->execute([poser_fichier('LIVRABLE'), (int)$a1['id']]);
-$res = activite_avancer((int)$a1['id'], 'realisee');
+    ->execute([poser_fichier('LIVRABLE'), id_de($a1)]);
+$res = activite_avancer(id_de($a1), 'realisee');
 cas('Avec son livrable, l\'activite se declare realisee', !empty($res['success']), $res['error'] ?? '');
 
-$dif = difficulte_ajouter((int)$a1['id'], 'REC6 retard de livraison des materiels', 'REC6 report d\'une semaine');
+$dif = difficulte_ajouter(id_de($a1), 'REC6 retard de livraison des materiels', 'REC6 report d\'une semaine');
 cas('Une difficulte et sa mesure corrective s\'enregistrent', !empty($dif['success']), $dif['error'] ?? '');
 
 echo "\n== Sessions de formation\n";
 $pdo->exec("INSERT INTO tiers (type, nom, fonction) VALUES ('personne', 'REC6 Formateur', 'Formateur')");
 $formateur = (int)$pdo->lastInsertId();
 refuse_avec('Une session dont la fin precede le debut est refusee',
-    session_creer(['activite_id' => (int)$a1['id'], 'numero' => 1, 'date_debut' => '2026-06-10',
+    session_creer(['activite_id' => id_de($a1), 'numero' => 1, 'date_debut' => '2026-06-10',
                    'date_fin' => '2026-06-01', 'lieu' => 'REC6 salle', 'formateur_id' => $formateur]),
     'précède');
 refuse_avec('Une session sans activite est refusee',
     session_creer(['activite_id' => 999999, 'numero' => 1, 'date_debut' => '2026-06-01',
                    'date_fin' => '2026-06-02', 'lieu' => 'REC6 salle', 'formateur_id' => $formateur]),
     'Activité inconnue');
-$sess = session_creer(['activite_id' => (int)$a1['id'], 'numero' => 1, 'date_debut' => '2026-06-01',
+$sess = session_creer(['activite_id' => id_de($a1), 'numero' => 1, 'date_debut' => '2026-06-01',
                        'date_fin' => '2026-06-02', 'lieu' => 'REC6 salle de formation',
                        'formateur_id' => $formateur]);
 cas('La session se cree', !empty($sess['success']), $sess['error'] ?? '');
-$sid = (int)$sess['id'];
+$sid = id_de($sess);
 cas('Une session naît planifiee', (session($sid)['statut'] ?? '') === 'planifiee', session($sid)['statut'] ?? '');
 
 refuse_avec('Clore une session sans feuille de presence est refuse',
@@ -202,12 +212,12 @@ cas('Une version s\'inscrit au registre', !empty($va['success']), $va['error'] ?
 refuse_avec('Un numero deja pris est refuse',
     version_application_creer(['numero' => 'REC6-1.0.0', 'nature' => 'correctif']), 'existe déjà');
 refuse_avec('Une publication sans verification Google validee ne se diffuse pas',
-    version_application_diffuser((int)$va['id']), 'vérification Google');
-version_application_verification((int)$va['id'], 'valide');
-$res = version_application_diffuser((int)$va['id']);
+    version_application_diffuser(id_de($va)), 'vérification Google');
+version_application_verification(id_de($va), 'valide');
+$res = version_application_diffuser(id_de($va));
 cas('La verification validee ouvre la publication', !empty($res['success']), $res['error'] ?? '');
 $vc = version_application_creer(['numero' => 'REC6-1.0.1', 'nature' => 'correctif']);
-$res = version_application_diffuser((int)$vc['id']);
+$res = version_application_diffuser(id_de($vc));
 cas('Un correctif se diffuse sans verification Google', !empty($res['success']), $res['error'] ?? '');
 
 echo "\n== Anomalies\n";
@@ -220,10 +230,10 @@ $an = anomalie_declarer(['description' => 'REC6 la saisie plante au troisieme ec
 cas('Un signalement s\'enregistre', !empty($an['success']), $an['error'] ?? '');
 $ouvertes = array_filter(anomalies(), fn($a) => $a['date_resolution'] === null);
 cas('Un signalement non corrige est l\'etat normal d\'un ticket', count($ouvertes) >= 1, count($ouvertes) . ' ouverte(s)');
-$res = anomalie_accuser((int)$an['id']);
+$res = anomalie_accuser(id_de($an));
 cas('L\'accuse de reception s\'enregistre', !empty($res['success']), $res['error'] ?? '');
-refuse_avec('Resoudre sans reponse est refuse', anomalie_resoudre((int)$an['id'], ''), 'obligatoire');
-$res = anomalie_resoudre((int)$an['id'], 'REC6 corrige au correctif 1.0.1', (int)$vc['id']);
+refuse_avec('Resoudre sans reponse est refuse', anomalie_resoudre(id_de($an), ''), 'obligatoire');
+$res = anomalie_resoudre(id_de($an), 'REC6 corrige au correctif 1.0.1', id_de($vc));
 cas('La resolution rattache le correctif, facultativement', !empty($res['success']), $res['error'] ?? '');
 
 echo "\n== Enquete d'adoption\n";
