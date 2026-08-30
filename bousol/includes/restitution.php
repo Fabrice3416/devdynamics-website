@@ -176,8 +176,8 @@ function rapport_restitution(int $id): ?array
  */
 function rapport_ouvrir(string $type, int $periodeId, string $commentaire = ''): array
 {
-    if (user_role() !== 'coordinateur') {
-        return ['success' => false, 'error' => 'Valider et signer un rapport revient au Coordinateur (annexe B).'];
+    if (($refus = droit_ecriture('rapport_valider')) !== null) {
+        return ['success' => false, 'error' => $refus];
     }
     if (!array_key_exists($type, TYPES_RAPPORT) || $type === 'rectificatif') {
         return ['success' => false, 'error' => 'Type de rapport hors liste : une version rectificative se produit par rectification.'];
@@ -349,12 +349,12 @@ function lignes_financieres(int $rapportId): array
  */
 function rapport_valider(int $rapportId): array
 {
+    if (($refus = droit_ecriture('rapport_valider')) !== null) {
+        return ['success' => false, 'error' => $refus];
+    }
     $r = rapport_restitution($rapportId);
     if ($r === null) {
         return ['success' => false, 'error' => 'Rapport inconnu dans ce projet.'];
-    }
-    if (user_role() !== 'coordinateur') {
-        return ['success' => false, 'error' => 'Valider et signer un rapport revient au Coordinateur (annexe B).'];
     }
     if ($r['statut'] !== 'brouillon') {
         return ['success' => false, 'error' => 'Ce rapport est déjà ' . (STATUTS_RAPPORT_RESTITUTION[$r['statut']] ?? $r['statut']) . '.'];
@@ -444,12 +444,12 @@ function rapport_transmettre(int $rapportId, string $date, ?array $accuse = null
  */
 function rapport_rectifier(int $rapportId, string $motif): array
 {
+    if (($refus = droit_ecriture('reouverture', 'Rectifier un rapport transmis')) !== null) {
+        return ['success' => false, 'error' => $refus];
+    }
     $r = rapport_restitution($rapportId);
     if ($r === null) {
         return ['success' => false, 'error' => 'Rapport inconnu dans ce projet.'];
-    }
-    if (user_role() !== 'coordinateur') {
-        return ['success' => false, 'error' => 'La réouverture exceptionnelle est autorisée par le Coordinateur (annexe B).'];
     }
     if ($r['statut'] === 'brouillon') {
         return ['success' => false, 'error' => 'Un brouillon se corrige directement : la rectification ne vaut que pour un rapport figé.'];

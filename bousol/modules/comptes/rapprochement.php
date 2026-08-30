@@ -20,7 +20,7 @@ require_once __DIR__ . '/../../includes/comptes.php';
 require_role(['coordinateur', 'raf']);
 require_module('comptes');
 
-$peutEcrire = user_role() === 'raf';
+$peutEcrire = peut_ecrire('rapprochement');
 $erreur = null;
 
 $comptesBanque = array_values(array_filter(comptes_plan(), fn($c) => $c['type'] === 'banque' && $c['compte_bancaire_id'] !== null));

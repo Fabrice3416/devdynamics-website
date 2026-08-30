@@ -158,15 +158,15 @@ function rapports(?int $mois = null, ?int $projetId = null): array
  */
 function rapport_accepter(int $rapportId): array
 {
+    if (($refus = droit_ecriture('certificat')) !== null) {
+        return ['success' => false, 'error' => $refus];
+    }
     $r = rapport($rapportId);
     if ($r === null) {
         return ['success' => false, 'error' => 'Rapport inconnu dans ce projet.'];
     }
     if ($r['statut'] !== 'recu') {
         return ['success' => false, 'error' => 'Ce rapport est déjà ' . (STATUTS_RAPPORT[$r['statut']] ?? $r['statut']) . '.'];
-    }
-    if (user_role() !== 'coordinateur') {
-        return ['success' => false, 'error' => 'Le certificat d\'acceptation est délivré par le Coordinateur.'];
     }
     if ((int)user_tiers_id() === (int)$r['tiers_id']) {
         return ['success' => false, 'error' => 'On n\'accepte pas son propre rapport d\'exécution : '

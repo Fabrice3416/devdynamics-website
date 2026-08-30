@@ -188,6 +188,21 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id WHERE d.numero LIKE 'REC%'",
         "DELETE FROM dossiers WHERE numero LIKE 'REC%'",
 
+        // Scenarios de bout en bout : appositions, documents, puis les dossiers.
+        // Les pieces pointent vers leurs documents : on defait le lien avant.
+        "DELETE a FROM appositions a JOIN documents d ON d.id = a.document_id
+           JOIN dossiers dd ON dd.id = d.objet_id
+          WHERE d.objet_type = 'dossier' AND dd.objet LIKE 'RECB %'",
+        "UPDATE pieces p JOIN dossiers d ON d.id = p.dossier_id SET p.document_id = NULL
+          WHERE d.objet LIKE 'RECB %'",
+        "DELETE d FROM documents d JOIN dossiers dd ON dd.id = d.objet_id
+          WHERE d.objet_type = 'dossier' AND dd.objet LIKE 'RECB %'",
+        "DELETE FROM documents WHERE type = 'bon_reception' AND objet_type = 'dossier' AND objet_id = 0",
+        "DELETE p FROM pieces p JOIN dossiers d ON d.id = p.dossier_id WHERE d.objet LIKE 'RECB %'",
+        "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id WHERE d.objet LIKE 'RECB %'",
+        "DELETE FROM dossiers WHERE objet LIKE 'RECB %'",
+        "DELETE FROM parametres WHERE motif LIKE 'RECB %' OR motif LIKE 'RECS %'",
+
         // Tiers : beneficiaires puis personnes.
         "DELETE FROM beneficiaires WHERE nom LIKE 'REC2 %'",
         "DELETE FROM tiers WHERE nom LIKE 'REC3 %'",

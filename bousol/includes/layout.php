@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/calendrier.php';
+require_once __DIR__ . '/droits.php';
 require_once __DIR__ . '/referentiels.php';
 
 function page_start(string $titre, string $menuActif = ''): void

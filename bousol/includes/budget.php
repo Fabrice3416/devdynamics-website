@@ -17,6 +17,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/calendrier.php';
+require_once __DIR__ . '/droits.php';       // matrice de l'annexe B
 require_once __DIR__ . '/referentiels.php';  // UNITES, PARAMETRES_REGISTRE
 require_once __DIR__ . '/uploads.php';       // fichier() : la piece d'autorisation d'une reallocation
 require_once __DIR__ . '/audit.php';
@@ -443,6 +444,9 @@ function budget_controle_reallocation(array $deltasMontant, array $deltasQuantit
 {
     $refus = [];
     $alertes = [];
+    if (($interdit = droit_ecriture('provision', 'Réallouer le budget de gestion')) !== null) {
+        return ['refus' => [['regle' => 'droit', 'derogeable' => false, 'message' => $interdit]], 'alertes' => []];
+    }
     $lignes = budget_lignes();
     $consomme = budget_consomme();
 

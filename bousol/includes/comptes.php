@@ -18,6 +18,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/calendrier.php';
+require_once __DIR__ . '/droits.php';
 require_once __DIR__ . '/budget.php';
 require_once __DIR__ . '/uploads.php';
 require_once __DIR__ . '/audit.php';
@@ -932,6 +933,9 @@ function lignes_rapprochement(int $rapprochementId): array
  */
 function rapprochement_valider(int $rapprochementId): array
 {
+    if (($refus = droit_ecriture('rapprochement')) !== null) {
+        return ['success' => false, 'error' => $refus];
+    }
     $st = db()->prepare('SELECT * FROM rapprochements WHERE id = ? AND projet_id = ?');
     $st->execute([$rapprochementId, projet_id()]);
     $r = $st->fetch();

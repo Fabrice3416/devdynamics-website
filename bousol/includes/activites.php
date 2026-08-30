@@ -12,6 +12,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/calendrier.php';
+require_once __DIR__ . '/droits.php';
 require_once __DIR__ . '/budget.php';
 require_once __DIR__ . '/uploads.php';
 require_once __DIR__ . '/audit.php';
@@ -765,14 +766,15 @@ function versions_application(?int $projetId = null): array
  */
 function version_application_creer(array $d): array
 {
+    if (($refus = droit_ecriture('correctif')) !== null) {
+        return ['success' => false, 'error' => $refus
+            . (phase_code() === 'post_cloture'
+               ? ' Le Lead Développeur ne dispose plus de compte après la clôture.' : '')];
+    }
     $numero = trim((string)($d['numero'] ?? ''));
     $nature = (string)($d['nature'] ?? '');
     if ($numero === '' || !array_key_exists($nature, NATURES_VERSION_APP)) {
         return ['success' => false, 'error' => 'Le numéro de version et la nature de l\'intervention sont obligatoires.'];
-    }
-    if (phase_code() === 'post_cloture' && user_role() !== 'coordinateur') {
-        return ['success' => false, 'error' => 'En phase de suivi post-clôture, le registre est tenu par le Coordinateur : '
-            . 'le Lead Développeur ne dispose plus de compte après la clôture.'];
     }
     $modules = array_values(array_filter((array)($d['modules_touches'] ?? []),
         fn($m) => array_key_exists($m, MODULES_APPLICATION)));
@@ -858,6 +860,9 @@ function anomalies(?int $projetId = null): array
  */
 function anomalie_declarer(array $d): array
 {
+    if (($refus = droit_ecriture('journal_support')) !== null) {
+        return ['success' => false, 'error' => $refus];
+    }
     if (trim((string)($d['description'] ?? '')) === '') {
         return ['success' => false, 'error' => 'La description de l\'anomalie est obligatoire.'];
     }

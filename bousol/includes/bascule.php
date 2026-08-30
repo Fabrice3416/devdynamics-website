@@ -123,8 +123,8 @@ function bascule_checklist(?int $projetId = null): array
  */
 function regularisation_ouvrir(): array
 {
-    if (user_role() !== 'coordinateur') {
-        return ['success' => false, 'error' => 'La bascule est déclenchée par le Coordinateur (annexe B).'];
+    if (($refus = droit_ecriture('bascule')) !== null) {
+        return ['success' => false, 'error' => $refus];
     }
     if (phase_code() !== 'projet_actif') {
         return ['success' => false, 'error' => 'Le projet n\'est plus en exécution : la régularisation est déjà passée.'];
@@ -160,8 +160,8 @@ function regularisation_ouvrir(): array
  */
 function basculer(string $motif): array
 {
-    if (user_role() !== 'coordinateur') {
-        return ['success' => false, 'error' => 'La bascule est déclenchée par le Coordinateur (annexe B).'];
+    if (($refus = droit_ecriture('bascule')) !== null) {
+        return ['success' => false, 'error' => $refus];
     }
     if (param('suivi_post_cloture', '0') !== '1') {
         return ['success' => false, 'error' => 'Ce projet n\'a pas de phase de suivi post-clôture : '
@@ -217,8 +217,8 @@ function basculer(string $motif): array
  */
 function reouverture_ouvrir(string $motif, string $dateLimite, ?int $periodeId = null): array
 {
-    if (user_role() !== 'coordinateur') {
-        return ['success' => false, 'error' => 'Autoriser une réouverture revient au Coordinateur (annexe B).'];
+    if (($refus = droit_ecriture('reouverture')) !== null) {
+        return ['success' => false, 'error' => $refus];
     }
     if (trim($motif) === '') {
         return ['success' => false, 'error' => 'Le motif de la réouverture est obligatoire.'];

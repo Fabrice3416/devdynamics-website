@@ -6,6 +6,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../includes/layout.php';
 require_role(['coordinateur']);
 require_module('noyau');
+// « Parametrer les bornes et les seuils : Coordinateur », dans les deux phases (annexe B).
+if (($refusDroit = droit_ecriture('parametrer')) !== null) {
+    http_response_code(403);
+    exit('403 - ' . $refusDroit);
+}
 
 $cleEdit = (string)($_GET['cle'] ?? '');
 $erreur = null;

@@ -61,6 +61,9 @@ function dossier_numero_suivant(?int $projetId = null): string
  */
 function dossier_ouvrir(array $d): array
 {
+    if (($refus = droit_ecriture('dossier_ouvrir')) !== null) {
+        return ['success' => false, 'error' => $refus];
+    }
     $type = (string)($d['type'] ?? '');
     $def = TYPES_DOSSIER[$type] ?? null;
     if ($def === null) {
@@ -229,6 +232,9 @@ function dossier_pieces_manquantes(int $dossierId, ?string $moment = null): arra
  */
 function piece_verser(int $pieceId, array $fichier, ?string $datePiece = null): array
 {
+    if (($refus = droit_ecriture('televerser_scan')) !== null) {
+        return ['success' => false, 'error' => $refus];
+    }
     $st = db()->prepare(
         'SELECT p.*, d.numero, d.statut AS dossier_statut, d.periode_id AS periode_dossier FROM pieces p
            JOIN dossiers d ON d.id = p.dossier_id
@@ -364,14 +370,12 @@ function piece_sans_objet(int $pieceId, string $motif): array
 function dossier_imputer(int $dossierId, int $ligneId, float $quantite, float $valeurUnitaire,
                          string $unite, string $nature = 'consommation'): array
 {
+    if (($refus = droit_ecriture('imputer')) !== null) {
+        return ['success' => false, 'error' => $refus];
+    }
     $d = dossier($dossierId);
     if ($d === null) {
         return ['success' => false, 'error' => 'Dossier inconnu dans ce projet.'];
-    }
-    // « Imputer au budget : Coordinateur L, RAF E » (annexe B).
-    if (user_role() !== 'raf') {
-        return ['success' => false, 'error' => 'L\'imputation revient au Responsable Administratif et Financier ; '
-            . 'le Coordinateur en a la lecture, et la dérogation de quantité.'];
     }
     if (in_array($d['statut'], ['clos', 'abandonne', 'regle'], true)) {
         return ['success' => false, 'error' => 'Un dossier ' . $d['statut'] . ' ne se réimpute pas.'];
@@ -581,12 +585,12 @@ function proforma_retenir(int $proformaId, string $motif = ''): array
  */
 function dossier_approuver(int $dossierId): array
 {
+    if (($refus = droit_ecriture('dossier_approuver')) !== null) {
+        return ['success' => false, 'error' => $refus];
+    }
     $d = dossier($dossierId);
     if ($d === null) {
         return ['success' => false, 'error' => 'Dossier inconnu dans ce projet.'];
-    }
-    if (user_role() !== 'coordinateur') {
-        return ['success' => false, 'error' => 'L\'approbation d\'un dossier revient au Coordinateur.'];
     }
     $suppleant = trim((string)(param('suppleant_approbation') ?? ''));
     if ((int)user_tiers_id() === (int)$d['tiers_id']) {

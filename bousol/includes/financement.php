@@ -260,8 +260,8 @@ function pieces_demande(int $demandeId): array
  */
 function demande_ouvrir(int $trancheId, ?float $montant = null): array
 {
-    if (user_role() !== 'raf') {
-        return ['success' => false, 'error' => 'Préparer une demande de tranche revient au Responsable Administratif et Financier (annexe B).'];
+    if (($refus = droit_ecriture('demande_tranche')) !== null) {
+        return ['success' => false, 'error' => $refus];
     }
     $t = tranche($trancheId);
     if ($t === null) {

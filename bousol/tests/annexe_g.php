@@ -23,7 +23,7 @@ if (PHP_SAPI !== 'cli') {
 
 $racine = dirname(__DIR__);
 $recettes = '';
-foreach (glob($racine . '/tests/recette_phase*.php') as $f) {
+foreach (glob($racine . '/tests/recette_*.php') as $f) {
     $recettes .= (string)file_get_contents($f);
 }
 // Les recettes echappent les apostrophes en \' : sans cette normalisation, tout
@@ -72,7 +72,7 @@ $echouer = [
     ['Tiers', 'Créer un second tiers portant un NIF déjà enregistré', 'second tiers portant un NIF'],
     ['Restitution', 'Alimenter un cumul depuis une version remplacée par une rectificative', 'depuis une version remplacee'],
     ['Budget', 'Mobiliser la provision au-delà du seuil avec une seule autorisation', 'au-dela du seuil de variation avec une seule'],
-    ['Dépenses', 'Satisfaire deux pièces d\'un même dossier avec un seul fichier', ''],
+    ['Dépenses', 'Satisfaire deux pièces d\'un même dossier avec un seul fichier', 'deux pieces d\'un meme dossier avec un seul fichier'],
     ['Activités', 'Inscrire un bénéficiaire mineur sans autorisation parentale', 'mineur sans autorisation parentale'],
     ['Cloisonnement', 'Consulter un projet auquel on n\'est pas affecté', 'Sans affectation, aucun role'],
     ['Cloisonnement', 'Imputer une dépense sur la ligne budgétaire d\'un autre projet', 'ligne d\'un autre projet'],
@@ -92,14 +92,14 @@ $reussir = [
     ['Rapport financier', 'Produire le rapport sur un jeu calculé à la main', 'colonne budget reproduit le contractuel'],
     ['Rapport financier', 'Produire le rapport suivant une version rectificative', 'depuis une version remplacee'],
     ['Liasse', 'Produire la liasse d\'un dossier clos et celle d\'une période', 'liasse de periode se produit'],
-    ['Droits', 'Parcourir la matrice de l\'annexe B, rôle par rôle et phase par phase', ''],
+    ['Droits', 'Parcourir la matrice de l\'annexe B, rôle par rôle et phase par phase', 'la matrice de l\'annexe B'],
     ['Bascule', 'Tenter la clôture avec données incomplètes, puis compléter et basculer', 'checklist incomplete bloque la bascule'],
     ['Bascule', 'Exercer en phase 2 les seules actions autorisées', 'journal de support reste ouvert'],
-    ['Paramètres', 'Modifier un seuil en cours de projet', ''],
+    ['Paramètres', 'Modifier un seuil en cours de projet', 'un seuil modifie en cours de projet'],
     ['Multi-projets', 'Travailler alternativement sur les deux projets dans la même session', 'Imputer sur la ligne d\'un autre projet'],
     ['Trésorerie', 'Rapprocher le compte partagé sur un mois portant des mouvements des deux projets', 'ventilation nomme chaque projet'],
     ['Archive', 'Produire le paquet autoportant et l\'ouvrir sans Bousòl', 'index d\'archive se produit'],
-    ['Signature', 'Signer un document, le modifier, le signer de nouveau', ''],
+    ['Signature', 'Signer un document, le modifier, le signer de nouveau', 'signer, modifier, signer de nouveau'],
 ];
 
 $couverts = 0; $absents = [];

@@ -16,6 +16,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/uploads.php';
 require_once __DIR__ . '/referentiels.php';
+require_once __DIR__ . '/droits.php';
 
 function specimen_actif(int $userId): ?array
 {
@@ -199,14 +200,38 @@ function apposer(int $documentId, string $qualite, string $password): array
     if (!isset(QUALITES_SIGNATURE[$qualite])) {
         return ['success' => false, 'error' => 'Qualité de signature inconnue.'];
     }
-    if ($qualite === 'reglement' && !user_est_mandataire()) {
-        return ['success' => false, 'error' => 'La signature de règlement est réservée aux mandataires du compte.'];
+    // « Signer un reglement : Coordinateur E mandataire, RAF -, Mandataire E », et
+    // la ligne est fermee en phase 2 comme les autres actes de la depense (annexe B).
+    if (droit_ecrivains('signer_reglement') === [] && droit_ecrivains('signer_preparateur') === []) {
+        return ['success' => false, 'error' => 'La signature est fermée pendant la phase de suivi post-clôture (annexe B).'];
+    }
+    if ($qualite === 'reglement') {
+        if (($refus = droit_ecriture('signer_reglement')) !== null) {
+            return ['success' => false, 'error' => $refus];
+        }
+        if (!user_est_mandataire()) {
+            return ['success' => false, 'error' => 'La signature de règlement est réservée aux mandataires du compte (annexe B).'];
+        }
     }
     $stmt = db()->prepare('SELECT d.*, f.empreinte, f.chemin, f.coffre FROM documents d LEFT JOIN fichiers f ON f.id = d.fichier_id WHERE d.id = ?');
     $stmt->execute([$documentId]);
     $doc = $stmt->fetch();
     if (!$doc) {
         return ['success' => false, 'error' => 'Document introuvable.'];
+    }
+    // Qui signe quoi vient du catalogue de l'annexe E, et non de la bonne volonte
+    // du signataire : « Signer en qualite de preparateur : RAF » (annexe B) veut
+    // dire qu'un bon de reception attend le RAF, et que le Coordinateur, qui a
+    // pourtant un specimen, n'y a pas sa place.
+    $attendues = array_values(array_filter(DOCUMENTS_GENERES[(string)$doc['type']][1] ?? [],
+        fn($r) => !in_array($r, ['beneficiaire', 'prestataire'], true)));
+    if (array_intersect($attendues, qualites_catalogue_utilisateur()) === []) {
+        $libelles = array_map(fn($r) => ROLES_LIBELLE[$r] ?? $r, $attendues);
+        audit('signature', 'apposition_refusee', 'document', $documentId,
+            'Qualité hors du catalogue · attendu ' . ($libelles ? implode(', ', $libelles) : 'aucun signataire'));
+        return ['success' => false, 'error' => $libelles === []
+            ? 'Ce document n\'attend aucune signature applicative (annexe B).'
+            : 'Ce document se signe en qualité de ' . implode(' ou de ', $libelles) . ' (annexe B).'];
     }
     if ($doc['statut'] !== 'a_signer') {
         return ['success' => false, 'error' => 'Ce document n\'est pas en attente de signature (statut : ' . $doc['statut'] . ').'];

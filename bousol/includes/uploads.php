@@ -193,15 +193,16 @@ function decoder_png_base64(string $dataUrl): ?string
  * Le document est distinct du fichier : l'un est un acte, l'autre des octets (CDC 8.1).
  */
 function creer_document(string $type, string $module, string $objetType, int $objetId,
-                        ?int $fichierId = null, string $statut = 'brouillon', ?string $regime = null): int
+                        ?int $fichierId = null, string $statut = 'brouillon', ?string $regime = null,
+                        int $version = 1): int
 {
     $stmt = db()->prepare(
-        'INSERT INTO documents (type, module, objet_type, objet_id, projet_code, statut, regime, fichier_id, created_by)
-         VALUES (?,?,?,?,?,?,?,?,?)'
+        'INSERT INTO documents (type, module, objet_type, objet_id, projet_code, version, statut, regime, fichier_id, created_by)
+         VALUES (?,?,?,?,?,?,?,?,?,?)'
     );
     $stmt->execute([$type, $module, $objetType, $objetId, $_SESSION['projet_code'] ?? null,
-                    $statut, $regime ?? 'papier', $fichierId, $_SESSION['user_id'] ?? null]);
+                    $version, $statut, $regime ?? 'papier', $fichierId, $_SESSION['user_id'] ?? null]);
     $id = (int)db()->lastInsertId();
-    audit($module, 'document_cree', 'document', $id, $type);
+    audit($module, 'document_cree', 'document', $id, $type . ($version > 1 ? ' · version ' . $version : ''));
     return $id;
 }

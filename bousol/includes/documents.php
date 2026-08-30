@@ -52,6 +52,23 @@ function document_generer(string $type, array $donnees, string $objetType, int $
             . ' identifiants de projet. Un rapport n\'agrège jamais deux projets.'];
     }
 
+    // « Le document est fige apres apposition, toute modification imposant une
+    // nouvelle version et une nouvelle signature » (CDC 1.8). C'est l'apposition
+    // qui declenche le versionnement, et elle seule : un document jamais signe se
+    // reproduit autant qu'on veut, ce n'est pas une version nouvelle mais un
+    // brouillon repris. Les trois exemplaires d'un meme acte restent ainsi une
+    // seule version, puisqu'en regime papier rien n'est signe dans l'outil.
+    $precedent = document_de($type, $objetType, $objetId);
+    $version = 1;
+    $aRemplacer = null;
+    if ($precedent !== null) {
+        $version = (int)$precedent['version'];
+        if ((int)$precedent['nb_appositions'] > 0) {
+            $version++;
+            $aRemplacer = (int)$precedent['id'];
+        }
+    }
+
     $regime = param('regime_signature_defaut', 'papier');
     $svc = new PdfService();
     $nom = projet_code() . '-' . strtoupper($type) . '-' . $objetId
@@ -65,13 +82,22 @@ function document_generer(string $type, array $donnees, string $objetType, int $
     // applicatif est produit et classe tel quel.
     $signataires = array_filter($def[1], fn($r) => !in_array($r, ['beneficiaire', 'prestataire'], true));
     $statut = ($regime === 'electronique' && $signataires) ? 'a_signer' : 'brouillon';
-    $documentId = creer_document($type, $module, $objetType, $objetId, (int)$res['id'], $statut, $regime);
+    $documentId = creer_document($type, $module, $objetType, $objetId, (int)$res['id'], $statut, $regime, $version);
+
+    // La version precedente n'est jamais detruite : elle porte des signatures, et
+    // c'est elle qui a ete remise. Elle passe a « remplace » et reste consultable.
+    if ($aRemplacer !== null) {
+        db()->prepare("UPDATE documents SET statut = 'remplace' WHERE id = ?")->execute([$aRemplacer]);
+        audit($module, 'document_remplace', 'document', $aRemplacer,
+            $def[0] . ' · remplacé par la version ' . $version . ' (document ' . $documentId . ')');
+    }
 
     audit($module, 'document_genere', 'document', $documentId,
-        $def[0] . ' · ' . $objetType . ':' . $objetId . ' · régime ' . $regime
+        $def[0] . ' · ' . $objetType . ':' . $objetId . ' · version ' . $version . ' · régime ' . $regime
         . ($exemplaire !== '' ? ' · ' . $exemplaire : '')
         . ($statut === 'a_signer' ? ' · ' . count($signataires) . ' signature(s) attendue(s)' : ''));
-    return ['success' => true, 'document_id' => $documentId, 'fichier_id' => (int)$res['id'], 'statut' => $statut];
+    return ['success' => true, 'document_id' => $documentId, 'fichier_id' => (int)$res['id'],
+            'statut' => $statut, 'version' => $version];
 }
 
 /**

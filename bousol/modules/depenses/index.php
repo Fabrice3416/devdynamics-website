@@ -15,8 +15,7 @@ require_once __DIR__ . '/../../includes/depenses.php';
 require_projet();
 require_module('depenses');
 
-// « Ouvrir et constituer un dossier de depense : RAF » (annexe B).
-$peutOuvrir = user_role() === 'raf';
+$peutOuvrir = peut_ecrire('dossier_ouvrir');
 $erreur = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
