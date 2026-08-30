@@ -292,6 +292,41 @@ function dossier_avancer_sur_piece(int $dossierId, string $typePiece): void
         ->execute([$etape, $dossierId, ...$anterieurs]);
 }
 
+/**
+ * Certaines cases de la checklist ne recoivent pas un fichier mais une attestation :
+ * « TCA incluse dans le prix final, aucun montant hors taxe » (annexe H) se verifie
+ * en lisant les pieces, et ce qui doit rester dans l'outil est la trace de qui l'a
+ * verifie et quand.
+ *
+ * @return array{success: bool, error?: string}
+ */
+function piece_attester(int $pieceId, string $mention): array
+{
+    $st = db()->prepare(
+        'SELECT p.*, d.numero, d.statut AS dossier_statut FROM pieces p
+           JOIN dossiers d ON d.id = p.dossier_id
+          WHERE p.id = ? AND p.projet_id = ?'
+    );
+    $st->execute([$pieceId, projet_id()]);
+    $piece = $st->fetch();
+    if ($piece === false) {
+        return ['success' => false, 'error' => 'Pièce inconnue dans ce projet.'];
+    }
+    if (!in_array($piece['type'], PIECES_ATTESTEES, true)) {
+        return ['success' => false, 'error' => 'Cette pièce attend un fichier numérisé, pas une attestation.'];
+    }
+    if (in_array($piece['dossier_statut'], ['clos', 'abandonne'], true)) {
+        return ['success' => false, 'error' => 'Ce dossier est ' . $piece['dossier_statut'] . '.'];
+    }
+    if (trim($mention) === '') {
+        return ['success' => false, 'error' => 'L\'attestation porte la mention de ce qui a été vérifié.'];
+    }
+    db()->prepare("UPDATE pieces SET statut = 'recue', date_piece = CURDATE() WHERE id = ?")->execute([$pieceId]);
+    audit('depenses', 'piece_attestee', 'dossier', (int)$piece['dossier_id'],
+        $piece['numero'] . ' · ' . $piece['libelle'] . ' · ' . trim($mention));
+    return ['success' => true];
+}
+
 /** Une piece que le type prevoit mais que ce dossier-ci n'appelle pas. */
 function piece_sans_objet(int $pieceId, string $motif): array
 {
@@ -353,6 +388,11 @@ function dossier_imputer(int $dossierId, int $ligneId, float $quantite, float $v
     }
     if (!array_key_exists($unite, UNITES)) {
         return ['success' => false, 'error' => 'Unité hors liste.'];
+    }
+    if ($d['type'] === 'versement_dgi' && $nature !== 'memoire') {
+        return ['success' => false, 'error' => 'Un versement à la DGI ne consomme aucune ligne budgétaire : '
+            . 'l\'acompte est déjà compris dans le brut imputé à la prestation. Sa fiche d\'imputation '
+            . 'existe à titre de mémoire.'];
     }
     $montant = round($quantite * $valeurUnitaire, 2);
 
@@ -548,9 +588,33 @@ function dossier_approuver(int $dossierId): array
     if (user_role() !== 'coordinateur') {
         return ['success' => false, 'error' => 'L\'approbation d\'un dossier revient au Coordinateur.'];
     }
+    $suppleant = trim((string)(param('suppleant_approbation') ?? ''));
     if ((int)user_tiers_id() === (int)$d['tiers_id']) {
         return ['success' => false, 'error' => 'Vous êtes le bénéficiaire de ce dossier : l\'approbation revient au suppléant, '
-            . 'membre du comité exécutif signataire de la délégation.'];
+            . ($suppleant !== '' ? '« ' . $suppleant . ' »' : 'membre du comité exécutif signataire de la délégation')
+            . '. Elle ne se donne pas à soi-même.'];
+    }
+    // « Approbation en conflit : suppleance par le membre du comite executif
+    // signataire de la delegation » (annexe H). Quand le Coordinateur en titre est
+    // le beneficiaire, l'approbation n'est recevable que du suppleant designe.
+    $sc = db()->prepare(
+        "SELECT u.tiers_id FROM affectations a JOIN utilisateurs u ON u.id = a.utilisateur_id
+          WHERE a.projet_id = ? AND a.role = 'coordinateur'
+            AND a.date_debut <= CURDATE() AND (a.date_fin IS NULL OR a.date_fin >= CURDATE())"
+    );
+    $sc->execute([projet_id()]);
+    $coordinateurs = array_map('intval', $sc->fetchAll(PDO::FETCH_COLUMN));
+    if (in_array((int)$d['tiers_id'], $coordinateurs, true)) {
+        if ($suppleant === '') {
+            return ['success' => false, 'error' => 'Ce dossier bénéficie au Coordinateur : son approbation revient au suppléant, '
+                . 'et aucun suppléant n\'est désigné dans les paramètres du projet.'];
+        }
+        $sn = db()->prepare('SELECT nom FROM tiers WHERE id = ?');
+        $sn->execute([(int)user_tiers_id()]);
+        if (mb_strtolower(trim((string)$sn->fetchColumn())) !== mb_strtolower($suppleant)) {
+            return ['success' => false, 'error' => 'Ce dossier bénéficie au Coordinateur : seul le suppléant désigné, '
+                . '« ' . $suppleant .' », peut l\'approuver.'];
+        }
     }
     if (imputation_dossier($dossierId) === null) {
         return ['success' => false, 'error' => 'Un dossier s\'impute avant d\'être approuvé.'];

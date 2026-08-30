@@ -40,6 +40,21 @@ function document_generer(string $type, array $donnees, string $objetType, int $
             . 'l\'outil ne le génère pas, il le reçoit numérisé.'];
     }
 
+    // « Un rapport ne doit jamais agreger deux projets. Le generateur refuse de
+    // produire un document si les donnees qui l'alimentent portent plus d'un
+    // identifiant de projet, quelle que soit la maniere dont la selection a ete
+    // faite » (CDC 7.3). Le controle porte sur les donnees, pas sur la requete.
+    $projets = projets_dans($donnees);
+    if (count($projets) > 1) {
+        audit($module, 'document_refuse', 'document', $objetType . ':' . $objetId,
+            'Données portant ' . count($projets) . ' identifiants de projet : ' . implode(', ', $projets));
+        return ['success' => false, 'error' => 'Les données de ce document portent ' . count($projets)
+            . ' identifiants de projet. Un rapport n\'agrège jamais deux projets.'];
+    }
+    if ($projets && !in_array((string)projet_id(), $projets, true)) {
+        return ['success' => false, 'error' => 'Les données de ce document appartiennent à un autre projet.'];
+    }
+
     $regime = param('regime_signature_defaut', 'papier');
     $svc = new PdfService();
     $nom = projet_code() . '-' . strtoupper($type) . '-' . $objetId
@@ -60,6 +75,32 @@ function document_generer(string $type, array $donnees, string $objetType, int $
         . ($exemplaire !== '' ? ' · ' . $exemplaire : '')
         . ($statut === 'a_signer' ? ' · ' . count($signataires) . ' signature(s) attendue(s)' : ''));
     return ['success' => true, 'document_id' => $documentId, 'fichier_id' => (int)$res['id'], 'statut' => $statut];
+}
+
+/**
+ * Les identifiants de projet presents dans les donnees d'un document, a quelque
+ * profondeur qu'ils se trouvent. Les lignes venant de la base portent toutes leur
+ * projet_id : il suffit de les ramasser.
+ *
+ * @return string[] les identifiants distincts, en chaines pour la comparaison
+ */
+function projets_dans(array $donnees): array
+{
+    $vus = [];
+    $parcourir = function ($valeur) use (&$parcourir, &$vus): void {
+        if (!is_array($valeur)) {
+            return;
+        }
+        foreach ($valeur as $cle => $v) {
+            if ($cle === 'projet_id' && $v !== null && $v !== '') {
+                $vus[(string)(int)$v] = true;
+            } elseif (is_array($v)) {
+                $parcourir($v);
+            }
+        }
+    };
+    $parcourir($donnees);
+    return array_keys($vus);
 }
 
 /**

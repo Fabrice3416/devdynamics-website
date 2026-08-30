@@ -184,6 +184,49 @@ if (!empty($rect['success'])) {
         !periode_est_figee((int)$p1['id']), 'statut ' . ($vr['periode_statut'] ?? ''));
 }
 
+echo "\n== Ce qu'un rapport fige ne laisse plus faire\n";
+// « Les lignes du rapport financier sont stockees et non recalculees, de sorte
+// qu'une correction ulterieure dans un dossier ancien ne modifie jamais un rapport
+// deja envoye » (CDC 6.7).
+$avantLignes = [];
+foreach (lignes_financieres($rid) as $lf) {
+    $avantLignes[(int)$lf['ligne_id']] = (float)$lf['periode_total'];
+}
+rapport_calculer_lignes($rid);
+$apresLignes = [];
+foreach (lignes_financieres($rid) as $lf) {
+    $apresLignes[(int)$lf['ligne_id']] = (float)$lf['periode_total'];
+}
+cas('Modifier un rapport transmis sans version rectificative est sans effet',
+    $avantLignes == $apresLignes, count($avantLignes) . ' ligne(s) inchangées');
+$refus = (int)$pdo->query("SELECT COUNT(*) FROM journal_audit
+                            WHERE module = 'restitution' AND action = 'recalcul_refuse'")->fetchColumn();
+cas('Le refus de recalcul laisse sa trace au journal', $refus > 0, $refus . ' trace(s)');
+
+// « Le generateur refuse de produire un document si les donnees qui l'alimentent
+// portent plus d'un identifiant de projet » (CDC 7.3).
+cas('Les identifiants de projet se ramassent a toute profondeur',
+    count(projets_dans(['a' => ['projet_id' => 1], 'b' => [['projet_id' => 2]]])) === 2,
+    implode(', ', projets_dans(['a' => ['projet_id' => 1], 'b' => [['projet_id' => 2]]])));
+refuse_avec('Produire un rapport portant deux identifiants de projet est refuse',
+    document_generer('rapport_mensuel',
+        ['rapport' => ['projet_id' => 1], 'autre' => ['projet_id' => 2]],
+        'rapport', $rid, 'restitution'),
+    'deux identifiants de projet');
+
+// « Lorsqu'un rapport a fait l'objet d'une version rectificative, c'est celle-ci
+// qui alimente le cumul du rapport suivant » (CDC 6.4).
+if (!empty($rect['success'])) {
+    $pdo->prepare("UPDATE rapports SET statut = 'valide' WHERE id = ?")->execute([(int)$rect['id']]);
+    $ligneTest = budget_ligne('1.1');
+    $cumul = cumul_anterieur((int)$ligneTest['id'], '2099-12-31', 0);
+    $sr = $pdo->prepare("SELECT COUNT(*) FROM rapports r JOIN lignes_financieres lf ON lf.rapport_id = r.id
+                          WHERE r.projet_id = 1 AND r.rectifie_id IS NOT NULL AND lf.ligne_id = ?");
+    $sr->execute([(int)$ligneTest['id']]);
+    cas('Le cumul alimente depuis une version remplacee ecarte celle qu\'elle rectifie',
+        is_float($cumul) && (int)$sr->fetchColumn() >= 1, 'cumul ' . htg($cumul));
+}
+
 echo "\n== Solde de cloture\n";
 $solde = solde_cloture();
 cas('L\'enveloppe indirecte est plafonnee au taux du contrat',

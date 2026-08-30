@@ -237,6 +237,33 @@ $_SESSION['role_projet'] = 'raf';
 $res = dossier_imputer($dos, (int)$l21['id'], 1, 100, 'unite');
 cas('Un dossier clos ne se reimpute plus', empty($res['success']), $res['error'] ?? 'accepte');
 
+echo "\n== Mention hors taxe et suppleance\n";
+// « TCA incluse dans le prix final, aucun montant hors taxe » (annexe H) : la case
+// se coche apres verification sur pieces, elle ne recoit pas de fichier.
+$rTtc = dossier_ouvrir(['type' => 'achat_bien', 'tiers_id' => 2, 'objet' => 'REC4-mention hors taxe']);
+$dosTtc = (int)($rTtc['id'] ?? 0);
+$pieceTtc = null; $pieceFacture = null;
+foreach (pieces_dossier($dosTtc) as $pp) {
+    if ($pp['type'] === 'mention_ttc') { $pieceTtc = $pp; }
+    if ($pp['type'] === 'facture')     { $pieceFacture = $pp; }
+}
+cas('Les types d\'achat portent la case de mention hors taxe', $pieceTtc !== null);
+if ($pieceTtc !== null) {
+    refuse_avec('Une attestation sans mention est refusee',
+        piece_attester((int)$pieceTtc['id'], ''), 'mention');
+    $res = piece_attester((int)$pieceTtc['id'], 'Montants TTC vérifiés sur la facture');
+    cas('La case se coche par attestation, sans fichier', !empty($res['success']), $res['error'] ?? '');
+}
+if ($pieceFacture !== null) {
+    refuse_avec('Une piece ordinaire ne s\'atteste pas, elle se televerse',
+        piece_attester((int)$pieceFacture['id'], 'tentative'), 'fichier numérisé');
+}
+$_SESSION['role_projet'] = 'coordinateur';
+$suppleant = param('suppleant_approbation');
+cas('Le suppleant d\'approbation est un parametre du projet',
+    $suppleant === null || trim($suppleant) !== '', 'suppléant : ' . ($suppleant ?? 'non désigné'));
+$_SESSION['role_projet'] = 'raf';
+
 echo "\n== Abandon\n";
 $rAb = dossier_ouvrir(['type' => 'achat_bien', 'tiers_id' => 2, 'objet' => 'REC4-a abandonner']);
 $dosAb = (int)($rAb['id'] ?? 0);

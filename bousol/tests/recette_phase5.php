@@ -188,6 +188,11 @@ $impV = imputation_dossier((int)$resV['dossier_id']);
 cas('Sa fiche d\'imputation est pour memoire, a consommation nulle',
     $impV !== null && $impV['nature'] === 'memoire' && abs((float)$impV['montant']) < 0.01,
     $impV ? $impV['nature'] . ' ' . htg((float)$impV['montant']) : '');
+$_SESSION['role_projet'] = 'raf';
+refuse_avec('Consommer du budget par le dossier de versement a la DGI est refuse',
+    dossier_imputer((int)$resV['dossier_id'], (int)$lAE11['id'], 1, 1000, 'mois'),
+    'ne consomme aucune ligne');
+
 $soldeApres = dette_dgi_soldee(91);
 cas('La cloture reste bloquee tant que le versement n\'est pas regle',
     $soldeApres['soldee'] === false, $soldeApres['motif'] ?? '');

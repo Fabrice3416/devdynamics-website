@@ -43,6 +43,12 @@ const QUALITES_SIGNATURE = [
     'reglement'   => 'Signature de règlement (mandataire)',
 ];
 
+/**
+ * Les cases de checklist qui se cochent au lieu de recevoir un fichier : ce qu'on
+ * verifie en lisant les pieces, et dont l'outil ne garde que la trace.
+ */
+const PIECES_ATTESTEES = ['mention_ttc'];
+
 const UNITES = ['mois' => 'mois', 'jour' => 'jour', 'unite' => 'unité', 'personne' => 'personne', 'forfait' => 'forfait'];
 
 /** Les quatre qualites que couvre la table unique des tiers (CDC 8.2). */
@@ -91,6 +97,7 @@ const TYPES_DOSSIER = [
             ['recu_beneficiaire',  'Reçu signé du fournisseur',       'avant', null],
             ['bon_reception',      'Bon de réception',                'avant', null],
             ['preuve_paiement',    'Preuve de paiement',              'apres', null],
+            ['mention_ttc',        'Montants toutes taxes comprises, aucune mention hors taxe', 'apres', null],
         ],
     ],
     'service_compagnie' => [
@@ -105,6 +112,7 @@ const TYPES_DOSSIER = [
             ['bon_decaissement',   'Bon de décaissement',                        'avant', null],
             ['recu_beneficiaire',  'Reçu signé',                                 'avant', null],
             ['preuve_paiement',    'Preuve de paiement',                         'apres', null],
+            ['mention_ttc',        'Montants toutes taxes comprises, aucune mention hors taxe', 'apres', null],
         ],
     ],
     'service_particulier' => [
@@ -134,6 +142,7 @@ const TYPES_DOSSIER = [
             ['bon_decaissement',  'Bon de décaissement',            'avant', null],
             ['recu_beneficiaire', 'Reçu',                           'avant', null],
             ['preuve_paiement',   'Preuve de paiement',             'apres', null],
+            ['mention_ttc',        'Montants toutes taxes comprises, aucune mention hors taxe', 'apres', null],
         ],
     ],
     'versement_dgi' => [
@@ -159,6 +168,7 @@ const TYPES_DOSSIER = [
             ['bon_decaissement',        'Bon de décaissement',            'avant', null],
             ['recu_beneficiaire',       'Reçu signé',                     'avant', null],
             ['preuve_paiement',         'Preuve de virement',             'apres', null],
+            ['mention_ttc',        'Montants toutes taxes comprises, aucune mention hors taxe', 'apres', null],
         ],
     ],
     'petite_caisse' => [
@@ -273,6 +283,7 @@ const PARAMETRES_REGISTRE = [
     'delai_alerte_sauvegarde_jours' => ['Délai d\'alerte d\'absence de sauvegarde (jours)', 'int', null, true],
     'enveloppe_indirecte_figee'     => ['Enveloppe indirecte figée à la bascule (HTG)', 'decimal', null, false],
     'mention_bailleur'              => ['Mention longue du bailleur sur les documents', 'texte', null, true],
+    'suppleant_approbation'         => ['Suppléant d\'approbation, membre du comité exécutif', 'texte', null, true],
     'representant_legal'            => ['Représentant légal (nom et fonction)',       'texte',   null, true],
 ];
 
@@ -312,6 +323,7 @@ const PARAMETRES_INITIAUX = [
     'delai_alerte_sauvegarde_jours' => null,
     'enveloppe_indirecte_figee'     => null,
     'mention_bailleur'              => null,
+    'suppleant_approbation'         => null,
     'representant_legal'            => null,
 ];
 

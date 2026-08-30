@@ -160,6 +160,22 @@ cas('Deux appositions depuis la meme session refusees', !$r['success'], $r['erro
 $r = apposer($d2, 'reglement', $mdp);
 cas('Signature de reglement par un non-mandataire refusee', !$r['success'], $r['error'] ?? '');
 
+// « Un specimen n'est apposable que par son titulaire » (CDC 1.8) : la fonction ne
+// lit que le specimen de l'utilisateur courant, il n'y a pas de chemin pour en
+// designer un autre. On verifie que la lecture est bien nominative.
+cas('Un specimen ne se lit que sous son titulaire',
+    specimen_actif($u2) !== null && specimen_actif(999999) === null,
+    'aucun specimen pour un titulaire inconnu');
+
+echo "\n== Habilitation a l'outil\n";
+// require_admin_outil() est une garde de page : elle s'arrete. C'est le predicat
+// qu'elle consulte qui se teste ici, et c'est lui qui porte la regle.
+$_SESSION['admin_outil'] = false;
+cas('Creer un projet ou s\'auto-affecter sans etre administrateur de l\'outil est refuse',
+    user_est_admin_outil() === false);
+$_SESSION['admin_outil'] = true;
+cas('L\'administrateur de l\'outil, lui, passe', user_est_admin_outil() === true);
+
 echo "\n== Pieces\n";
 $empreinte = $acte['empreinte'];
 [$deja, $motif] = empreinte_deja_utilisee($empreinte);

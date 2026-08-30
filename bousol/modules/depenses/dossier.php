@@ -59,6 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 : 'Document produit. À imprimer, signer à la main, puis verser numérisé.');
             redirect(base_path('modules/depenses/dossier.php?id=' . $id));
         }
+    } elseif ($action === 'attester') {
+        $res = piece_attester((int)($_POST['piece_id'] ?? 0), (string)($_POST['mention'] ?? ''));
     } elseif ($action === 'sans_objet') {
         $res = piece_sans_objet((int)($_POST['piece_id'] ?? 0), (string)($_POST['motif'] ?? ''));
     } elseif ($action === 'proforma') {
@@ -287,6 +289,16 @@ require __DIR__ . '/_nav.php';
                             <?php if ($p['empreinte']): ?><br><small class="text-muted"><?= e(substr($p['empreinte'], 0, 12)) ?>…</small><?php endif; ?>
                         <?php elseif ($p['statut'] === 'sans_objet'): ?>
                             <span class="text-muted">sans objet</span>
+                        <?php elseif ($peutSaisir && in_array($p['type'], PIECES_ATTESTEES, true)
+                                      && !in_array($d['statut'], ['clos', 'abandonne'], true)): ?>
+                            <form method="post" class="d-flex gap-1 justify-content-end">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="action" value="attester">
+                                <input type="hidden" name="piece_id" value="<?= (int)$p['id'] ?>">
+                                <input class="form-control form-control-sm" name="mention"
+                                       placeholder="vérifié sur pièces" required>
+                                <button class="btn btn-sm btn-outline-secondary">Attester</button>
+                            </form>
                         <?php elseif ($peutSaisir && !in_array($d['statut'], ['clos', 'abandonne'], true)): ?>
                             <?php if (piece_generable((string)$p['type'])): ?>
                             <form method="post" class="d-inline"><?= csrf_field() ?>

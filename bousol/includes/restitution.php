@@ -230,10 +230,20 @@ function rapport_ouvrir(string $type, int $periodeId, string $commentaire = ''):
  * des valeurs unitaires differentes. Sur une ligne non consommee, la quantite etant
  * nulle, la colonne reste vide.
  */
-function rapport_calculer_lignes(int $rapportId): void
+function rapport_calculer_lignes(int $rapportId, bool $forceFige = false): void
 {
     $r = rapport_restitution($rapportId);
     if ($r === null) {
+        return;
+    }
+    // « Les lignes du rapport financier sont stockees et non recalculees, de sorte
+    // qu'une correction ulterieure dans un dossier ancien ne modifie jamais un
+    // rapport deja envoye » (CDC 6.7). Une correction passe par la rectification,
+    // qui est un autre rapport - d'ou le seul appel autorise sur un rapport fige,
+    // celui de la validation qui arrete les chiffres une derniere fois.
+    if ($r['statut'] !== 'brouillon' && !$forceFige) {
+        audit('restitution', 'recalcul_refuse', 'rapport', $rapportId,
+            'Rapport ' . $r['statut'] . ' : ses lignes sont figées, une correction passe par la rectification');
         return;
     }
     $pdo = db();
@@ -368,7 +378,7 @@ function rapport_valider(int $rapportId): array
     $pdo->beginTransaction();
     try {
         // Les lignes sont recalculees une derniere fois, puis plus jamais.
-        rapport_calculer_lignes($rapportId);
+        rapport_calculer_lignes($rapportId, true);
         $pdo->prepare("UPDATE rapports SET statut = 'valide', valide_par = ? WHERE id = ?")
             ->execute([user_id(), $rapportId]);
         $pdo->prepare("UPDATE periodes SET statut = 'figee', figee_le = NOW(), figee_par = ? WHERE id = ?")
@@ -480,7 +490,7 @@ function rapport_rectifier(int $rapportId, string $motif): array
         return ['success' => false, 'error' => 'Rectification impossible.'];
     }
 
-    rapport_calculer_lignes($id);
+    rapport_calculer_lignes($id, true);
     $ecarts = [];
     foreach (lignes_financieres($id) as $lf) {
         $avant = $ancien[(int)$lf['ligne_id']] ?? 0.0;
