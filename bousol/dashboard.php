@@ -28,18 +28,25 @@ $audit = $st->fetchAll();
  *
  * Trois familles sont ecartees, non par oubli mais parce qu'elles ne se saisissent
  * pas : celles que l'outil pose lui-meme (l'enveloppe indirecte figee a la bascule,
- * le seuil de blocage de variation), la seconde borne quand le projet n'a pas de
- * phase de suivi, et le couple contrat / date d'ancrage que l'alerte
- * d'initialisation annonce deja plus haut.
+ * le seuil de blocage de variation), celles qui ne valent que pour un projet ayant
+ * une phase de suivi post-cloture, et le couple contrat / date d'ancrage que
+ * l'alerte d'initialisation annonce deja plus haut.
+ *
+ * Koule Ki Pale ferme en decembre 2026 sans phase 2 : lui reclamer un delai
+ * d'accuse de reception et un delai de correctif, c'est lui demander de parametrer
+ * ce qui n'arrivera pas.
  */
+const PARAMETRES_PHASE_2 = ['seconde_borne', 'delai_accuse_phase2_heures', 'delai_correctif_phase2_jours'];
+
 $aDefinir = [];
 $poseParLOutil = array_keys(array_filter(PARAMETRES_REGISTRE, fn($d) => $d[3] === false));
 $dejaAnnonces  = ['numero_contrat', 'date_debut_execution'];
+$avecPhase2    = param('suivi_post_cloture', '0') === '1';
 foreach (PARAMETRES_REGISTRE as $k => $def) {
     if (in_array($k, $poseParLOutil, true) || in_array($k, $dejaAnnonces, true)) {
         continue;
     }
-    if ($k === 'seconde_borne' && param('suivi_post_cloture', '0') !== '1') {
+    if (!$avecPhase2 && in_array($k, PARAMETRES_PHASE_2, true)) {
         continue;
     }
     if (param($k) === null) {
