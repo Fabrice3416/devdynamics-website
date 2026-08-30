@@ -29,12 +29,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/calendrier.php';
-
-const ROLES_LIBELLE = [
-    'coordinateur' => 'Coordinateur',
-    'raf'          => 'Responsable Administratif et Financier',
-    'mandataire'   => 'Mandataire',
-];
+require_once __DIR__ . '/referentiels.php';   // ROLES_LIBELLES
 
 /** cle => [libelle de l'action, cellules de la phase 1, cellules de la phase 2] */
 const ANNEXE_B = [
@@ -162,7 +157,7 @@ function droit(string $action, ?string $role = null, ?string $phase = null): str
 function droit_ecrivains(string $action, ?string $phase = null): array
 {
     $roles = [];
-    foreach (array_keys(ROLES_LIBELLE) as $r) {
+    foreach (array_keys(ROLES_LIBELLES) as $r) {
         if (str_starts_with(droit($action, $r, $phase), 'E')) {
             $roles[] = $r;
         }
@@ -204,7 +199,7 @@ function droit_ecriture(string $action, ?string $acte = null): ?string
     if ($ecrivains === []) {
         return $lib . ' est fermé pendant la phase de suivi post-clôture (annexe B).';
     }
-    $noms = array_map(fn($r) => ROLES_LIBELLE[$r], $ecrivains);
+    $noms = array_map(fn($r) => ROLES_LIBELLES[$r], $ecrivains);
     return $lib . ' revient au ' . implode(' et au ', $noms) . ' (annexe B).';
 }
 

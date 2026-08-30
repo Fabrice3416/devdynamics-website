@@ -147,7 +147,7 @@ foreach ($phases as $phase => $def) {
         $constate = [];
         $conforme = true;
 
-        foreach (array_keys(ROLES_LIBELLE) as $role) {
+        foreach (array_keys(ROLES_LIBELLES) as $role) {
             endosser($role);
             $cellule = droit($action, $role, $phase);
             $attendu[] = substr($role, 0, 4) . ' ' . $cellule;

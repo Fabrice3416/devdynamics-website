@@ -227,7 +227,7 @@ function apposer(int $documentId, string $qualite, string $password): array
     $attendues = array_values(array_filter(DOCUMENTS_GENERES[(string)$doc['type']][1] ?? [],
         fn($r) => !in_array($r, ['beneficiaire', 'prestataire'], true)));
     if (array_intersect($attendues, qualites_catalogue_utilisateur()) === []) {
-        $libelles = array_map(fn($r) => ROLES_LIBELLE[$r] ?? $r, $attendues);
+        $libelles = array_map(fn($r) => ROLES_LIBELLES[$r] ?? $r, $attendues);
         audit('signature', 'apposition_refusee', 'document', $documentId,
             'Qualité hors du catalogue · attendu ' . ($libelles ? implode(', ', $libelles) : 'aucun signataire'));
         return ['success' => false, 'error' => $libelles === []
