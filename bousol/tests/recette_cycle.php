@@ -457,16 +457,31 @@ foreach (ANNEXE_D as $type => $guide) {
 echo "\n== De la creation a la cloture, type par type\n";
 
 // La petite caisse doit d'abord etre approvisionnee : elle ne regle qu'en especes,
-// et on ne sort pas d'especes d'une caisse vide.
+// et on ne sort pas d'especes d'une caisse vide. Mais on ne renfloue pas non plus
+// sans avoir arrete la caisse : « le renflouement suppose la justification des
+// depenses anterieures » (CDC 4.7). L'arrete precede donc le cheque.
 endosser('raf');
-$renf = caisse_renflouer((int)$caisse['id'], 20000.0, $tiers['caissier'], '000RECC');
+$soldeTheorique = solde_compte((int)$caisse['id']);
+$arr = arrete_caisse_creer((int)$caisse['id'], date('Y-m-d'), $soldeTheorique, $tiers['caissier'],
+    'RECC arrêté préalable au renflouement');
+cas('La caisse est arrêtée avant d\'être renflouée', !empty($arr['success']),
+    $arr['error'] ?? ('solde constaté ' . htg($soldeTheorique)));
+// Le fonds fixe est plafonne quand le projet l'a parametre : on ne renfloue pas
+// au-dela, la recette n'ayant pas a forcer une regle qu'elle est censee respecter.
+$plafondCaisse = param('plafond_petite_caisse');
+$aRenflouer = $plafondCaisse === null ? 20000.0
+    : max(0.0, min(20000.0, round((float)$plafondCaisse - $soldeTheorique, 2)));
+$renf = $aRenflouer <= 0 ? ['success' => false, 'error' => 'fonds fixe déjà au plafond']
+                         : caisse_renflouer((int)$caisse['id'], $aRenflouer, $tiers['caissier'], '000RECC');
 if (!empty($renf['success'])) {
     reglement_valider((int)$renf['id'], $tiers['mandataireA'], 'signature_bancaire');
     reglement_valider((int)$renf['id'], $tiers['mandataireB'], 'signature_bancaire');
     $exec = reglement_executer((int)$renf['id'], date('Y-m-d'));
     cas('La petite caisse est approvisionnée par chèque nominatif',
-        !empty($exec['success']), $exec['error'] ?? htg(20000.0));
-    $reglementsExecutes['banque'] += 20000.0;
+        !empty($exec['success']), $exec['error'] ?? htg($aRenflouer));
+    if (!empty($exec['success'])) {
+        $reglementsExecutes['banque'] += $aRenflouer;
+    }
 } else {
     cas('La petite caisse est approvisionnée par chèque nominatif', false, $renf['error'] ?? '');
 }
@@ -507,16 +522,15 @@ if (!isset($dossiers['versement_dgi']) || !isset($versementId)) {
     endosser('raf');
     poser_pieces($pdo, $dgi['id'], 'avant');
 
-    // Son imputation est pour memoire, a zero : rien ne peut se payer depuis le
-    // dossier, et c'est juste - un versement a la DGI ne consomme aucune ligne.
-    refuse_avec('Le règlement ne se demande pas depuis le dossier, dont l\'imputation est à zéro',
-        dossier_demander_reglement($dgi['id'], ['compte_id' => (int)$banque['id']]), 'strictement positif');
-
     endosser('coordinateur');
     $res = dossier_approuver($dgi['id']);
     cas('Le dossier de versement s\'approuve', !empty($res['success']), $res['error'] ?? '');
 
     endosser('raf');
+    // Son imputation est pour memoire, a zero : rien ne peut se payer depuis le
+    // dossier, et c'est juste - un versement a la DGI ne consomme aucune ligne.
+    refuse_avec('Le règlement ne se demande pas depuis le dossier, dont l\'imputation est à zéro',
+        dossier_demander_reglement($dgi['id'], ['compte_id' => (int)$banque['id']]), 'strictement positif');
     $r = reglement_creer([
         'mode'            => 'virement',
         'beneficiaire_id' => $dgiTiers,
@@ -573,6 +587,7 @@ $complement = [
     ['achat_bien',        'fournisseur',  'RECC matériels de formation',      'AE2.2', 1.0, 9000.0,  'forfait',  'BQ'],
 ];
 foreach ($complement as $i => [$type, $cleTiers, $objet, $code, $qte, $pu, $unite, $compte]) {
+    endosser('raf');   // mener_a_cloture() a rendu la main en Coordinateur
     $ligne = budget_ligne($code);
     $montant = round($qte * $pu, 2);
     $res = $ligne === null ? ['success' => false, 'error' => 'ligne ' . $code . ' absente']
@@ -668,8 +683,8 @@ cas('La banque a diminué de ce qu\'elle a réglé',
     abs($deltaBanque + round($reglementsExecutes['banque'], 2)) < 0.01,
     htg($deltaBanque) . ' de variation · ' . htg(-$reglementsExecutes['banque']) . ' attendu');
 cas('La caisse porte son approvisionnement moins ses dépenses',
-    abs($deltaCaisse - round(20000.0 - $reglementsExecutes['caisse'], 2)) < 0.01,
-    htg($deltaCaisse) . ' de variation · ' . htg(20000.0 - $reglementsExecutes['caisse']) . ' attendu');
+    abs($deltaCaisse - round($aRenflouer - $reglementsExecutes['caisse'], 2)) < 0.01,
+    htg($deltaCaisse) . ' de variation · ' . htg($aRenflouer - $reglementsExecutes['caisse']) . ' attendu');
 
 // (f) Le rapprochement bancaire, oppose au releve.
 $dateReleve = fin_de_mois($fin);

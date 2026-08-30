@@ -104,7 +104,8 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE lr FROM lignes_rapprochement lr JOIN rapprochements ra ON ra.id = lr.rapprochement_id
           WHERE ra.date_releve = '2026-06-30'",
         "DELETE FROM rapprochements WHERE date_releve = '2026-06-30'",
-        "DELETE FROM arretes_caisse WHERE commentaire LIKE 'REC3-%' OR date = '2026-06-30'",
+        "DELETE FROM arretes_caisse WHERE commentaire LIKE 'REC3-%' OR commentaire LIKE 'RECC %'
+             OR date = '2026-06-30'",
 
         // Bascule : le projet revient en execution, ses reouvertures disparaissent.
         "DELETE FROM reouvertures WHERE projet_id = 1",
