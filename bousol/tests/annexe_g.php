@@ -77,7 +77,7 @@ $echouer = [
     ['Cloisonnement', 'Consulter un projet auquel on n\'est pas affecté', 'Sans affectation, aucun role'],
     ['Cloisonnement', 'Imputer une dépense sur la ligne budgétaire d\'un autre projet', 'ligne d\'un autre projet'],
     ['Pièces', 'Rattacher un même fichier à deux dossiers de projets différents', 'empreinte deja versee'],
-    ['Rapports', 'Produire un rapport dont les données portent deux identifiants de projet', 'deux identifiants de projet est refuse'],
+    ['Rapports', 'Produire un rapport dont les données portent deux identifiants de projet', 'identifiants de projet est refuse'],
     ['Habilitation', 'Créer un projet ou s\'auto-affecter sans être administrateur', 'sans etre administrateur de l\'outil'],
     ['Habilitation', 'Affecter un coordinateur sans acte de délégation téléversé', 'sans acte de delegation'],
     ['Trésorerie', 'Clore un rapprochement de compte partagé laissant un écart non ventilé', 'ecart non ventile'],

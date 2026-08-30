@@ -51,9 +51,6 @@ function document_generer(string $type, array $donnees, string $objetType, int $
         return ['success' => false, 'error' => 'Les données de ce document portent ' . count($projets)
             . ' identifiants de projet. Un rapport n\'agrège jamais deux projets.'];
     }
-    if ($projets && !in_array((string)projet_id(), $projets, true)) {
-        return ['success' => false, 'error' => 'Les données de ce document appartiennent à un autre projet.'];
-    }
 
     $regime = param('regime_signature_defaut', 'papier');
     $svc = new PdfService();

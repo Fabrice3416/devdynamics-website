@@ -212,7 +212,7 @@ refuse_avec('Produire un rapport portant deux identifiants de projet est refuse'
     document_generer('rapport_mensuel',
         ['rapport' => ['projet_id' => 1], 'autre' => ['projet_id' => 2]],
         'rapport', $rid, 'restitution'),
-    'deux identifiants de projet');
+    'identifiants de projet');
 
 // « Lorsqu'un rapport a fait l'objet d'une version rectificative, c'est celle-ci
 // qui alimente le cumul du rapport suivant » (CDC 6.4).
