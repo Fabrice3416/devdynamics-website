@@ -425,8 +425,8 @@ if ($signataire === null) {
             $a1['error'] ?? ('code ' . ($a1['code'] ?? '')));
         cas('Le document est des lors signe', ($a1['statut'] ?? '') === 'signe', (string)($a1['statut'] ?? ''));
 
-        refuse_avec('Le meme signataire ne signe pas deux fois la meme version',
-            apposer($doc1, 'approbation', RECS_MOTDEPASSE), 'déjà signé');
+        refuse_avec('Une version signee ne se resigne pas',
+            apposer($doc1, 'approbation', RECS_MOTDEPASSE), 'attente de signature');
 
         // « Le document est fige apres apposition, toute modification imposant une
         // nouvelle version et une nouvelle signature » (CDC 1.8).
@@ -463,6 +463,27 @@ if ($signataire === null) {
                         && $l['empreinte_avant'] !== null && $l['empreinte_apres'] !== null;
         }
         cas('Chaque apposition porte l\'empreinte du document avant et apres elle', $chainees);
+
+        // « Deux appositions ne peuvent venir ni du meme compte ni de la meme
+        // session » (CDC 1.8). La regle du meme compte ne se laisse eprouver que sur
+        // un document qui attend deux signatures : a signature unique, le statut
+        // ferme le document avant qu'elle ait a jouer.
+        $st = $pdo->prepare("SELECT id FROM pieces WHERE dossier_id = ? AND type = 'bon_decaissement'");
+        $st->execute([$dosAvant]);
+        $pieceDec = (int)($st->fetchColumn() ?: 0);
+        $vd = $pieceDec === 0 ? ['success' => false, 'error' => 'pièce bon_decaissement introuvable']
+                              : dossier_generer_piece($pieceDec);
+        cas('Le bon de decaissement attend deux signatures',
+            !empty($vd['success']) && signatures_attendues('bon_decaissement') === 2,
+            $vd['error'] ?? (signatures_attendues('bon_decaissement') . ' attendue(s)'));
+        if (!empty($vd['success'])) {
+            $ad = apposer((int)$vd['document_id'], 'approbation', RECS_MOTDEPASSE);
+            cas('Une premiere signature y est posee, le document restant a signer',
+                !empty($ad['success']) && ($ad['statut'] ?? '') === 'a_signer',
+                $ad['error'] ?? ('statut ' . ($ad['statut'] ?? '')));
+            refuse_avec('Le meme compte ne signe pas deux fois le meme document',
+                apposer((int)$vd['document_id'], 'approbation', RECS_MOTDEPASSE), 'déjà signé');
+        }
 
         // Le versionnement suit l'apposition, et elle seule : un document jamais
         // signe se reproduit sans devenir une version nouvelle - sans quoi les trois

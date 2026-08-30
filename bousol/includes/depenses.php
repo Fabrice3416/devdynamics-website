@@ -964,7 +964,7 @@ function dossier_generer_piece(int $pieceId): array
             $sr = db()->prepare("SELECT r.mode, c.code, c.libelle FROM reglements r JOIN comptes c ON c.id = r.compte_id
                                   WHERE r.projet_id = ? AND r.origine_ref IN (?, ?) AND r.statut <> 'annule' ORDER BY r.id DESC LIMIT 1");
             $sr->execute([projet_id(), 'dossier:' . $d['id'], 'dossier_avance:' . $d['id']]);
-            $reglement = $sr->fetch();
+            $reglement = $sr->fetch() ?: null;
             $donnees += [
                 'beneficiaire' => $tiers,
                 'montant'      => (float)$imputation['montant'],
