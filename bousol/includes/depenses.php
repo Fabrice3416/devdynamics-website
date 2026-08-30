@@ -141,6 +141,20 @@ function concurrence_requise(float $montant, string $typeDossier): bool
     if ($seuil === null) {
         return false;
     }
+    // La mise en concurrence ne vise que les types auxquels l'annexe D donne une
+    // case de proforma. Le service a un particulier, les frais de voyage, le
+    // remboursement de frais avances, la petite caisse et le versement a la DGI
+    // n'en portent aucune : leur opposer le seuil, c'etait exiger une piece que
+    // leur checklist ne comporte pas - un dossier qu'aucun role n'aurait pu payer.
+    $porteProforma = false;
+    foreach (TYPES_DOSSIER[$typeDossier]['pieces'] ?? [] as [$code, $libelle, $moment, $condition]) {
+        if ($condition === 'seuil_proformas') {
+            $porteProforma = true;
+        }
+    }
+    if (!$porteProforma) {
+        return false;
+    }
     if (param('seuil_concurrence_perimetre', 'tout_achat') === 'equipements_materiels'
         && $typeDossier !== 'achat_bien') {
         return false;

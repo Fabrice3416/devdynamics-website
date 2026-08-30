@@ -188,6 +188,52 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id WHERE d.numero LIKE 'REC%'",
         "DELETE FROM dossiers WHERE numero LIKE 'REC%'",
 
+        // Cycle complet (RECC). La tresorerie d'abord, puis les dossiers, puis ce qui
+        // les a fait naitre du cote de Remuneration, et les tiers en dernier.
+        "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id
+          WHERE e.origine_ref LIKE 'versement_dgi:%' OR e.libelle LIKE '%RECC%'",
+        "DELETE FROM ecritures WHERE origine_ref LIKE 'versement_dgi:%' OR libelle LIKE '%RECC%'",
+        "DELETE m FROM mouvements m JOIN ecritures e ON e.id = m.ecriture_id
+           JOIN reglements r ON r.id = e.reglement_id
+          WHERE r.objet LIKE '%RECC%' OR r.origine_ref LIKE 'versement_dgi:%'",
+        "DELETE e FROM ecritures e JOIN reglements r ON r.id = e.reglement_id
+          WHERE r.objet LIKE '%RECC%' OR r.origine_ref LIKE 'versement_dgi:%'",
+        "DELETE v FROM validations_reglement v JOIN reglements r ON r.id = v.reglement_id
+          WHERE r.objet LIKE '%RECC%' OR r.origine_ref LIKE 'versement_dgi:%'",
+        "DELETE FROM reglements WHERE objet LIKE '%RECC%' OR origine_ref LIKE 'versement_dgi:%'",
+        "DELETE a FROM appositions a JOIN documents d ON d.id = a.document_id
+           JOIN dossiers dd ON dd.id = d.objet_id
+          WHERE d.objet_type = 'dossier' AND (dd.objet LIKE 'RECC %' OR dd.objet LIKE 'Honoraires RECC%'
+             OR dd.objet LIKE 'Acomptes retenus du mois %')",
+        "UPDATE pieces p JOIN dossiers d ON d.id = p.dossier_id SET p.document_id = NULL
+          WHERE d.objet LIKE 'RECC %' OR d.objet LIKE 'Honoraires RECC%'
+             OR d.objet LIKE 'Acomptes retenus du mois %'",
+        "DELETE d FROM documents d JOIN dossiers dd ON dd.id = d.objet_id
+          WHERE d.objet_type = 'dossier' AND (dd.objet LIKE 'RECC %' OR dd.objet LIKE 'Honoraires RECC%'
+             OR dd.objet LIKE 'Acomptes retenus du mois %')",
+        "DELETE p FROM proformas p JOIN dossiers d ON d.id = p.dossier_id WHERE d.objet LIKE 'RECC %'",
+        "DELETE p FROM pieces p JOIN dossiers d ON d.id = p.dossier_id
+          WHERE d.objet LIKE 'RECC %' OR d.objet LIKE 'Honoraires RECC%'
+             OR d.objet LIKE 'Acomptes retenus du mois %'",
+        "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id
+          WHERE d.objet LIKE 'RECC %' OR d.objet LIKE 'Honoraires RECC%'
+             OR d.objet LIKE 'Acomptes retenus du mois %'",
+        "DELETE FROM dossiers WHERE objet LIKE 'RECC %' OR objet LIKE 'Honoraires RECC%'
+             OR objet LIKE 'Acomptes retenus du mois %'",
+        "DELETE p FROM prestations p JOIN contrats c ON c.id = p.contrat_id
+           JOIN tiers t ON t.id = c.tiers_id WHERE t.nom LIKE 'RECC %'",
+        "DELETE r FROM rapports_execution r JOIN contrats c ON c.id = r.contrat_id
+           JOIN tiers t ON t.id = c.tiers_id WHERE t.nom LIKE 'RECC %'",
+        "DELETE FROM contrats WHERE fonction LIKE 'RECC %'",
+        "UPDATE prestations SET versement_dgi_id = NULL
+          WHERE versement_dgi_id IN (SELECT id FROM (SELECT id FROM versements_dgi) v)",
+        "DELETE d FROM documents d JOIN versements_dgi v ON v.id = d.objet_id
+          WHERE d.objet_type = 'versement_dgi'",
+        "DELETE FROM versements_dgi WHERE projet_id = 1",
+        "DELETE lf FROM lignes_financieres lf JOIN rapports r ON r.id = lf.rapport_id
+          WHERE r.contenu_json LIKE '%RECC%'",
+        "DELETE FROM rapports WHERE contenu_json LIKE '%RECC%'",
+
         // Scenarios de bout en bout : appositions, documents, puis les dossiers.
         // Les pieces pointent vers leurs documents : on defait le lien avant.
         "DELETE a FROM appositions a JOIN documents d ON d.id = a.document_id
@@ -210,6 +256,7 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE FROM beneficiaires WHERE nom LIKE 'REC2 %'",
         "DELETE FROM tiers WHERE nom LIKE 'REC3 %'",
         "DELETE FROM tiers WHERE nom LIKE 'REC5 %'",
+        "DELETE FROM tiers WHERE nom LIKE 'RECC %'",
         "DELETE FROM tiers WHERE nom IN ('Fournisseur Recette', 'Doublon Recette', 'Sans NIF 1', 'Sans NIF 2')",
         "UPDATE tiers SET nif = NULL WHERE nif = '001-234-567-8'",
 

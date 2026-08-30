@@ -656,7 +656,18 @@ function dette_dgi_soldee(int $mois, ?int $projetId = null): array
     return ['soldee' => true];
 }
 
-/** Constate le reglement du versement et attend le recu scelle de la DGI. */
+/**
+ * Constate le reglement du versement et attend le recu scelle de la DGI.
+ *
+ * Le reglement d'un versement a la DGI ne se demande pas depuis son dossier :
+ * l'imputation y est pour memoire, a zero, et dossier_demander_reglement() refuse
+ * a juste titre de payer plus que ce qui est impute. Il se saisit dans Comptes sur
+ * l'origine « versement_dgi », la seule que l'ecriture type sache traduire en un
+ * debit de la dette et un credit de la banque (CDC 4.8). C'est donc cette origine
+ * qu'il faut chercher ici : la chercher sous « dossier: » revenait a attendre un
+ * reglement qui ne pouvait pas exister, et le versement restait « a verser » pour
+ * toujours - avec lui la dette du mois, et donc la cloture de la periode.
+ */
 function versement_dgi_constater(int $versementId): void
 {
     $st = db()->prepare('SELECT dossier_ref FROM versements_dgi WHERE id = ? AND projet_id = ?');
@@ -665,14 +676,18 @@ function versement_dgi_constater(int $versementId): void
     if ($ref === false) {
         return;
     }
-    $sd = db()->prepare("SELECT COUNT(*) FROM dossiers d
-                          JOIN reglements r ON r.origine_ref IN (CONCAT('dossier:', d.id), CONCAT('dossier_avance:', d.id))
-                          WHERE d.projet_id = ? AND d.numero = ? AND r.statut = 'execute'");
-    $sd->execute([projet_id(), $ref]);
-    if ((int)$sd->fetchColumn() > 0) {
-        db()->prepare("UPDATE versements_dgi SET statut = 'verse' WHERE id = ? AND statut = 'a_verser'")
-            ->execute([$versementId]);
+    $sd = db()->prepare("SELECT COUNT(*) FROM reglements
+                          WHERE projet_id = ? AND origine_ref = ? AND statut = 'execute'");
+    $sd->execute([projet_id(), 'versement_dgi:' . $versementId]);
+    if ((int)$sd->fetchColumn() === 0) {
+        return;
     }
+    db()->prepare("UPDATE versements_dgi SET statut = 'verse' WHERE id = ? AND statut = 'a_verser'")
+        ->execute([$versementId]);
+    // Le dossier suit : regle, il attend son recu scelle avant de se clore.
+    db()->prepare("UPDATE dossiers SET statut = 'regle'
+                    WHERE projet_id = ? AND numero = ? AND statut = 'approuve'")
+        ->execute([projet_id(), $ref]);
 }
 
 /** Le recu scelle de la DGI clot le circuit. */
