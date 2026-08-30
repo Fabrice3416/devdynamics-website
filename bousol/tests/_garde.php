@@ -201,7 +201,10 @@ function recette_nettoyer(PDO $pdo): void
         "DELETE p FROM pieces p JOIN dossiers d ON d.id = p.dossier_id WHERE d.objet LIKE 'RECB %'",
         "DELETE i FROM imputations i JOIN dossiers d ON d.id = i.dossier_id WHERE d.objet LIKE 'RECB %'",
         "DELETE FROM dossiers WHERE objet LIKE 'RECB %'",
-        "DELETE FROM parametres WHERE motif LIKE 'RECB %' OR motif LIKE 'RECS %'",
+        // Les parametres ne se nettoient pas : un trigger refuse la suppression, le
+        // registre etant en ajout seul (annexe F). La recette des scenarios rend
+        // leurs valeurs comme le ferait le Coordinateur, en versant une version
+        // nouvelle - et ses assertions comptent des ecarts, non des totaux.
 
         // Tiers : beneficiaires puis personnes.
         "DELETE FROM beneficiaires WHERE nom LIKE 'REC2 %'",

@@ -201,7 +201,13 @@ $_SESSION['est_mandataire'] = false;
 
 echo "\n== Parametres : un seuil modifie en cours de projet\n";
 
+// Le registre est en ajout seul : la recette ne peut pas effacer ses versions, et
+// n'essaie pas. Elle retient ce qui etait en vigueur, compte des ecarts plutot que
+// des totaux, et rend la valeur d'avant en en versant une nouvelle - ce que ferait
+// le Coordinateur.
 endosser('coordinateur');
+$seuilAvant = param('seuil_proformas');
+$histAvant  = count(param_historique('seuil_proformas'));
 param_set('seuil_proformas', '50000', 'RECB seuil initial');
 param_oublier();
 cas('Le seuil de mise en concurrence est pose a 50 000', param('seuil_proformas') === '50000',
@@ -245,22 +251,29 @@ cas('Sa case « proforma » est attendue et obligatoire',
 
 endosser('coordinateur');
 $hist = param_historique('seuil_proformas');
-$versionsRecette = array_values(array_filter($hist, fn($h) => str_starts_with((string)$h['motif'], 'RECB ')));
-cas('Les deux versions du seuil coexistent, la plus recente en tete',
-    count($versionsRecette) >= 2 && $versionsRecette[0]['valeur'] === '10000',
-    count($versionsRecette) . ' version(s) · ' . implode(' ← ', array_column($versionsRecette, 'valeur')));
-cas('Chaque version porte son motif et son auteur',
-    $versionsRecette !== [] && $versionsRecette[0]['motif'] !== null && $versionsRecette[0]['auteur_id'] !== null,
-    (string)($versionsRecette[0]['motif'] ?? ''));
+cas('Les deux modifications ajoutent deux versions, sans en remplacer aucune',
+    count($hist) === $histAvant + 2, count($hist) . ' version(s) pour ' . $histAvant . ' avant');
 
-// Une version datee du futur est enregistree mais ne s'applique pas encore : le
-// registre est en ajout seul, et c'est la date d'effet qui decide.
-param_set('seuil_proformas', '999999', 'RECB valeur à effet différé', date('Y-m-d', strtotime('+30 days')));
+// « La plus recente en tete » se lit parmi les versions applicables : une version
+// datee du futur est enregistree, elle n'est pas en vigueur.
+$applicables = array_values(array_filter($hist, fn($h) => $h['date_effet'] <= date('Y-m-d')));
+cas('La version en vigueur est la plus recente des versions applicables',
+    $applicables !== [] && $applicables[0]['valeur'] === '10000' && param('seuil_proformas') === '10000',
+    implode(' ← ', array_slice(array_column($applicables, 'valeur'), 0, 4)));
+cas('Chaque version porte son motif et son auteur',
+    $applicables !== [] && $applicables[0]['motif'] !== null && $applicables[0]['auteur_id'] !== null,
+    (string)($applicables[0]['motif'] ?? ''));
+
+// Une version datee du futur est enregistree mais ne s'applique pas encore : c'est
+// la date d'effet qui decide. Elle est datee de loin, pour que la base de test ne
+// se reveille pas un matin avec un seuil pose par une recette.
+$differe = count(array_filter($hist, fn($h) => $h['valeur'] === '999999'));
+param_set('seuil_proformas', '999999', 'RECB valeur à effet différé', date('Y-m-d', strtotime('+5 years')));
 param_oublier();
 cas('Une version a effet differe ne s\'applique pas encore', param('seuil_proformas') === '10000',
     'en vigueur ' . (string)param('seuil_proformas'));
 cas('Elle figure pourtant a l\'historique',
-    count(array_filter(param_historique('seuil_proformas'), fn($h) => $h['valeur'] === '999999')) === 1);
+    count(array_filter(param_historique('seuil_proformas'), fn($h) => $h['valeur'] === '999999')) === $differe + 1);
 
 // ---------------------------------------------------------------------
 // 3. Signature : signer un document, le modifier, le signer de nouveau
@@ -313,6 +326,23 @@ if ($signataire === null) {
     $_SESSION['user_nom'] = 'RECS Signataire';
     endosser('coordinateur');
 
+    // Un specimen laisse par un passage precedent peut avoir perdu son fichier :
+    // storage/ n'est pas dans le depot, et ce serveur a deja vu un deploiement
+    // emporter ce qui n'est pas suivi. On le lit avant de s'y fier, et on le
+    // redepose s'il ne se lit plus - une recette doit se remettre d'aplomb seule.
+    $specExistant = specimen_actif($signataire['id']);
+    if ($specExistant !== null) {
+        $fimg = fichier((int)$specExistant['image_fichier_id']);
+        if ($fimg === null || lire_fichier($fimg) === null) {
+            cas('Le specimen laisse par un passage precedent ne se lit plus : il est redepose', true,
+                $fimg === null ? 'ligne fichier absente'
+                    : (is_file(storage_dir() . '/' . $fimg['chemin'])
+                        ? 'fichier présent, déchiffrement impossible'
+                        : 'fichier absent de storage/ : ' . $fimg['chemin']));
+            revoquer_specimen($signataire['id'], 'RECS spécimen illisible, redéposé par la recette');
+        }
+    }
+
     // Le depot passe normalement par deposer_specimen(), qui exige un televersement
     // HTTP : la recette pose les memes lignes directement. Ce qu'elle eprouve est
     // l'apposition, pas le depot, deja couvert ailleurs.
@@ -331,7 +361,11 @@ if ($signataire === null) {
             return (int)$pdo->lastInsertId();
         });
     }
-    cas('Le signataire a un specimen actif', specimen_actif($signataire['id']) !== null);
+    $specActif = specimen_actif($signataire['id']);
+    $imageSpecimen = $specActif === null ? null : lire_fichier((array)fichier((int)$specActif['image_fichier_id']));
+    cas('Le signataire a un specimen actif dont l\'image se lit',
+        $imageSpecimen !== null && $imageSpecimen !== '',
+        $imageSpecimen === null ? 'image illisible' : strlen($imageSpecimen) . ' octets déchiffrés');
 
     // Regime electronique : c'est lui qui met un document dans la file de signature.
     $regimeAvant = (string)param('regime_signature_defaut', 'papier');
@@ -367,18 +401,23 @@ if ($signataire === null) {
         // apposer() ne rend pas la raison technique d'une estampille manquee : elle
         // va au journal. La sonde l'appelle directement pour que la recette la
         // nomme - un « Impossible » sans cause a deja coute un aller-retour.
-        $spec = specimen_actif((int)$signataire['id']);
-        try {
-            $estampille = estampiller_pdf(
-                (string)lire_fichier((array)fichier((int)$v1['fichier_id'])),
-                (string)lire_fichier((array)fichier((int)$spec['image_fichier_id'])),
-                ['nom' => 'RECS Signataire', 'qualite' => 'Sonde de recette',
-                 'horodatage' => date('Y-m-d H:i:s'), 'code' => 'RECE-TTE0-01'], 0);
-            cas('L\'estampille se pose sur le PDF rendu', strlen($estampille) > 1000,
-                strlen($estampille) . ' octets');
-        } catch (Throwable $e) {
-            cas('L\'estampille se pose sur le PDF rendu', false,
-                get_class($e) . ' : ' . $e->getMessage());
+        // Les deux entrees sont lues avant d'etre passees : un cast en chaine
+        // transformerait un null en image vide, et l'estampille rendrait un PDF
+        // sans signature en annoncant sa reussite - le silence qu'on traque.
+        $pdfRendu = lire_fichier((array)fichier((int)$v1['fichier_id']));
+        cas('Le PDF rendu se relit', $pdfRendu !== null && $pdfRendu !== '',
+            $pdfRendu === null ? 'illisible' : strlen($pdfRendu) . ' octets');
+        if ($pdfRendu !== null && $imageSpecimen !== null) {
+            try {
+                $estampille = estampiller_pdf($pdfRendu, $imageSpecimen,
+                    ['nom' => 'RECS Signataire', 'qualite' => 'Sonde de recette',
+                     'horodatage' => date('Y-m-d H:i:s'), 'code' => 'RECE-TTE0-01'], 0);
+                cas('L\'estampille se pose sur le PDF rendu', strlen($estampille) > strlen($pdfRendu),
+                    strlen($estampille) . ' octets pour ' . strlen($pdfRendu) . ' en entrée');
+            } catch (Throwable $e) {
+                cas('L\'estampille se pose sur le PDF rendu', false,
+                    get_class($e) . ' : ' . $e->getMessage());
+            }
         }
 
         $a1 = apposer($doc1, 'approbation', RECS_MOTDEPASSE);
@@ -489,6 +528,13 @@ if (!empty($scanA['success']) && $dosAvant > 0) {
     }
 }
 endosser('coordinateur');
+
+// Un registre en ajout seul ne se nettoie pas, il se corrige : la valeur d'avant
+// la recette revient par une version nouvelle, motivee comme les autres.
+param_set('seuil_proformas', $seuilAvant, 'RECB retour à la valeur d\'avant la recette');
+param_oublier();
+cas('Le seuil est rendu a la valeur d\'avant la recette',
+    param('seuil_proformas') === $seuilAvant, 'en vigueur ' . (param('seuil_proformas') ?? '(vide)'));
 
 echo "\n$ok OK, $ko ECHEC\n";
 exit($ko > 0 ? 1 : 0);
