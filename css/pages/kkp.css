@@ -1,0 +1,393 @@
+/* ============================================
+   KOULÈ KI PALE — questionnaires avant / après
+   Pensé d'abord pour le téléphone : les jeunes
+   remplissent le formulaire en salle, sur mobile.
+   ============================================ */
+
+.kkp-page {
+  background-color: var(--color-lighter-gray);
+  min-height: 100vh;
+}
+
+.kkp-shell {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-md) var(--spacing-3xl);
+}
+
+/* ---------- En-tête ---------- */
+
+.kkp-header {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl) var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-lg);
+  border-top: 4px solid var(--color-primary);
+}
+
+.kkp-eyebrow {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.kkp-header h1 {
+  font-size: var(--font-size-3xl);
+  line-height: var(--line-height-tight);
+  color: var(--color-dark);
+  margin-bottom: var(--spacing-sm);
+}
+
+.kkp-deadline {
+  color: var(--color-gray);
+  font-style: italic;
+  margin-bottom: var(--spacing-lg);
+}
+
+.kkp-intro {
+  color: var(--color-dark-gray);
+  line-height: var(--line-height-relaxed);
+  font-size: var(--font-size-sm);
+  background: var(--color-primary-lighter);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+}
+
+.kkp-intro p + p {
+  margin-top: var(--spacing-sm);
+}
+
+/* ---------- Sections ---------- */
+
+.kkp-section {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.kkp-section > h2 {
+  font-size: var(--font-size-xl);
+  color: var(--color-primary-dark);
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+}
+
+.kkp-section-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.kkp-hint {
+  color: var(--color-gray);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-md);
+}
+
+/* ---------- Champs ---------- */
+
+.kkp-field {
+  margin-bottom: var(--spacing-lg);
+}
+
+.kkp-field:last-child {
+  margin-bottom: 0;
+}
+
+.kkp-field > label,
+.kkp-legend {
+  display: block;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-dark);
+  margin-bottom: var(--spacing-sm);
+}
+
+.kkp-field.required > label::after,
+.kkp-legend.required::after {
+  content: " *";
+  color: var(--color-secondary);
+}
+
+.kkp-field fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.kkp-code-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.kkp-code-row .kkp-field {
+  flex: 1 1 12rem;
+  margin-bottom: 0;
+}
+
+input[type="text"].kkp-code {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* L'exemple ne doit pas passer pour une saisie déjà faite */
+.kkp-field input::placeholder {
+  letter-spacing: normal;
+  font-weight: var(--font-weight-normal);
+  color: var(--color-gray);
+  opacity: 0.55;
+}
+
+/* ---------- Choix (cases et boutons radio) ---------- */
+
+.kkp-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.kkp-choices.kkp-choices-stack {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.kkp-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid #dddddd;
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  line-height: var(--line-height-normal);
+}
+
+.kkp-choice:hover {
+  border-color: var(--color-primary-light);
+}
+
+.kkp-choice input {
+  margin: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+}
+
+/* Le retour visuel du choix retenu doit survivre à un coup d'œil rapide */
+.kkp-choice:has(input:checked) {
+  border-color: var(--color-primary);
+  background: var(--color-primary-lighter);
+  font-weight: var(--font-weight-medium);
+}
+
+.kkp-choice:has(input:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Échelle de Likert ---------- */
+
+.kkp-scale-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-gray);
+  margin-bottom: var(--spacing-md);
+}
+
+.kkp-statement {
+  border: 1px solid #e8e8e8;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  background: var(--color-lighter-gray);
+}
+
+.kkp-statement:last-child {
+  margin-bottom: 0;
+}
+
+.kkp-statement.kkp-missing {
+  border-color: var(--color-error);
+  background: rgba(231, 76, 60, 0.06);
+}
+
+.kkp-statement-text {
+  display: block;
+  color: var(--color-dark);
+  margin-bottom: var(--spacing-md);
+  line-height: var(--line-height-normal);
+}
+
+.kkp-statement-text::before {
+  content: attr(data-num) ". ";
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+.kkp-scale {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--spacing-xs);
+}
+
+.kkp-scale label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-xs);
+  border: 1px solid #dddddd;
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray);
+  /* Cible tactile confortable au pouce */
+  min-height: 3rem;
+  justify-content: center;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.kkp-scale label:hover {
+  border-color: var(--color-primary-light);
+}
+
+.kkp-scale input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.kkp-scale label:has(input:checked) {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.kkp-scale label:has(input:focus-visible) {
+  outline: 2px solid var(--color-primary-dark);
+  outline-offset: 2px;
+}
+
+/* ---------- Pied de formulaire ---------- */
+
+.kkp-submit-bar {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.kkp-submit-bar .btn {
+  width: 100%;
+  max-width: 22rem;
+}
+
+.kkp-required-note {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray);
+  margin-bottom: var(--spacing-md);
+}
+
+.kkp-feedback:empty {
+  display: none;
+}
+
+.kkp-funder {
+  margin-top: var(--spacing-xl);
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-gray);
+  font-style: italic;
+  line-height: var(--line-height-relaxed);
+}
+
+/* ---------- Écran de confirmation ---------- */
+
+.kkp-done {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-3xl) var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  border-top: 4px solid var(--color-success);
+}
+
+.kkp-done-icon {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: var(--spacing-md);
+}
+
+.kkp-done h2 {
+  color: var(--color-primary-dark);
+  margin-bottom: var(--spacing-md);
+}
+
+.kkp-done p {
+  color: var(--color-gray);
+  line-height: var(--line-height-relaxed);
+  max-width: 34rem;
+  margin: 0 auto var(--spacing-md);
+}
+
+/* Le piège à robots ne doit jamais atteindre un écran ni un lecteur d'écran */
+.kkp-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* ---------- Petits écrans ---------- */
+
+@media (max-width: 480px) {
+  .kkp-shell {
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+  }
+
+  .kkp-header h1 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .kkp-section {
+    padding: var(--spacing-md);
+  }
+
+  .kkp-scale {
+    gap: 2px;
+  }
+
+  .kkp-scale label {
+    padding: var(--spacing-sm) 0;
+    font-size: var(--font-size-sm);
+  }
+}

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Koulè Ki Pale : Jèn yo pran pawòl — questionnaire de formation, DevDynamics">
+  <!-- Page diffusée par lien direct : elle n'a pas vocation à être indexée -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>Questionnaire — Koulè Ki Pale | DevDynamics</title>
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages/kkp.css">
+</head>
+<body class="kkp-page">
+  <div class="kkp-shell">
+
+    <!-- EN-TÊTE -->
+    <div class="kkp-header">
+      <img src="../assets/images/logo_6.png" alt="DevDynamics" class="logo-img" style="height:48px;margin-bottom:1rem;">
+      <p class="kkp-eyebrow">REVIV, Appel 5 — « Koulè Ki Pale : Jèn yo pran pawòl »</p>
+      <h1 id="kkp-title">Questionnaire avant la formation</h1>
+      <p class="kkp-deadline" id="kkp-deadline"></p>
+      <div class="kkp-intro" id="kkp-intro"></div>
+    </div>
+
+    <!-- FORMULAIRE -->
+    <form id="kkp-form" novalidate>
+
+      <!-- Piège à robots : invisible, doit rester vide -->
+      <div class="kkp-hp" aria-hidden="true">
+        <label for="kkp-website">Ne pas remplir</label>
+        <input type="text" id="kkp-website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <!-- CODE PERSONNEL -->
+      <section class="kkp-section">
+        <h2><span class="kkp-section-number">1</span> <span id="kkp-s1-title">Pour mieux te connaître</span></h2>
+        <p class="kkp-hint" id="kkp-code-hint"></p>
+
+        <div class="kkp-code-row">
+          <div class="kkp-field required">
+            <label for="kkp-code">Code personnel</label>
+            <input type="text" id="kkp-code" name="personal_code" class="kkp-code"
+                   maxlength="12" placeholder="MA14" autocomplete="off"
+                   inputmode="text" spellcheck="false" required>
+          </div>
+          <div class="kkp-field" data-phase="avant">
+            <label for="kkp-age">Âge</label>
+            <input type="number" id="kkp-age" name="age" min="5" max="120" placeholder="19" inputmode="numeric">
+          </div>
+        </div>
+
+        <!-- Profil : demandé une seule fois, au premier questionnaire -->
+        <div data-phase="avant">
+          <div class="kkp-field" style="margin-top:var(--spacing-lg);">
+            <fieldset>
+              <legend class="kkp-legend">Sexe</legend>
+              <div class="kkp-choices" data-radio="gender"></div>
+            </fieldset>
+          </div>
+
+          <div class="kkp-field">
+            <fieldset>
+              <legend class="kkp-legend">Situation</legend>
+              <div class="kkp-choices" data-radio="situation"></div>
+            </fieldset>
+          </div>
+
+          <div class="kkp-field">
+            <fieldset>
+              <legend class="kkp-legend">As-tu déjà suivi une formation sur la gestion des conflits ?</legend>
+              <div class="kkp-choices" data-radio="prior_training"></div>
+            </fieldset>
+          </div>
+
+          <div class="kkp-field">
+            <fieldset>
+              <legend class="kkp-legend">Pratiques-tu une activité artistique ?</legend>
+              <p class="kkp-hint">Plusieurs réponses possibles.</p>
+              <div class="kkp-choices" data-checkbox="arts"></div>
+            </fieldset>
+          </div>
+        </div>
+      </section>
+
+      <!-- RAPPORT AU CONFLIT (les deux phases) -->
+      <section class="kkp-section">
+        <h2><span class="kkp-section-number" id="kkp-n-conflit">2</span> Ton rapport au conflit aujourd'hui</h2>
+        <p class="kkp-hint">
+          Pour chaque affirmation, choisis la réponse qui correspond le mieux à ta situation aujourd'hui.
+        </p>
+        <div class="kkp-scale-legend">
+          <span>1 = pas du tout d'accord</span>
+          <span>5 = tout à fait d'accord</span>
+        </div>
+        <div id="kkp-questions"></div>
+      </section>
+
+      <!-- FAÇON DE RÉAGIR (les deux phases) -->
+      <section class="kkp-section">
+        <h2><span class="kkp-section-number" id="kkp-n-reaction">3</span> Ta façon de réagir</h2>
+        <p class="kkp-hint">Face à un conflit, que fais-tu le plus souvent ? Une seule réponse.</p>
+        <div class="kkp-choices kkp-choices-stack" data-radio="reaction"></div>
+      </section>
+
+      <!-- ATTENTES (avant uniquement) -->
+      <section class="kkp-section" data-phase="avant">
+        <h2><span class="kkp-section-number">4</span> Tes attentes</h2>
+        <div class="kkp-field">
+          <label for="kkp-expectations">Qu'est-ce que tu attends de cette formation ?</label>
+          <textarea id="kkp-expectations" name="expectations" rows="4"
+                    placeholder="Écris ce qui te vient, en français ou en créole."></textarea>
+        </div>
+        <div class="kkp-field">
+          <label for="kkp-needs">As-tu un besoin particulier pour participer dans de bonnes conditions&nbsp;?</label>
+          <p class="kkp-hint">Horaires, accès à la salle, autre.</p>
+          <textarea id="kkp-needs" name="special_needs" rows="3"></textarea>
+        </div>
+      </section>
+
+      <!-- AVIS SUR LA FORMATION (après uniquement) -->
+      <section class="kkp-section" data-phase="apres">
+        <h2><span class="kkp-section-number">4</span> Ton avis sur la formation</h2>
+        <p class="kkp-hint">Pour chaque affirmation, choisis une seule réponse.</p>
+        <div class="kkp-scale-legend">
+          <span>1 = pas du tout d'accord</span>
+          <span>5 = tout à fait d'accord</span>
+        </div>
+        <div id="kkp-satisfaction"></div>
+      </section>
+
+      <!-- QUESTIONS OUVERTES (après uniquement) -->
+      <section class="kkp-section" data-phase="apres">
+        <h2><span class="kkp-section-number">5</span> Questions ouvertes</h2>
+        <div class="kkp-field">
+          <label for="kkp-fav">Quelle activité as-tu préférée ? Pourquoi ?</label>
+          <textarea id="kkp-fav" name="fav_activity" rows="4"></textarea>
+        </div>
+        <div class="kkp-field">
+          <label for="kkp-different">Que feras-tu différemment après cette formation ?</label>
+          <textarea id="kkp-different" name="will_do_differently" rows="4"></textarea>
+        </div>
+        <div class="kkp-field">
+          <label for="kkp-improve">Qu'est-ce que tu améliorerais ?</label>
+          <textarea id="kkp-improve" name="improvements" rows="4"></textarea>
+        </div>
+      </section>
+
+      <!-- APRÈS LA FORMATION (après uniquement) -->
+      <section class="kkp-section" data-phase="apres">
+        <h2><span class="kkp-section-number">6</span> Après la formation</h2>
+        <div class="kkp-field">
+          <fieldset>
+            <legend class="kkp-legend">Penses-tu pouvoir utiliser ce que tu as appris dans ta vie quotidienne ?</legend>
+            <div class="kkp-choices" data-radio="can_apply"></div>
+          </fieldset>
+        </div>
+        <div class="kkp-field">
+          <fieldset>
+            <legend class="kkp-legend">Recommanderais-tu cette formation à un ami ou une amie ?</legend>
+            <div class="kkp-choices" data-radio="would_recommend"></div>
+          </fieldset>
+        </div>
+      </section>
+
+      <!-- TÉMOIGNAGE (après uniquement) -->
+      <section class="kkp-section" data-phase="apres">
+        <h2><span class="kkp-section-number">7</span> Ton témoignage, si tu le souhaites</h2>
+        <div class="kkp-field">
+          <label for="kkp-testimonial">
+            En quelques phrases, qu'as-tu vécu, appris ou changé pendant ces quatre jours ?
+          </label>
+          <textarea id="kkp-testimonial" name="testimonial" rows="6"></textarea>
+        </div>
+        <div class="kkp-field">
+          <fieldset>
+            <legend class="kkp-legend">
+              J'autorise DEVDYNAMICS à reprendre ce témoignage dans les documents du projet
+              et à le transmettre à la FOKAL
+            </legend>
+            <div class="kkp-choices kkp-choices-stack" data-radio="testimonial_consent"></div>
+          </fieldset>
+        </div>
+        <!-- Le nom n'apparaît qu'une fois l'accord de citation donné -->
+        <div class="kkp-field" id="kkp-name-field" hidden>
+          <label for="kkp-name">Nom, seulement si tu acceptes d'être cité(e) avec ton nom</label>
+          <input type="text" id="kkp-name" name="testimonial_name" maxlength="120" autocomplete="off">
+        </div>
+      </section>
+
+      <!-- ENVOI -->
+      <div class="kkp-submit-bar">
+        <div class="kkp-feedback" id="kkp-feedback" role="status" aria-live="polite"></div>
+        <p class="kkp-required-note">Les champs marqués d'un <span style="color:var(--color-secondary)">*</span> sont obligatoires.</p>
+        <button type="submit" class="btn btn-primary btn-lg" id="kkp-submit">Envoyer mes réponses</button>
+      </div>
+    </form>
+
+    <!-- CONFIRMATION -->
+    <div class="kkp-done" id="kkp-done" hidden>
+      <div class="kkp-done-icon" aria-hidden="true">&#10003;</div>
+      <h2>Merci !</h2>
+      <p id="kkp-done-text"></p>
+      <p><strong>Retiens bien ton code personnel : <span id="kkp-done-code"></span></strong></p>
+      <a href="../index.html" class="btn btn-outline">Retour à l'accueil</a>
+    </div>
+
+    <p class="kkp-funder">
+      REVIV est un projet mis en œuvre par la FOKAL, avec le financement de l'Union européenne.<br>
+      DevDynamics — 90, rue 15-16 B, Alliance Française, Cap-Haïtien — contact@dev-dynamics.org
+    </p>
+  </div>
+
+  <script src="../js/api.js?v=2"></script>
+  <script src="../js/pages/kkp-questionnaire.js?v=2"></script>
+</body>
+</html>

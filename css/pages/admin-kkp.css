@@ -1,0 +1,303 @@
+/* ============================================
+   ADMIN — Koulè Ki Pale : statistiques
+   Graphiques en HTML/CSS : pas de dépendance CDN,
+   lisibles sur une connexion faible comme au Cap.
+   ============================================ */
+
+.kkp-admin {
+  /* Paire avant / après validée en clair et en sombre
+     (bande de clarté, plancher de chroma, séparation daltonisme, contraste) */
+  --kkp-avant: #00A0A0;
+  --kkp-apres: #E8621F;
+  --kkp-track: rgba(0, 0, 0, 0.07);
+  --kkp-ink: var(--color-dark);
+  --kkp-ink-soft: var(--color-gray);
+}
+
+@media (prefers-color-scheme: dark) {
+  .kkp-admin {
+    --kkp-track: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* ---------- Barre d'outils ---------- */
+
+.kkp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.kkp-phase-switch {
+  display: inline-flex;
+  border: 1px solid #dddddd;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.kkp-phase-switch button {
+  border: 0;
+  border-radius: 0;
+  background: var(--color-white);
+  color: var(--color-gray);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.kkp-phase-switch button + button {
+  border-left: 1px solid #dddddd;
+}
+
+.kkp-phase-switch button.active {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.kkp-exports {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-left: auto;
+}
+
+/* ---------- Tuiles de chiffres ---------- */
+
+.kkp-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.kkp-tile {
+  background: var(--color-white);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.kkp-tile-label {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--kkp-ink-soft);
+  margin-bottom: var(--spacing-xs);
+}
+
+.kkp-tile-value {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--kkp-ink);
+}
+
+.kkp-tile-note {
+  font-size: var(--font-size-xs);
+  color: var(--kkp-ink-soft);
+  margin-top: var(--spacing-xs);
+}
+
+/* ---------- Blocs de graphique ---------- */
+
+.kkp-block {
+  background: var(--color-white);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.kkp-block h3 {
+  font-size: var(--font-size-lg);
+  color: var(--kkp-ink);
+  margin-bottom: var(--spacing-xs);
+}
+
+.kkp-block-note {
+  font-size: var(--font-size-sm);
+  color: var(--kkp-ink-soft);
+  margin-bottom: var(--spacing-lg);
+  line-height: var(--line-height-relaxed);
+}
+
+.kkp-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* ---------- Légende ---------- */
+
+.kkp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  color: var(--kkp-ink-soft);
+}
+
+.kkp-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.kkp-swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.kkp-swatch-avant { background: var(--kkp-avant); }
+.kkp-swatch-apres { background: var(--kkp-apres); }
+
+/* ---------- Barres horizontales ---------- */
+
+.kkp-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.kkp-row-label {
+  font-size: var(--font-size-sm);
+  color: var(--kkp-ink);
+  line-height: var(--line-height-normal);
+  margin-bottom: var(--spacing-xs);
+}
+
+.kkp-row-label .kkp-n {
+  color: var(--kkp-ink-soft);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.kkp-bar-line {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* 2px de fond entre deux barres voisines : elles ne se touchent jamais */
+.kkp-bar-line + .kkp-bar-line {
+  margin-top: 2px;
+}
+
+.kkp-track {
+  flex: 1;
+  height: 0.6rem;
+  background: var(--kkp-track);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.kkp-fill {
+  height: 100%;
+  /* Extrémité arrondie côté valeur, ancrée à plat sur la ligne de base */
+  border-radius: 0 4px 4px 0;
+  min-width: 2px;
+  transition: width var(--transition-base);
+}
+
+.kkp-fill-avant { background: var(--kkp-avant); }
+.kkp-fill-apres { background: var(--kkp-apres); }
+.kkp-fill-neutral { background: var(--color-primary); }
+
+/* La valeur reste en encre de texte : la couleur de la barre porte l'identité */
+.kkp-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--kkp-ink);
+  min-width: 3.25rem;
+  text-align: right;
+}
+
+.kkp-delta {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  min-width: 3.5rem;
+  text-align: right;
+}
+
+.kkp-delta-up { color: var(--color-success); }
+.kkp-delta-down { color: var(--color-error); }
+.kkp-delta-flat { color: var(--kkp-ink-soft); }
+
+/* ---------- Témoignages ---------- */
+
+.kkp-quote {
+  border-left: 3px solid var(--color-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  background: var(--color-lighter-gray);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.kkp-quote p {
+  color: var(--kkp-ink);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-xs);
+}
+
+.kkp-quote-meta {
+  font-size: var(--font-size-xs);
+  color: var(--kkp-ink-soft);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.kkp-quote.kkp-quote-private {
+  border-left-color: var(--color-warning);
+}
+
+/* ---------- Divers ---------- */
+
+.kkp-codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.kkp-code-chip {
+  font-family: monospace;
+  font-size: var(--font-size-xs);
+  background: var(--color-light-gray);
+  color: var(--kkp-ink);
+  padding: 2px var(--spacing-sm);
+  border-radius: var(--radius-sm);
+}
+
+.kkp-empty {
+  text-align: center;
+  color: var(--kkp-ink-soft);
+  padding: var(--spacing-2xl) var(--spacing-md);
+  line-height: var(--line-height-relaxed);
+}
+
+.kkp-longtext {
+  max-width: 22rem;
+  font-size: var(--font-size-sm);
+  color: var(--kkp-ink-soft);
+}
+
+@media (max-width: 640px) {
+  .kkp-exports {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .kkp-value {
+    min-width: 2.75rem;
+  }
+}

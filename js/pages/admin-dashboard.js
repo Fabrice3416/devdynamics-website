@@ -94,6 +94,7 @@ function switchPage(page) {
     contact: 'Messages de Contact',
     courses: 'Gestion des Cours',
     sponsors: 'Sponsors',
+    kkp: 'Koulè Ki Pale — questionnaires',
     organization: 'Informations de l\'Organisation',
     users: 'Utilisateurs'
   };
@@ -127,6 +128,9 @@ async function loadPageData(page) {
       break;
     case 'courses':
       loadCourses();
+      break;
+    case 'kkp':
+      loadKkp();
       break;
     case 'organization':
       loadOrganizationForm();
