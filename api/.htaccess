@@ -38,6 +38,13 @@ Options -Indexes
     Deny from all
 </FilesMatch>
 
+# Les migrations sont versionnees avec le code, mais n'ont rien a servir
+# sur le web : sans cette regle, api/sql/*.sql se telecharge publiquement.
+<FilesMatch "\.sql$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
 # PHP settings
 <IfModule mod_php7.c>
     php_value upload_max_filesize 10M
