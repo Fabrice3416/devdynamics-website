@@ -31,6 +31,11 @@ node_modules/
 *.backup
 *.sql
 
+# Les schemas versionnes ne sont pas des exports : la regle *.sql ci-dessus
+# vise les dumps de base, pas les migrations qui doivent suivre le code.
+!api/sql/*.sql
+!bousol/database/*.sql
+
 # Build
 *.zip
 
