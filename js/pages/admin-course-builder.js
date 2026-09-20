@@ -8,7 +8,7 @@
   const token = localStorage.getItem('auth_token');
 
   // Redirect immediately if not authenticated or not authorized
-  if (!token || !user || (user.role !== 'admin' && user.role !== 'instructor')) {
+  if (!token || !user || (user.role !== 'admin' && user.role !== 'editor')) {
     window.location.href = '../index.html';
     // Stop script execution
     throw new Error('Access denied - redirecting');
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const user = getStorage('user');
-  if (!user || (user.role !== 'admin' && user.role !== 'instructor')) {
+  if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
     window.location.href = '../index.html';
     return;
   }

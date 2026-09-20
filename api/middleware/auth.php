@@ -45,16 +45,19 @@ function adminMiddleware() {
 }
 
 /**
- * Verify admin or instructor role middleware
+ * Verify admin or editor role middleware
+ *
+ * La colonne users.role est un enum ('admin','editor','student') : le role
+ * 'instructor' que ce code testait ne pouvait jamais exister.
  */
-function instructorMiddleware() {
+function editorMiddleware() {
     // First authenticate
     authMiddleware();
 
-    // Then check if admin or instructor
+    // Then check if admin or editor
     $role = $GLOBALS['user']['role'] ?? '';
-    if ($role !== 'admin' && $role !== 'instructor') {
-        Response::forbidden('Instructor or admin access required');
+    if ($role !== 'admin' && $role !== 'editor') {
+        Response::forbidden('Editor or admin access required');
     }
 }
 
@@ -74,9 +77,9 @@ function isAdmin() {
 }
 
 /**
- * Check if current user is instructor or admin
+ * Check if current user is editor or admin
  */
-function isInstructor() {
+function isEditor() {
     $user = getCurrentUser();
-    return $user && ($user['role'] === 'admin' || $user['role'] === 'instructor');
+    return $user && ($user['role'] === 'admin' || $user['role'] === 'editor');
 }

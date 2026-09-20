@@ -35,6 +35,13 @@ $router->post('\/auth/login', function($params) use ($db) {
             Response::error('Invalid credentials', 401);
         }
 
+        // Un compte desactive ne doit pas obtenir de jeton. Le controle vient
+        // apres la verification du mot de passe : sinon la reponse revelerait
+        // l'existence d'un compte a qui ne connait pas son mot de passe.
+        if (isset($user['is_active']) && (int) $user['is_active'] !== 1) {
+            Response::forbidden('Ce compte est desactive. Contacte un administrateur.');
+        }
+
         // Generate JWT token
         $token = JWT::encode([
             'id' => $user['id'],

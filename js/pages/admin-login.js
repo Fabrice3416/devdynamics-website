@@ -32,7 +32,7 @@ async function handleLogin(e) {
       const { token, user } = response.data;
 
       // Check if user is admin
-      if (user.role !== 'admin' && user.role !== 'instructor') {
+      if (user.role !== 'admin' && user.role !== 'editor') {
         showNotification('Accès refusé. Seuls les administrateurs peuvent se connecter ici.', 'error');
         return;
       }

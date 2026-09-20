@@ -72,7 +72,7 @@ $router->put('\/admin/users/:id/role', function($params) use ($db) {
         Response::error('Role is required', 400);
     }
 
-    if (!in_array($body['role'], ['admin', 'instructor', 'user'])) {
+    if (!in_array($body['role'], ['admin', 'editor', 'student'])) {
         Response::error('Invalid role', 400);
     }
 
