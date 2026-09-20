@@ -161,6 +161,33 @@ function removeStorage(key) {
   localStorage.removeItem(key);
 }
 
+// ============================================
+// SESSION ADMINISTRATEUR
+// Partage par admin-dashboard.js et admin-course-builder.js : les deux pages
+// chargent utils.js, aucune ne charge le script de l'autre.
+// ============================================
+
+function sessionAdminValide() {
+  const user = getStorage('user');
+  return Boolean(localStorage.getItem('auth_token'))
+    && Boolean(user)
+    && (user.role === 'admin' || user.role === 'editor');
+}
+
+/**
+ * Efface une session inutilisable puis renvoie vers la page de connexion.
+ *
+ * Sans l'effacement, admin-login.html renverrait aussitot ici sur la seule
+ * presence du jeton : les deux pages se renvoyaient la balle. Et renvoyer
+ * vers l'accueil public laissait l'utilisateur sans explication ni moyen de
+ * se connecter.
+ */
+function renvoyerVersConnexion() {
+  localStorage.removeItem('auth_token');
+  removeStorage('user');
+  window.location.href = 'admin-login.html?session=invalide';
+}
+
 // Debounce
 function debounce(func, delay = 300) {
   let timeoutId;

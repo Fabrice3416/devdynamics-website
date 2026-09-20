@@ -6,9 +6,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('login-form');
   loginForm.addEventListener('submit', handleLogin);
 
-  // Check if already logged in
-  if (api.token) {
+  // Une session en cours ne renvoie au tableau de bord que si elle y donne
+  // vraiment acces. Se fier au seul jeton provoquait un aller-retour sans fin
+  // avec le tableau de bord, qui refusait ensuite cette meme session.
+  const session = getStorage('user');
+  if (api.token && session && (session.role === 'admin' || session.role === 'editor')) {
     window.location.href = 'admin-dashboard.html';
+    return;
+  }
+
+  if (new URLSearchParams(window.location.search).get('session') === 'invalide') {
+    showNotification('Ta session a expire ou ne donne pas acces a l\'administration. Reconnecte-toi.', 'warning', 8000);
   }
 });
 

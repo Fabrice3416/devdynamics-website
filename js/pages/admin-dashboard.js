@@ -4,11 +4,8 @@
 
 // CHECK AUTHENTICATION IMMEDIATELY (before page renders)
 (function() {
-  const user = getStorage('user');
-
-  // Redirect immediately if not authenticated or not authorized
-  if (!localStorage.getItem('auth_token') || !user || (user.role !== 'admin' && user.role !== 'editor')) {
-    window.location.href = '../index.html';
+  if (!sessionAdminValide()) {
+    renvoyerVersConnexion();
     // Stop script execution
     throw new Error('Access denied - redirecting');
   }
@@ -19,18 +16,12 @@ let editingId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Double-check authentication (defensive programming)
-  if (!api.token) {
-    window.location.href = 'admin-login.html';
+  if (!sessionAdminValide()) {
+    renvoyerVersConnexion();
     return;
   }
 
   const user = getStorage('user');
-
-  // Double-check authorization
-  if (!user || (user.role !== 'admin' && user.role !== 'editor')) {
-    window.location.href = '../index.html';
-    return;
-  }
 
   if (user) {
     document.getElementById('user-name').textContent = user.full_name;
