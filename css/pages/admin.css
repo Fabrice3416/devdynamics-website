@@ -69,11 +69,22 @@
   background-color: var(--color-lighter-gray);
 }
 
-/* SIDEBAR */
+/* SIDEBAR
+   Le menu est un panneau sombre dans les DEUX modes : c'est un choix de
+   marque, pas une consequence du theme. Il ne doit donc pas dependre des
+   jetons de texte, qui s'inversent en mode sombre — --color-dark y devient
+   clair, ce qui donnait un fond blanc sous un texte blanc. */
 .admin-sidebar {
+  --sidebar-bg: #1a1a1a;
+  --sidebar-ink: rgba(255, 255, 255, 0.78);
+  --sidebar-ink-strong: #ffffff;
+  /* Sur le teal actif, l'encre doit suivre le mode : blanche sur le teal
+     fonce du mode clair, sombre sur le teal eclairci du mode sombre. */
+  --sidebar-active-ink: var(--color-white);
+
   width: 250px;
-  background-color: var(--color-dark);
-  color: var(--color-white);
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-ink-strong);
   padding: var(--spacing-lg);
   position: fixed;
   height: 100vh;
@@ -91,7 +102,7 @@
 }
 
 .sidebar-header h2 {
-  color: var(--color-white);
+  color: var(--sidebar-ink-strong);
   margin: 0;
   font-size: var(--font-size-2xl);
 }
@@ -100,7 +111,7 @@
   display: none;
   background: none;
   border: none;
-  color: var(--color-white);
+  color: var(--sidebar-ink-strong);
   font-size: var(--font-size-2xl);
   cursor: pointer;
 }
@@ -116,7 +127,7 @@
   align-items: center;
   gap: var(--spacing-md);
   padding: var(--spacing-md) var(--spacing-lg);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--sidebar-ink);
   background: none;
   border: none;
   border-radius: var(--radius-md);
@@ -127,14 +138,21 @@
   text-align: left;
 }
 
+/* Largeur fixe : si un glyphe manque, le libelle ne se decale pas pour autant */
+.menu-item i {
+  width: 1.25rem;
+  flex-shrink: 0;
+  text-align: center;
+}
+
 .menu-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  color: var(--color-white);
+  color: var(--sidebar-ink-strong);
 }
 
 .menu-item.active {
   background-color: var(--color-primary);
-  color: var(--color-white);
+  color: var(--sidebar-active-ink);
 }
 
 .menu-item.logout {
@@ -178,6 +196,9 @@
   display: none;
   background: none;
   border: none;
+  /* Sans couleur explicite, un <button> prend le noir par defaut du
+     navigateur au lieu d'heriter : invisible sur un en-tete sombre. */
+  color: var(--color-dark);
   font-size: var(--font-size-2xl);
   cursor: pointer;
 }
