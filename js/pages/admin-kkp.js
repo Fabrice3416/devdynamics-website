@@ -53,9 +53,10 @@ function renderKkp() {
       ${kkpConflictBlock(agg)}
       ${kkpReactionBlock(stats)}
       ${kkpProfileBlock(stats.phases.avant, labels)}
+      ${kkpArtBlock(stats)}
+      ${kkpMeaningsBlock(cmp)}
       ${stats.phases.apres.total > 0 ? kkpFeedbackBlock(stats.phases.apres) : ''}
       ${stats.phases.apres.total > 0 ? kkpTestimonialsBlock(stats.phases.apres, labels) : ''}
-      ${kkpMeaningsBlock(cmp)}
       ${kkpOrphanBlock(cmp)}
       ${kkpTable(labels)}
     `}
@@ -314,6 +315,50 @@ function kkpTestimonialsBlock(agg, labels) {
         seuls les témoignages autorisés figurent dans le rapport PDF.
       </p>
       ${quotes}
+    </div>`;
+}
+
+/**
+ * L'art et le conflit : ce que le projet cherche a deplacer. Les deux
+ * echelles ne se comparent pas — oui/non avant, quatre niveaux apres —
+ * elles sont donc presentees separement et jamais mises sur le meme axe.
+ */
+function kkpArtBlock(stats) {
+  const labels = stats.labels;
+  const avant = stats.phases.avant;
+  const apres = stats.phases.apres;
+  if (avant.total === 0 && apres.total === 0) return '';
+
+  const autres = (liste, titre) => (!liste || !liste.length) ? '' : `
+    <div style="margin-top:var(--spacing-md);">
+      <div class="kkp-row-label"><strong>${titre}</strong></div>
+      ${liste.map(t => `<div class="kkp-quote"><p>${kkpEsc(t)}</p></div>`).join('')}
+    </div>`;
+
+  return `
+    <div class="kkp-block">
+      <h3>L'art et le conflit</h3>
+      <p class="kkp-block-note">
+        Les deux questionnaires posent cette question sur des échelles différentes
+        — oui/non au début, quatre niveaux à la fin. Elles se lisent séparément :
+        les mettre sur un même axe donnerait une progression qui n'existe pas.
+      </p>
+      <div class="kkp-grid-2">
+        ${avant.total > 0 ? kkpCountChart(
+          "Avant — l'art peut aider à gérer les émotions",
+          labels.art_can_help, avant.art_can_help) : ''}
+        ${apres.total > 0 ? kkpCountChart(
+          "Après — l'art m'a aidé",
+          labels.art_helped, apres.art_helped) : ''}
+        ${avant.total > 0 ? kkpCountChart(
+          "Avant — comment le participant utilise déjà l'art",
+          labels.uses, avant.uses, true) : ''}
+        ${apres.total > 0 ? kkpCountChart(
+          'Après — stratégies envisagées',
+          labels.strategies, apres.strategies, true) : ''}
+      </div>
+      ${autres(avant.other_texts?.uses, "Autres usages précisés (avant)")}
+      ${autres(apres.other_texts?.strategies, 'Autres stratégies précisées (après)')}
     </div>`;
 }
 

@@ -38,6 +38,32 @@ CREATE TABLE IF NOT EXISTS kkp_responses (
     -- 3. Ta facon de reagir
     reaction        ENUM('evite','cede','impose','compromis','collabore') NULL,
 
+    -- ---- L'art et le conflit ----
+
+    -- Avant : question fermee oui/non. Apres : quatre niveaux. Les deux
+    -- echelles different, donc deux colonnes : les melanger rendrait toute
+    -- comparaison trompeuse.
+    art_can_help    ENUM('oui','non') NULL COMMENT 'Avant : l art peut-il aider ?',
+    art_helped      ENUM('beaucoup','un_peu','pas_vraiment','pas_du_tout') NULL
+                    COMMENT 'Apres : dans quelle mesure l art a aide',
+
+    -- Avant : comment le participant utilise deja l'art (choix multiple)
+    use_draw        TINYINT(1) NOT NULL DEFAULT 0,
+    use_write       TINYINT(1) NOT NULL DEFAULT 0,
+    use_music       TINYINT(1) NOT NULL DEFAULT 0,
+    use_dance       TINYINT(1) NOT NULL DEFAULT 0,
+    use_photo       TINYINT(1) NOT NULL DEFAULT 0,
+    use_none        TINYINT(1) NOT NULL DEFAULT 0,
+    use_other       TINYINT(1) NOT NULL DEFAULT 0,
+    use_other_text  VARCHAR(255) NULL,
+
+    -- Apres : strategies envisagees (choix multiple)
+    strategy_listen     TINYINT(1) NOT NULL DEFAULT 0,
+    strategy_art        TINYINT(1) NOT NULL DEFAULT 0,
+    strategy_dialogue   TINYINT(1) NOT NULL DEFAULT 0,
+    strategy_other      TINYINT(1) NOT NULL DEFAULT 0,
+    strategy_other_text VARCHAR(255) NULL,
+
     -- Ce que le participant comprend de la demarche.
     -- Une seule colonne pour les deux passations : c'est la meme question,
     -- posee avant puis apres, ce qui permet de lire l'evolution du sens

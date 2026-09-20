@@ -391,3 +391,18 @@ input[type="text"].kkp-code {
     font-size: var(--font-size-sm);
   }
 }
+
+/* ---------- Champ libre d'un « Autre » ---------- */
+
+.kkp-other {
+  margin-top: var(--spacing-sm);
+  padding-left: var(--spacing-md);
+  border-left: 2px solid var(--color-primary-light);
+}
+
+.kkp-other label {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-gray);
+  margin-bottom: var(--spacing-xs);
+}

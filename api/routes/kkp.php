@@ -84,6 +84,46 @@ function kkp_arts() {
     ];
 }
 
+/**
+ * Avant : l'art peut-il aider ? Apres : dans quelle mesure il a aide.
+ * Les deux echelles different a dessein ; elles ne se comparent pas.
+ */
+function kkp_art_can_help() {
+    return ['oui' => 'Oui', 'non' => 'Non'];
+}
+
+function kkp_art_helped() {
+    return [
+        'beaucoup'     => 'Beaucoup',
+        'un_peu'       => 'Un peu',
+        'pas_vraiment' => 'Pas vraiment',
+        'pas_du_tout'  => 'Pas du tout',
+    ];
+}
+
+/** Avant : comment le participant utilise deja l'art (choix multiple). */
+function kkp_uses() {
+    return [
+        'use_draw'  => "Je dessine ou je peins ce que je ressens.",
+        'use_write' => "J'écris (texte, poème, slam, journal).",
+        'use_music' => "J'écoute de la musique, je chante ou je joue d'un instrument.",
+        'use_dance' => "Je danse ou je joue une scène.",
+        'use_photo' => "Je fais des photos ou des vidéos.",
+        'use_none'  => "Je n'utilise pas l'art pour cela.",
+        'use_other' => "Autre",
+    ];
+}
+
+/** Apres : strategies envisagees (choix multiple). */
+function kkp_strategies() {
+    return [
+        'strategy_listen'   => "Écouter l'autre.",
+        'strategy_art'      => "Exprimer ses émotions par l'art.",
+        'strategy_dialogue' => "Dialoguer calmement.",
+        'strategy_other'    => "Autre",
+    ];
+}
+
 function kkp_phases() {
     return ['avant' => 'Avant la formation', 'apres' => 'Après la formation'];
 }
@@ -101,6 +141,10 @@ function kkp_labels() {
         'arts'         => kkp_arts(),
         'choices'      => kkp_choices(),
         'consents'     => kkp_consents(),
+        'art_can_help' => kkp_art_can_help(),
+        'art_helped'   => kkp_art_helped(),
+        'uses'         => kkp_uses(),
+        'strategies'   => kkp_strategies(),
         'phases'       => kkp_phases(),
     ];
 }
@@ -295,7 +339,34 @@ function kkp_aggregate(array $rows) {
         ];
     }
 
+    // Choix multiples : une ligne peut compter dans plusieurs cases
+    $uses = [];
+    foreach (array_keys(kkp_uses()) as $key) {
+        $uses[$key] = 0;
+        foreach ($rows as $row) { if (!empty($row[$key])) $uses[$key]++; }
+    }
+    $strategies = [];
+    foreach (array_keys(kkp_strategies()) as $key) {
+        $strategies[$key] = 0;
+        foreach ($rows as $row) { if (!empty($row[$key])) $strategies[$key]++; }
+    }
+
+    // Les « Autre : ... » precises a la main, pour ne pas perdre ce qui sort
+    // des cases prevues.
+    $otherTexts = ['uses' => [], 'strategies' => []];
+    foreach ($rows as $row) {
+        $u = trim((string) ($row['use_other_text'] ?? ''));
+        if ($u !== '') $otherTexts['uses'][] = $u;
+        $st = trim((string) ($row['strategy_other_text'] ?? ''));
+        if ($st !== '') $otherTexts['strategies'][] = $st;
+    }
+
     return [
+        'art_can_help' => kkp_count_by($rows, 'art_can_help', kkp_art_can_help()),
+        'art_helped'   => kkp_count_by($rows, 'art_helped', kkp_art_helped()),
+        'uses'         => $uses,
+        'strategies'   => $strategies,
+        'other_texts'  => $otherTexts,
         'satisfaction' => $satisfaction,
         'satisfaction_global' => $satValues ? round(array_sum($satValues) / count($satValues), 2) : null,
         'can_apply'       => kkp_count_by($rows, 'can_apply', kkp_choices()),
@@ -485,6 +556,24 @@ $router->post('\/kkp/responses', function($params) use ($db) {
             : null;
     };
 
+    // Les choix multiples de la partie « L'art et le conflit ». Chacun n'est
+    // recueilli que dans sa passation : laisser passer l'autre remplirait des
+    // colonnes qui n'ont pas ete posees a ce participant.
+    $uses = [];
+    foreach (array_keys(kkp_uses()) as $key) {
+        $uses[$key] = ($phase === 'avant' && !empty($body[$key])) ? 1 : 0;
+    }
+    $strategies = [];
+    foreach (array_keys(kkp_strategies()) as $key) {
+        $strategies[$key] = ($phase === 'apres' && !empty($body[$key])) ? 1 : 0;
+    }
+
+    $textCourt = function($key) use ($body) {
+        return (isset($body[$key]) && trim((string) $body[$key]) !== '')
+            ? mb_substr(trim((string) $body[$key]), 0, 255)
+            : null;
+    };
+
     $ipHash = kkp_ip_hash();
 
     try {
@@ -504,13 +593,19 @@ $router->post('\/kkp/responses', function($params) use ($db) {
                  art_drawing, art_theatre, art_music, art_writing, art_other, art_none,
                  q1, q2, q3, q4, q5, q6, q7,
                  reaction, art_conflict_meaning, expectations, special_needs,
+                 art_can_help, art_helped,
+                 use_draw, use_write, use_music, use_dance, use_photo, use_none,
+                 use_other, use_other_text,
+                 strategy_listen, strategy_art, strategy_dialogue,
+                 strategy_other, strategy_other_text,
                  s1, s2, s3, s4, s5, s6, s7,
                  fav_activity, will_do_differently, improvements,
                  can_apply, would_recommend,
                  testimonial, testimonial_consent, testimonial_name,
                  ip_hash, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())",
+                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())",
             [
                 $phase,
                 $code,
@@ -526,6 +621,20 @@ $router->post('\/kkp/responses', function($params) use ($db) {
                 $text('art_conflict_meaning'),
                 $text('expectations'),
                 $text('special_needs'),
+                // Chaque echelle n'a de sens que dans sa propre passation
+                ($phase === 'avant')
+                    ? kkp_enum($body['art_can_help'] ?? null, array_keys(kkp_art_can_help()))
+                    : null,
+                ($phase === 'apres')
+                    ? kkp_enum($body['art_helped'] ?? null, array_keys(kkp_art_helped()))
+                    : null,
+                $uses['use_draw'], $uses['use_write'], $uses['use_music'],
+                $uses['use_dance'], $uses['use_photo'], $uses['use_none'],
+                $uses['use_other'],
+                $uses['use_other'] ? $textCourt('use_other_text') : null,
+                $strategies['strategy_listen'], $strategies['strategy_art'],
+                $strategies['strategy_dialogue'], $strategies['strategy_other'],
+                $strategies['strategy_other'] ? $textCourt('strategy_other_text') : null,
                 $satisfaction['s1'], $satisfaction['s2'], $satisfaction['s3'], $satisfaction['s4'],
                 $satisfaction['s5'], $satisfaction['s6'], $satisfaction['s7'],
                 $text('fav_activity'),
@@ -683,6 +792,35 @@ function kkp_export_columns() {
     $columns[] = ['Reaction au conflit', function($r) use ($reactions) {
         return $r['reaction'] ? ($reactions[$r['reaction']] ?? $r['reaction']) : '';
     }];
+    // ---- L'art et le conflit ----
+    $canHelp = kkp_art_can_help();
+    $columns[] = ["Avant : l'art peut aider", function($r) use ($canHelp) {
+        return !empty($r['art_can_help']) ? ($canHelp[$r['art_can_help']] ?? '') : '';
+    }];
+
+    foreach (kkp_uses() as $key => $label) {
+        $columns[] = ["Avant, usage de l'art : {$label}", function($r) use ($key) {
+            return !empty($r[$key]) ? 'Oui' : 'Non';
+        }];
+    }
+    $columns[] = ["Avant, usage de l'art : autre (precise)", function($r) {
+        return $r['use_other_text'] ?? '';
+    }];
+
+    $helped = kkp_art_helped();
+    $columns[] = ["Apres : l'art a aide", function($r) use ($helped) {
+        return !empty($r['art_helped']) ? ($helped[$r['art_helped']] ?? '') : '';
+    }];
+
+    foreach (kkp_strategies() as $key => $label) {
+        $columns[] = ["Apres, strategie : {$label}", function($r) use ($key) {
+            return !empty($r[$key]) ? 'Oui' : 'Non';
+        }];
+    }
+    $columns[] = ['Apres, strategie : autre (precise)', function($r) {
+        return $r['strategy_other_text'] ?? '';
+    }];
+
     $columns[] = ['Sens de « gerer un conflit a travers l\'art »', function($r) {
         return $r['art_conflict_meaning'] ?? '';
     }];
@@ -869,6 +1007,37 @@ function kkp_export_excel(array $rows, array $before, array $after, $filename) {
         ]);
     }
 
+    // L'art et le conflit
+    echo kkp_xls_row([]);
+    echo kkp_xls_row([
+        kkp_xls_cell("L'art et le conflit", 'String', 'sHeader'),
+        kkp_xls_cell('Effectif', 'String', 'sHeader'),
+    ]);
+    foreach (kkp_art_can_help() as $key => $label) {
+        echo kkp_xls_row([
+            kkp_xls_cell("Avant, l'art peut aider — {$label}"),
+            kkp_xls_cell($aggBefore['art_can_help'][$key] ?? 0, 'Number'),
+        ]);
+    }
+    foreach (kkp_uses() as $key => $label) {
+        echo kkp_xls_row([
+            kkp_xls_cell("Avant, usage — {$label}"),
+            kkp_xls_cell($aggBefore['uses'][$key] ?? 0, 'Number'),
+        ]);
+    }
+    foreach (kkp_art_helped() as $key => $label) {
+        echo kkp_xls_row([
+            kkp_xls_cell("Apres, l'art a aide — {$label}"),
+            kkp_xls_cell($aggAfter['art_helped'][$key] ?? 0, 'Number'),
+        ]);
+    }
+    foreach (kkp_strategies() as $key => $label) {
+        echo kkp_xls_row([
+            kkp_xls_cell("Apres, strategie — {$label}"),
+            kkp_xls_cell($aggAfter['strategies'][$key] ?? 0, 'Number'),
+        ]);
+    }
+
     // Avis sur la formation : recueilli uniquement a la fin
     if ($aggAfter['total'] > 0) {
         echo kkp_xls_row([]);
@@ -1039,6 +1208,43 @@ function kkp_export_pdf(array $before, array $after, $phaseFilter, $filename) {
                 . "   en recul : {$item['progress']['down']}"
             );
             $pdf->moveDown(4);
+        }
+    }
+
+    // L'art et le conflit : le coeur de la demarche du projet
+    $pdf->moveDown(10);
+    $pdf->setFont(10);
+    $pdf->heading("L'art et le conflit", 13);
+    $pdf->moveDown(4);
+    $pdf->setFont(9);
+
+    if ($aggBefore['total'] > 0) {
+        $pdf->setFont(9, true);
+        $pdf->text('Avant la formation');
+        $pdf->setFont(9);
+        foreach (kkp_art_can_help() as $key => $label) {
+            kkp_pdf_keep($pdf, 20);
+            $pdf->labelValue("    L'art peut aider — {$label}", $aggBefore['art_can_help'][$key] ?? 0, 300);
+        }
+        foreach (kkp_uses() as $key => $label) {
+            kkp_pdf_keep($pdf, 20);
+            $pdf->labelValue("    {$label}", $aggBefore['uses'][$key] ?? 0, 300);
+        }
+        $pdf->moveDown(8);
+    }
+
+    if ($aggAfter['total'] > 0) {
+        kkp_pdf_keep($pdf, 120);
+        $pdf->setFont(9, true);
+        $pdf->text('Après la formation');
+        $pdf->setFont(9);
+        foreach (kkp_art_helped() as $key => $label) {
+            kkp_pdf_keep($pdf, 20);
+            $pdf->labelValue("    L'art a aidé — {$label}", $aggAfter['art_helped'][$key] ?? 0, 300);
+        }
+        foreach (kkp_strategies() as $key => $label) {
+            kkp_pdf_keep($pdf, 20);
+            $pdf->labelValue("    {$label}", $aggAfter['strategies'][$key] ?? 0, 300);
         }
     }
 

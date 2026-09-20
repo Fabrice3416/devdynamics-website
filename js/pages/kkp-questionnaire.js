@@ -64,6 +64,33 @@ const KKP = {
     ['oui_nom', 'Oui, avec mon nom'],
     ['oui_anonyme', 'Oui, sans mon nom'],
     ['non', 'Non']
+  ],
+  // Avant : oui/non. Après : quatre niveaux. Les deux échelles diffèrent à
+  // dessein, elles ne se comparent pas.
+  art_can_help: [
+    ['oui', 'Oui'],
+    ['non', 'Non']
+  ],
+  art_helped: [
+    ['beaucoup', 'Beaucoup'],
+    ['un_peu', 'Un peu'],
+    ['pas_vraiment', 'Pas vraiment'],
+    ['pas_du_tout', 'Pas du tout']
+  ],
+  uses: [
+    ['use_draw', "Je dessine ou je peins ce que je ressens."],
+    ['use_write', "J'écris (texte, poème, slam, journal)."],
+    ['use_music', "J'écoute de la musique, je chante ou je joue d'un instrument."],
+    ['use_dance', "Je danse ou je joue une scène."],
+    ['use_photo', "Je fais des photos ou des vidéos."],
+    ['use_none', "Je n'utilise pas l'art pour cela."],
+    ['use_other', "Autre"]
+  ],
+  strategies: [
+    ['strategy_listen', "Écouter l'autre."],
+    ['strategy_art', "Exprimer ses émotions par l'art."],
+    ['strategy_dialogue', "Dialoguer calmement."],
+    ['strategy_other', "Autre"]
   ]
 };
 KKP.would_recommend = KKP.can_apply;
@@ -82,7 +109,7 @@ const PHASE_TEXT = {
     title: 'Évaluation de fin de formation',
     deadline: 'À remplir le dernier jour, le jeudi 24 septembre 2026',
     intro: [
-      "Réponds honnêtement : il n'y a pas de bonne ou de mauvaise réponse, et tes réponses nous aideront à améliorer le programme. Les deux premières parties reprennent exactement les questions du questionnaire de début de formation, pour mesurer ce qui a changé. Ton nom n'est pas demandé.",
+      "Réponds honnêtement : il n'y a pas de bonne ou de mauvaise réponse, et tes réponses nous aideront à améliorer le programme. Les parties 1 à 3 reprennent les questions du questionnaire de début de formation, pour mesurer ce qui a changé. Ton nom n'est pas demandé.",
       "Inscris le même code personnel que sur ton premier questionnaire : les deux premières lettres de ton prénom suivies de ton jour de naissance."
     ],
     codeHint: "Inscris exactement le même code que sur ton premier questionnaire (exemple : MA14 pour Maya, née un 14). C'est lui qui permet de rapprocher tes deux réponses sans connaître ton nom.",
@@ -100,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderScale('kkp-questions', 'q', KKP.questions);
   renderScale('kkp-satisfaction', 's', KKP.satisfaction);
   wireConsentField();
+  wireOtherFields();
   wireCodeField();
   document.getElementById('kkp-form').addEventListener('submit', onSubmit);
 });
@@ -123,10 +151,12 @@ function applyPhase() {
   });
 
   if (phase === 'apres') {
-    // Le questionnaire de fin n'a pas de partie « profil » : la numérotation glisse
+    // Le questionnaire de fin ne numérote pas le code personnel : la
+    // numérotation des parties commence au rapport au conflit.
     document.getElementById('kkp-s1-title').textContent = 'Ton code personnel';
-    document.getElementById('kkp-n-conflit').textContent = '2';
-    document.getElementById('kkp-n-reaction').textContent = '3';
+    document.getElementById('kkp-n-code').remove();
+    document.getElementById('kkp-n-conflit').textContent = '1';
+    document.getElementById('kkp-n-reaction').textContent = '2';
   }
 }
 
@@ -154,18 +184,9 @@ function renderChoiceGroups() {
     `).join('');
   });
 
-  // « Aucune » et une pratique artistique ne peuvent pas être vraies ensemble
-  const none = document.querySelector('input[name="art_none"]');
-  if (none) {
-    const others = Array.from(document.querySelectorAll('[data-checkbox="arts"] input'))
-      .filter(input => input !== none);
-    none.addEventListener('change', () => {
-      if (none.checked) others.forEach(o => { o.checked = false; });
-    });
-    others.forEach(o => o.addEventListener('change', () => {
-      if (o.checked) none.checked = false;
-    }));
-  }
+  // Une reponse « aucune » exclut les autres cases du meme groupe
+  wireExclusiveNone('[data-checkbox="arts"]', 'art_none');
+  wireExclusiveNone('[data-checkbox="uses"]', 'use_none');
 }
 
 function renderScale(containerId, prefix, statements) {
@@ -210,6 +231,47 @@ function wireConsentField() {
       if (!wantsName) document.getElementById('kkp-name').value = '';
     });
   });
+}
+
+/**
+ * Le champ libre d'un « Autre » n'apparait que si la case est cochee, et se
+ * vide sinon : un texte laisse derriere une case decochee partirait au
+ * serveur sans que personne ne l'ait voulu.
+ */
+function wireOtherFields() {
+  [
+    ['use_other', 'kkp-use-other-field', 'kkp-use-other'],
+    ['strategy_other', 'kkp-strategy-other-field', 'kkp-strategy-other']
+  ].forEach(([caseName, fieldId, inputId]) => {
+    const field = document.getElementById(fieldId);
+    const input = document.getElementById(inputId);
+    const box = document.querySelector(`input[name="${caseName}"]`);
+    if (!field || !input || !box) return;
+
+    const refresh = () => {
+      field.hidden = !box.checked;
+      if (!box.checked) input.value = '';
+    };
+    box.addEventListener('change', refresh);
+    refresh();
+  });
+}
+
+/** « Je n'utilise pas l'art pour cela » exclut les autres usages. */
+function wireExclusiveNone(groupSelector, noneName) {
+  const none = document.querySelector(`input[name="${noneName}"]`);
+  if (!none) return;
+  const others = Array.from(document.querySelectorAll(`${groupSelector} input`))
+    .filter(input => input !== none);
+  none.addEventListener('change', () => {
+    if (none.checked) others.forEach(o => {
+      o.checked = false;
+      o.dispatchEvent(new Event('change'));
+    });
+  });
+  others.forEach(o => o.addEventListener('change', () => {
+    if (o.checked) none.checked = false;
+  }));
 }
 
 function wireCodeField() {
@@ -289,20 +351,26 @@ function collect(code) {
   // phase qui distingue les deux reponses d'un meme participant.
   payload.art_conflict_meaning = field(phase === 'avant' ? 'kkp-sens' : 'kkp-sens-apres');
 
+  const checkbox = name => document.querySelector(`input[name="${name}"]`)?.checked ? 1 : 0;
+
   if (phase === 'avant') {
     payload.age = field('kkp-age');
     payload.gender = radio('gender');
     payload.situation = radio('situation');
     payload.prior_training = radio('prior_training');
-    KKP.arts.forEach(([key]) => {
-      payload[key] = document.querySelector(`input[name="${key}"]`)?.checked ? 1 : 0;
-    });
+    KKP.arts.forEach(([key]) => { payload[key] = checkbox(key); });
+    payload.art_can_help = radio('art_can_help');
+    KKP.uses.forEach(([key]) => { payload[key] = checkbox(key); });
+    payload.use_other_text = field('kkp-use-other');
     payload.expectations = field('kkp-expectations');
     payload.special_needs = field('kkp-needs');
   } else {
     for (let i = 1; i <= KKP.satisfaction.length; i++) {
       payload[`s${i}`] = radio(`s${i}`);
     }
+    payload.art_helped = radio('art_helped');
+    KKP.strategies.forEach(([key]) => { payload[key] = checkbox(key); });
+    payload.strategy_other_text = field('kkp-strategy-other');
     payload.fav_activity = field('kkp-fav');
     payload.will_do_differently = field('kkp-different');
     payload.improvements = field('kkp-improve');

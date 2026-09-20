@@ -122,6 +122,8 @@ function kkp_test_row($phase, $code, $overrides = []) {
         'art_writing' => 0, 'art_other' => 0, 'art_none' => 0,
         'reaction' => null, 'art_conflict_meaning' => null,
         'expectations' => null, 'special_needs' => null,
+        'art_can_help' => null, 'art_helped' => null,
+        'use_other_text' => null, 'strategy_other_text' => null,
         'fav_activity' => null, 'will_do_differently' => null, 'improvements' => null,
         'can_apply' => null, 'would_recommend' => null,
         'testimonial' => null, 'testimonial_consent' => null, 'testimonial_name' => null,
@@ -129,6 +131,10 @@ function kkp_test_row($phase, $code, $overrides = []) {
     ];
     foreach (['q1','q2','q3','q4','q5','q6','q7','s1','s2','s3','s4','s5','s6','s7'] as $k) {
         $row[$k] = null;
+    }
+    foreach (['use_draw','use_write','use_music','use_dance','use_photo','use_none','use_other',
+              'strategy_listen','strategy_art','strategy_dialogue','strategy_other'] as $k) {
+        $row[$k] = 0;
     }
     return array_merge($row, $overrides);
 }
@@ -140,6 +146,7 @@ $before = [
         'q1' => 2, 'q2' => 2, 'q3' => 1, 'q4' => 3, 'q5' => 2, 'q6' => 1, 'q7' => 2,
         'reaction' => 'evite', 'expectations' => 'Apprendre a gerer mes coleres.',
         'art_conflict_meaning' => 'Je pense que c est dessiner au lieu de se battre.',
+        'art_can_help' => 'oui', 'use_draw' => 1, 'use_write' => 1,
     ]),
     kkp_test_row('avant', 'JE08', [
         'age' => 23, 'gender' => 'masculin', 'situation' => 'recherche', 'prior_training' => 1,
@@ -152,6 +159,7 @@ $before = [
         'art_none' => 1,
         'q1' => 3, 'q2' => 3, 'q3' => 2, 'q4' => 2, 'q5' => 4, 'q6' => 3, 'q7' => 1,
         'reaction' => 'cede', 'special_needs' => 'Horaires du matin uniquement.',
+        'art_can_help' => 'non', 'use_none' => 1,
     ]),
 ];
 
@@ -165,6 +173,7 @@ $after = [
         'testimonial' => 'J ai appris a dire ce que je ressens sans crier.',
         'testimonial_consent' => 'oui_nom', 'testimonial_name' => 'Maya P.',
         'art_conflict_meaning' => 'C est se servir du theatre pour dire ce qu on ne peut pas dire en face.',
+        'art_helped' => 'beaucoup', 'strategy_listen' => 1, 'strategy_art' => 1,
     ]),
     kkp_test_row('apres', 'JE08', [
         'q1' => 4, 'q2' => 3, 'q3' => 4, 'q4' => 3, 'q5' => 4, 'q6' => 4, 'q7' => 3,
@@ -174,6 +183,8 @@ $after = [
         'testimonial' => 'Bonne ambiance, j aurais voulu plus de temps.',
         'testimonial_consent' => 'oui_anonyme',
         'art_conflict_meaning' => 'Mettre les mots en chanson pour baisser la tension.',
+        'art_helped' => 'un_peu', 'strategy_dialogue' => 1,
+        'strategy_other' => 1, 'strategy_other_text' => 'Faire une pause avant de repondre.',
     ]),
     // Code sans jumeau : doit rester hors de la comparaison
     kkp_test_row('apres', 'ZZ99', [
@@ -342,6 +353,20 @@ check('nom exposé quand la citation est accordée', $aggA['testimonials'][0]['n
 check('nom masqué quand le témoignage est anonyme', $aggA['testimonials'][1]['name'], null);
 check('refus de diffusion conservé tel quel', $aggA['testimonials'][2]['consent'], 'non');
 
+section("L'art et le conflit");
+check("avant : l'art peut aider, oui", $aggB['art_can_help']['oui'], 1);
+check("avant : l'art peut aider, non", $aggB['art_can_help']['non'], 1);
+check('avant : sans réponse', $aggB['art_can_help']['nr'], 1);
+check('avant : usage du dessin', $aggB['uses']['use_draw'], 1);
+check("avant : n'utilise pas l'art", $aggB['uses']['use_none'], 1);
+check('avant : aucune stratégie (question non posée)', $aggB['strategies']['strategy_listen'], 0);
+check("après : l'art a beaucoup aidé", $aggA['art_helped']['beaucoup'], 1);
+check("après : l'art a un peu aidé", $aggA['art_helped']['un_peu'], 1);
+check('après : stratégie écouter', $aggA['strategies']['strategy_listen'], 1);
+check('après : stratégie dialoguer', $aggA['strategies']['strategy_dialogue'], 1);
+check('après : le texte libre d’un « Autre » est conservé',
+      $aggA['other_texts']['strategies'], ['Faire une pause avant de repondre.']);
+
 section('Comparaison appariée');
 $cmp = kkp_compare($before, $after);
 check('participants appariés', $cmp['paired'], 2);
@@ -402,6 +427,40 @@ check('une soumission valide insère une ligne',
 
 $insert = array_values(array_filter(Database::$queries, fn($q) => stripos($q[0], 'INSERT') !== false))[0];
 check('le code personnel est mis en majuscules', $insert[1][1], 'MA14');
+
+// Chaque echelle n'appartient qu'a sa passation
+$halt = post_kkp(valid_body([
+    'phase' => 'avant',
+    'art_can_help' => 'oui', 'art_helped' => 'beaucoup',
+    'use_draw' => 1, 'strategy_listen' => 1,
+]));
+$insert = array_values(array_filter(Database::$queries, fn($q) => stripos($q[0], 'INSERT') !== false))[0];
+$cols = array_values(array_filter(array_map('trim',
+    explode(',', (function($sql) { preg_match('/\((.*?)\)\s*VALUES/s', $sql, $m); return $m[1]; })($insert[0])))));
+$idx = fn($nom) => array_search($nom, $cols, true);
+check("avant : l'échelle d'avant est enregistrée", $insert[1][$idx('art_can_help')], 'oui');
+check("avant : l'échelle d'après est ignorée", $insert[1][$idx('art_helped')], null);
+check("avant : l'usage de l'art est enregistré", $insert[1][$idx('use_draw')], 1);
+check('avant : une stratégie d’après est ignorée', $insert[1][$idx('strategy_listen')], 0);
+
+$halt = post_kkp(valid_body([
+    'phase' => 'apres',
+    'art_helped' => 'beaucoup', 'strategy_art' => 1,
+    'strategy_other' => 1, 'strategy_other_text' => 'Demander de l aide.',
+]));
+$insert = array_values(array_filter(Database::$queries, fn($q) => stripos($q[0], 'INSERT') !== false))[0];
+check("après : l'échelle d'après est enregistrée", $insert[1][$idx('art_helped')], 'beaucoup');
+check('après : la stratégie est enregistrée', $insert[1][$idx('strategy_art')], 1);
+check('après : le texte d’un « Autre » coché est conservé',
+      $insert[1][$idx('strategy_other_text')], 'Demander de l aide.');
+
+// Un texte laisse derriere une case decochee ne doit pas passer
+$halt = post_kkp(valid_body([
+    'phase' => 'apres',
+    'strategy_other' => 0, 'strategy_other_text' => 'Texte oublie.',
+]));
+$insert = array_values(array_filter(Database::$queries, fn($q) => stripos($q[0], 'INSERT') !== false))[0];
+check('le texte d’un « Autre » décoché est écarté', $insert[1][$idx('strategy_other_text')], null);
 
 $halt = post_kkp(valid_body(['art_conflict_meaning' => 'Utiliser le dessin pour parler.']));
 $insert = array_values(array_filter(Database::$queries, fn($q) => stripos($q[0], 'INSERT') !== false))[0];

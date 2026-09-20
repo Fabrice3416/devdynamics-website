@@ -8,10 +8,10 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Questionnaire — Koulè Ki Pale | DevDynamics</title>
   <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
-  <link rel="stylesheet" href="../css/variables.css?v=5">
-  <link rel="stylesheet" href="../css/global.css?v=5">
-  <link rel="stylesheet" href="../css/components.css?v=5">
-  <link rel="stylesheet" href="../css/pages/kkp.css?v=5">
+  <link rel="stylesheet" href="../css/variables.css?v=6">
+  <link rel="stylesheet" href="../css/global.css?v=6">
+  <link rel="stylesheet" href="../css/components.css?v=6">
+  <link rel="stylesheet" href="../css/pages/kkp.css?v=6">
 </head>
 <body class="kkp-page">
   <div class="kkp-shell">
@@ -36,7 +36,7 @@
 
       <!-- CODE PERSONNEL -->
       <section class="kkp-section">
-        <h2><span class="kkp-section-number">1</span> <span id="kkp-s1-title">Pour mieux te connaître</span></h2>
+        <h2><span class="kkp-section-number" id="kkp-n-code">1</span> <span id="kkp-s1-title">Pour mieux te connaître</span></h2>
         <p class="kkp-hint" id="kkp-code-hint"></p>
 
         <div class="kkp-code-row">
@@ -75,13 +75,6 @@
             </fieldset>
           </div>
 
-          <div class="kkp-field">
-            <fieldset>
-              <legend class="kkp-legend">Pratiques-tu une activité artistique ?</legend>
-              <p class="kkp-hint">Plusieurs réponses possibles.</p>
-              <div class="kkp-choices" data-checkbox="arts"></div>
-            </fieldset>
-          </div>
         </div>
       </section>
 
@@ -105,18 +98,51 @@
         <div class="kkp-choices kkp-choices-stack" data-radio="reaction"></div>
       </section>
 
-      <!-- CE QUE TU COMPRENDS DE LA DÉMARCHE (avant uniquement) -->
+      <!-- L'ART ET LE CONFLIT (avant uniquement) -->
       <section class="kkp-section" data-phase="avant">
-        <h2><span class="kkp-section-number">4</span> Ce que tu comprends de la démarche</h2>
+        <h2><span class="kkp-section-number">4</span> L'art et le conflit</h2>
+
+        <div class="kkp-field">
+          <fieldset>
+            <legend class="kkp-legend">Pratiques-tu une activité artistique&nbsp;?</legend>
+            <p class="kkp-hint">Plusieurs réponses possibles.</p>
+            <div class="kkp-choices" data-checkbox="arts"></div>
+          </fieldset>
+        </div>
+
+        <div class="kkp-field">
+          <fieldset>
+            <legend class="kkp-legend">
+              Penses-tu que l'art peut aider à exprimer et à gérer les émotions lors d'un conflit&nbsp;?
+            </legend>
+            <div class="kkp-choices" data-radio="art_can_help"></div>
+          </fieldset>
+        </div>
+
+        <div class="kkp-field">
+          <fieldset>
+            <legend class="kkp-legend">
+              Avant cet atelier, comment utilises-tu l'art (dessin, peinture, musique,
+              théâtre, écriture) pour exprimer tes émotions ou gérer une situation de conflit&nbsp;?
+            </legend>
+            <p class="kkp-hint">Plusieurs réponses possibles.</p>
+            <div class="kkp-choices kkp-choices-stack" data-checkbox="uses"></div>
+          </fieldset>
+          <div class="kkp-other" id="kkp-use-other-field" hidden>
+            <label for="kkp-use-other">Précise :</label>
+            <input type="text" id="kkp-use-other" name="use_other_text" maxlength="255">
+          </div>
+        </div>
+
         <div class="kkp-field">
           <label for="kkp-sens">
             Selon toi, que veut dire « gérer un conflit à travers l'art »&nbsp;?
           </label>
           <p class="kkp-hint">
-            Écris ce que tu en comprends aujourd'hui, même si tu n'en es pas sûr.
+            Écris ce que tu en comprends aujourd'hui, même si tu n'en es pas sûr(e).
             Il n'y a pas de bonne réponse.
           </p>
-          <textarea id="kkp-sens" name="art_conflict_meaning" rows="5"
+          <textarea id="kkp-sens" name="art_conflict_meaning" rows="4"
                     placeholder="Écris ce qui te vient, en français ou en créole."></textarea>
         </div>
       </section>
@@ -136,6 +162,45 @@
         </div>
       </section>
 
+      <!-- L'ART ET LE CONFLIT (après uniquement) -->
+      <section class="kkp-section" data-phase="apres">
+        <h2><span class="kkp-section-number">3</span> L'art et le conflit</h2>
+
+        <div class="kkp-field">
+          <fieldset>
+            <legend class="kkp-legend">
+              Après l'atelier, penses-tu que l'art peut t'aider à mieux exprimer
+              tes émotions et à gérer un conflit&nbsp;?
+            </legend>
+            <div class="kkp-choices" data-radio="art_helped"></div>
+          </fieldset>
+        </div>
+
+        <div class="kkp-field">
+          <fieldset>
+            <legend class="kkp-legend">
+              Après l'atelier, quelle stratégie pourrais-tu utiliser pour mieux gérer un conflit&nbsp;?
+            </legend>
+            <p class="kkp-hint">Plusieurs réponses possibles.</p>
+            <div class="kkp-choices kkp-choices-stack" data-checkbox="strategies"></div>
+          </fieldset>
+          <div class="kkp-other" id="kkp-strategy-other-field" hidden>
+            <label for="kkp-strategy-other">Précise :</label>
+            <input type="text" id="kkp-strategy-other" name="strategy_other_text" maxlength="255">
+          </div>
+        </div>
+
+        <div class="kkp-field">
+          <label for="kkp-sens-apres">
+            Après ces quatre jours, que veut dire pour toi « gérer un conflit à travers l'art »&nbsp;?
+          </label>
+          <p class="kkp-hint">
+            Dis aussi ce qui a changé par rapport à ce que tu en pensais au premier jour.
+          </p>
+          <textarea id="kkp-sens-apres" name="art_conflict_meaning" rows="5"></textarea>
+        </div>
+      </section>
+
       <!-- AVIS SUR LA FORMATION (après uniquement) -->
       <section class="kkp-section" data-phase="apres">
         <h2><span class="kkp-section-number">4</span> Ton avis sur la formation</h2>
@@ -150,15 +215,6 @@
       <!-- QUESTIONS OUVERTES (après uniquement) -->
       <section class="kkp-section" data-phase="apres">
         <h2><span class="kkp-section-number">5</span> Questions ouvertes</h2>
-        <div class="kkp-field">
-          <label for="kkp-sens-apres">
-            Après ces quatre jours, que veut dire pour toi « gérer un conflit à travers l'art »&nbsp;?
-          </label>
-          <p class="kkp-hint">
-            Dis aussi ce qui a changé par rapport à ce que tu en pensais au premier jour.
-          </p>
-          <textarea id="kkp-sens-apres" name="art_conflict_meaning" rows="6"></textarea>
-        </div>
         <div class="kkp-field">
           <label for="kkp-fav">Quelle activité as-tu préférée ? Pourquoi ?</label>
           <textarea id="kkp-fav" name="fav_activity" rows="4"></textarea>
@@ -238,7 +294,7 @@
     </p>
   </div>
 
-  <script src="../js/api.js?v=5"></script>
-  <script src="../js/pages/kkp-questionnaire.js?v=5"></script>
+  <script src="../js/api.js?v=6"></script>
+  <script src="../js/pages/kkp-questionnaire.js?v=6"></script>
 </body>
 </html>
