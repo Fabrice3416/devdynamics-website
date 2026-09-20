@@ -45,6 +45,13 @@ Options -Indexes
     Deny from all
 </FilesMatch>
 
+# Scripts de mise au point laisses en production. export-database.php sert
+# la structure complete de la base a qui la demande, sans authentification.
+<FilesMatch "^(export-database|clear-cache)\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
 # PHP settings
 <IfModule mod_php7.c>
     php_value upload_max_filesize 10M
