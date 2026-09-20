@@ -2,9 +2,9 @@
 .env
 .env.local
 *.env
-!.env.example
-.env.example
 .env.hostinger.example
+!.env.example
+!api/.env.example
 
 # Logs
 *.log
