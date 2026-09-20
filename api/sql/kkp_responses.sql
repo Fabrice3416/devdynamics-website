@@ -38,7 +38,13 @@ CREATE TABLE IF NOT EXISTS kkp_responses (
     -- 3. Ta facon de reagir
     reaction        ENUM('evite','cede','impose','compromis','collabore') NULL,
 
-    -- 4. Tes attentes (questionnaire d'avant uniquement)
+    -- Ce que le participant comprend de la demarche.
+    -- Une seule colonne pour les deux passations : c'est la meme question,
+    -- posee avant puis apres, ce qui permet de lire l'evolution du sens
+    -- qu'un participant donne a la demarche, code par code.
+    art_conflict_meaning TEXT NULL,
+
+    -- Tes attentes (questionnaire d'avant uniquement)
     expectations    TEXT NULL,
     special_needs   TEXT NULL,
 

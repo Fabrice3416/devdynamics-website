@@ -285,6 +285,10 @@ function collect(code) {
   }
   payload.reaction = radio('reaction');
 
+  // Meme question dans les deux questionnaires, donc meme champ : c'est la
+  // phase qui distingue les deux reponses d'un meme participant.
+  payload.art_conflict_meaning = field(phase === 'avant' ? 'kkp-sens' : 'kkp-sens-apres');
+
   if (phase === 'avant') {
     payload.age = field('kkp-age');
     payload.gender = radio('gender');

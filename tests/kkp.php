@@ -120,7 +120,8 @@ function kkp_test_row($phase, $code, $overrides = []) {
         'age' => null, 'gender' => null, 'situation' => null, 'prior_training' => null,
         'art_drawing' => 0, 'art_theatre' => 0, 'art_music' => 0,
         'art_writing' => 0, 'art_other' => 0, 'art_none' => 0,
-        'reaction' => null, 'expectations' => null, 'special_needs' => null,
+        'reaction' => null, 'art_conflict_meaning' => null,
+        'expectations' => null, 'special_needs' => null,
         'fav_activity' => null, 'will_do_differently' => null, 'improvements' => null,
         'can_apply' => null, 'would_recommend' => null,
         'testimonial' => null, 'testimonial_consent' => null, 'testimonial_name' => null,
@@ -138,6 +139,7 @@ $before = [
         'art_drawing' => 1, 'art_music' => 1,
         'q1' => 2, 'q2' => 2, 'q3' => 1, 'q4' => 3, 'q5' => 2, 'q6' => 1, 'q7' => 2,
         'reaction' => 'evite', 'expectations' => 'Apprendre a gerer mes coleres.',
+        'art_conflict_meaning' => 'Je pense que c est dessiner au lieu de se battre.',
     ]),
     kkp_test_row('avant', 'JE08', [
         'age' => 23, 'gender' => 'masculin', 'situation' => 'recherche', 'prior_training' => 1,
@@ -162,6 +164,7 @@ $after = [
         'can_apply' => 'oui', 'would_recommend' => 'oui',
         'testimonial' => 'J ai appris a dire ce que je ressens sans crier.',
         'testimonial_consent' => 'oui_nom', 'testimonial_name' => 'Maya P.',
+        'art_conflict_meaning' => 'C est se servir du theatre pour dire ce qu on ne peut pas dire en face.',
     ]),
     kkp_test_row('apres', 'JE08', [
         'q1' => 4, 'q2' => 3, 'q3' => 4, 'q4' => 3, 'q5' => 4, 'q6' => 4, 'q7' => 3,
@@ -170,6 +173,7 @@ $after = [
         'can_apply' => 'pas_certain', 'would_recommend' => 'oui',
         'testimonial' => 'Bonne ambiance, j aurais voulu plus de temps.',
         'testimonial_consent' => 'oui_anonyme',
+        'art_conflict_meaning' => 'Mettre les mots en chanson pour baisser la tension.',
     ]),
     // Code sans jumeau : doit rester hors de la comparaison
     kkp_test_row('apres', 'ZZ99', [
@@ -354,6 +358,19 @@ check('le code non apparié est exclu du calcul', $cmp['likert'][0]['n'], 2);
 check('changement de style de réaction', count($cmp['reaction_shift']), 1);
 check('MA14 passe à « collabore »', $cmp['reaction_shift'][0]['to'], 'collabore');
 
+section('Sens donné à la démarche');
+check('deux participants appariés ont répondu', count($cmp['meanings']), 2);
+$parCode = array_column($cmp['meanings'], null, 'code');
+check('le texte d’avant est repris',
+      strpos($parCode['MA14']['before'], 'dessiner au lieu de se battre') !== false, true);
+check('le texte d’après est repris',
+      strpos($parCode['MA14']['after'], 'theatre') !== false, true);
+check('une réponse manquante avant reste nulle', $parCode['JE08']['before'], null);
+check('une réponse présente après est conservée',
+      strpos($parCode['JE08']['after'], 'chanson') !== false, true);
+// ZZ99 n'est pas apparie : son texte ne doit pas remonter ici
+check('un code non apparié est exclu', isset($parCode['ZZ99']), false);
+
 // ============================================================
 // D. Route de soumission
 // ============================================================
@@ -385,6 +402,14 @@ check('une soumission valide insère une ligne',
 
 $insert = array_values(array_filter(Database::$queries, fn($q) => stripos($q[0], 'INSERT') !== false))[0];
 check('le code personnel est mis en majuscules', $insert[1][1], 'MA14');
+
+$halt = post_kkp(valid_body(['art_conflict_meaning' => 'Utiliser le dessin pour parler.']));
+$insert = array_values(array_filter(Database::$queries, fn($q) => stripos($q[0], 'INSERT') !== false))[0];
+$colonnes = array_values(array_filter(array_map('trim',
+    explode(',', (function($sql) { preg_match('/\((.*?)\)\s*VALUES/s', $sql, $m); return $m[1]; })($insert[0])))));
+$idxSens = array_search('art_conflict_meaning', $colonnes, true);
+check('le sens donné à la démarche est enregistré',
+      $insert[1][$idxSens], 'Utiliser le dessin pour parler.');
 
 $halt = post_kkp(valid_body(['personal_code' => '']));
 check('code personnel vide refusé', $halt->getCode(), 400);
@@ -463,6 +488,8 @@ $pdf = shell_exec('php ' . escapeshellarg($self) . ' pdf 2>/dev/null');
 
 check('CSV : un en-tête et six lignes', count(array_filter(explode("\n", trim((string) $csv)))), 7);
 check('CSV : BOM UTF-8 pour Excel', substr((string) $csv, 0, 3), "\xEF\xBB\xBF");
+check('CSV : la question sur le sens est exportée',
+      strpos((string) $csv, 'dessiner au lieu de se battre') !== false, true);
 check('CSV : même nombre de colonnes partout', (function($csv) {
     $fh = fopen('php://memory', 'r+');
     fwrite($fh, $csv);
@@ -483,6 +510,8 @@ check('PDF : les témoignages autorisés sont repris',
       strpos((string) $pdf, 'Maya P.') !== false, true);
 check('PDF : un témoignage refusé n’y figure pas',
       strpos((string) $pdf, 'Je ne veux pas') === false, true);
+check('PDF : le sens avant/après y figure',
+      strpos((string) $pdf, 'travers l\'art') !== false, true);
 
 // ---------- Bilan ----------
 

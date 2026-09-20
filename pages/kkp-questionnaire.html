@@ -8,10 +8,10 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Questionnaire — Koulè Ki Pale | DevDynamics</title>
   <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
-  <link rel="stylesheet" href="../css/variables.css?v=4">
-  <link rel="stylesheet" href="../css/global.css?v=4">
-  <link rel="stylesheet" href="../css/components.css?v=4">
-  <link rel="stylesheet" href="../css/pages/kkp.css?v=4">
+  <link rel="stylesheet" href="../css/variables.css?v=5">
+  <link rel="stylesheet" href="../css/global.css?v=5">
+  <link rel="stylesheet" href="../css/components.css?v=5">
+  <link rel="stylesheet" href="../css/pages/kkp.css?v=5">
 </head>
 <body class="kkp-page">
   <div class="kkp-shell">
@@ -105,9 +105,25 @@
         <div class="kkp-choices kkp-choices-stack" data-radio="reaction"></div>
       </section>
 
+      <!-- CE QUE TU COMPRENDS DE LA DÉMARCHE (avant uniquement) -->
+      <section class="kkp-section" data-phase="avant">
+        <h2><span class="kkp-section-number">4</span> Ce que tu comprends de la démarche</h2>
+        <div class="kkp-field">
+          <label for="kkp-sens">
+            Selon toi, que veut dire « gérer un conflit à travers l'art »&nbsp;?
+          </label>
+          <p class="kkp-hint">
+            Écris ce que tu en comprends aujourd'hui, même si tu n'en es pas sûr.
+            Il n'y a pas de bonne réponse.
+          </p>
+          <textarea id="kkp-sens" name="art_conflict_meaning" rows="5"
+                    placeholder="Écris ce qui te vient, en français ou en créole."></textarea>
+        </div>
+      </section>
+
       <!-- ATTENTES (avant uniquement) -->
       <section class="kkp-section" data-phase="avant">
-        <h2><span class="kkp-section-number">4</span> Tes attentes</h2>
+        <h2><span class="kkp-section-number">5</span> Tes attentes</h2>
         <div class="kkp-field">
           <label for="kkp-expectations">Qu'est-ce que tu attends de cette formation ?</label>
           <textarea id="kkp-expectations" name="expectations" rows="4"
@@ -134,6 +150,15 @@
       <!-- QUESTIONS OUVERTES (après uniquement) -->
       <section class="kkp-section" data-phase="apres">
         <h2><span class="kkp-section-number">5</span> Questions ouvertes</h2>
+        <div class="kkp-field">
+          <label for="kkp-sens-apres">
+            Après ces quatre jours, que veut dire pour toi « gérer un conflit à travers l'art »&nbsp;?
+          </label>
+          <p class="kkp-hint">
+            Dis aussi ce qui a changé par rapport à ce que tu en pensais au premier jour.
+          </p>
+          <textarea id="kkp-sens-apres" name="art_conflict_meaning" rows="6"></textarea>
+        </div>
         <div class="kkp-field">
           <label for="kkp-fav">Quelle activité as-tu préférée ? Pourquoi ?</label>
           <textarea id="kkp-fav" name="fav_activity" rows="4"></textarea>
@@ -213,7 +238,7 @@
     </p>
   </div>
 
-  <script src="../js/api.js?v=4"></script>
-  <script src="../js/pages/kkp-questionnaire.js?v=4"></script>
+  <script src="../js/api.js?v=5"></script>
+  <script src="../js/pages/kkp-questionnaire.js?v=5"></script>
 </body>
 </html>

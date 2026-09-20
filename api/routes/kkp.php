@@ -366,6 +366,18 @@ function kkp_compare(array $before, array $after) {
         ];
     }
 
+    // Ce que la demarche veut dire, avant puis apres. C'est la seule mesure
+    // qualitative du changement : deux textes du meme participant, a lire
+    // l'un a cote de l'autre.
+    $meanings = [];
+    foreach ($pairedCodes as $code) {
+        $avant = trim((string) ($beforeByCode[$code]['art_conflict_meaning'] ?? ''));
+        $apres = trim((string) ($afterByCode[$code]['art_conflict_meaning'] ?? ''));
+        if ($avant !== '' || $apres !== '') {
+            $meanings[] = ['code' => $code, 'before' => $avant ?: null, 'after' => $apres ?: null];
+        }
+    }
+
     // Deplacement des styles de reaction au conflit
     $reactionShift = [];
     foreach ($pairedCodes as $code) {
@@ -389,6 +401,7 @@ function kkp_compare(array $before, array $after) {
         'only_after'     => $onlyAfter,
         'likert'         => $likert,
         'reaction_shift' => $reactionShift,
+        'meanings'       => $meanings,
     ];
 }
 
@@ -490,14 +503,14 @@ $router->post('\/kkp/responses', function($params) use ($db) {
                 (phase, personal_code, age, gender, situation, prior_training,
                  art_drawing, art_theatre, art_music, art_writing, art_other, art_none,
                  q1, q2, q3, q4, q5, q6, q7,
-                 reaction, expectations, special_needs,
+                 reaction, art_conflict_meaning, expectations, special_needs,
                  s1, s2, s3, s4, s5, s6, s7,
                  fav_activity, will_do_differently, improvements,
                  can_apply, would_recommend,
                  testimonial, testimonial_consent, testimonial_name,
                  ip_hash, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())",
+                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())",
             [
                 $phase,
                 $code,
@@ -510,6 +523,7 @@ $router->post('\/kkp/responses', function($params) use ($db) {
                 $likert['q1'], $likert['q2'], $likert['q3'], $likert['q4'],
                 $likert['q5'], $likert['q6'], $likert['q7'],
                 kkp_enum($body['reaction'] ?? null, array_keys(kkp_reactions())),
+                $text('art_conflict_meaning'),
                 $text('expectations'),
                 $text('special_needs'),
                 $satisfaction['s1'], $satisfaction['s2'], $satisfaction['s3'], $satisfaction['s4'],
@@ -668,6 +682,9 @@ function kkp_export_columns() {
 
     $columns[] = ['Reaction au conflit', function($r) use ($reactions) {
         return $r['reaction'] ? ($reactions[$r['reaction']] ?? $r['reaction']) : '';
+    }];
+    $columns[] = ['Sens de « gerer un conflit a travers l\'art »', function($r) {
+        return $r['art_conflict_meaning'] ?? '';
     }];
     $columns[] = ['Attentes', function($r) { return $r['expectations']; }];
     $columns[] = ['Besoins particuliers', function($r) { return $r['special_needs']; }];
@@ -1022,6 +1039,33 @@ function kkp_export_pdf(array $before, array $after, $phaseFilter, $filename) {
                 . "   en recul : {$item['progress']['down']}"
             );
             $pdf->moveDown(4);
+        }
+    }
+
+    // Le sens donne a la demarche, avant puis apres : les chiffres disent si
+    // le groupe progresse, ces textes disent en quoi.
+    if (!empty($comparison['meanings'])) {
+        $pdf->addPage();
+        $pdf->setFont(10);
+        $pdf->heading('« Gérer un conflit à travers l\'art » — avant et après', 13);
+        $pdf->moveDown(4);
+        $pdf->setFont(9);
+        $pdf->paragraph(
+            'Ce que ' . count($comparison['meanings']) . ' participant(s) apparié(s) mettent '
+            . 'derrière la démarche, au premier jour puis au dernier.'
+        );
+        $pdf->moveDown(8);
+
+        foreach ($comparison['meanings'] as $m) {
+            kkp_pdf_keep($pdf, 90);
+            $pdf->setFont(9, true);
+            $pdf->text('Code ' . $m['code']);
+            $pdf->setFont(9);
+            $pdf->text('    Avant :');
+            $pdf->paragraph('      ' . ($m['before'] ?: '—'));
+            $pdf->text('    Après :');
+            $pdf->paragraph('      ' . ($m['after'] ?: '—'));
+            $pdf->moveDown(8);
         }
     }
 

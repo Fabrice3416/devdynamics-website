@@ -55,6 +55,7 @@ function renderKkp() {
       ${kkpProfileBlock(stats.phases.avant, labels)}
       ${stats.phases.apres.total > 0 ? kkpFeedbackBlock(stats.phases.apres) : ''}
       ${stats.phases.apres.total > 0 ? kkpTestimonialsBlock(stats.phases.apres, labels) : ''}
+      ${kkpMeaningsBlock(cmp)}
       ${kkpOrphanBlock(cmp)}
       ${kkpTable(labels)}
     `}
@@ -316,6 +317,40 @@ function kkpTestimonialsBlock(agg, labels) {
     </div>`;
 }
 
+/**
+ * Le sens donne a la demarche, avant puis apres, pour un meme participant.
+ * C'est la seule lecture qualitative du changement : deux textes cote a cote.
+ */
+function kkpMeaningsBlock(cmp) {
+  if (!cmp.meanings || !cmp.meanings.length) return '';
+
+  const lignes = cmp.meanings.map(m => `
+    <div class="kkp-meaning">
+      <div class="kkp-meaning-code"><span class="kkp-code-chip">${kkpEsc(m.code)}</span></div>
+      <div class="kkp-meaning-pair">
+        <div>
+          <div class="kkp-meaning-when"><i class="kkp-swatch kkp-swatch-avant"></i> Avant</div>
+          <p>${m.before ? kkpEsc(m.before) : '<em>sans réponse</em>'}</p>
+        </div>
+        <div>
+          <div class="kkp-meaning-when"><i class="kkp-swatch kkp-swatch-apres"></i> Après</div>
+          <p>${m.after ? kkpEsc(m.after) : '<em>sans réponse</em>'}</p>
+        </div>
+      </div>
+    </div>`).join('');
+
+  return `
+    <div class="kkp-block">
+      <h3>« Gérer un conflit à travers l'art » — avant et après</h3>
+      <p class="kkp-block-note">
+        Ce que ${cmp.meanings.length} participant(s) apparié(s) mettent derrière la démarche,
+        au premier jour puis au dernier. Les chiffres disent si le groupe progresse ;
+        ces textes disent en quoi.
+      </p>
+      ${lignes}
+    </div>`;
+}
+
 function kkpOrphanBlock(cmp) {
   if (!cmp.only_before.length && !cmp.only_after.length) return '';
 
@@ -355,8 +390,8 @@ function kkpTable(labels) {
   const body = rows.map(r => {
     const scores = qKeys.map(k => r[k] ?? '—').join(' · ');
     const free = kkpPhase === 'avant'
-      ? [r.expectations, r.special_needs]
-      : [r.fav_activity, r.will_do_differently, r.improvements, r.testimonial];
+      ? [r.art_conflict_meaning, r.expectations, r.special_needs]
+      : [r.art_conflict_meaning, r.fav_activity, r.will_do_differently, r.improvements, r.testimonial];
     const freeText = free.filter(Boolean).join(' — ');
 
     return `
