@@ -55,7 +55,7 @@ $router->get('\/admin/dashboard/stats', function($params) use ($db) {
 $router->get('\/admin/users', function($params) use ($db) {
     try {
         $users = $db->fetchAll(
-            "SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC"
+            "SELECT id, full_name, email, role, created_at FROM users ORDER BY created_at DESC"
         );
 
         Response::success($users);

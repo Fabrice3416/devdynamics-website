@@ -28,8 +28,10 @@ $router->post('\/auth/login', function($params) use ($db) {
             Response::error('Invalid credentials', 401);
         }
 
-        // Verify password
-        if (!password_verify($body['password'], $user['password'])) {
+        // La colonne s'appelle password_hash : lire $user['password'] renvoyait
+        // null, et password_verify(null) echoue toujours. La connexion ne
+        // pouvait donc jamais aboutir, quel que soit le mot de passe saisi.
+        if (!password_verify($body['password'], $user['password_hash'])) {
             Response::error('Invalid credentials', 401);
         }
 
@@ -46,7 +48,7 @@ $router->post('\/auth/login', function($params) use ($db) {
             'user' => [
                 'id' => $user['id'],
                 'email' => $user['email'],
-                'name' => $user['name'],
+                'full_name' => $user['full_name'],
                 'role' => $user['role']
             ]
         ], 'Login successful');
@@ -84,15 +86,15 @@ $router->post('\/auth/register', function($params) use ($db) {
         // Hash password
         $hashedPassword = password_hash($body['password'], PASSWORD_BCRYPT);
 
-        // Set role (default to user if not specified)
-        $role = $body['role'] ?? 'user';
-        if (!in_array($role, ['admin', 'instructor', 'user'])) {
-            $role = 'user';
+        // Les seuls roles que la colonne accepte sont admin, editor et student
+        $role = $body['role'] ?? 'student';
+        if (!in_array($role, ['admin', 'editor', 'student'])) {
+            $role = 'student';
         }
 
-        // Insert user
         $db->query(
-            "INSERT INTO users (name, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())",
+            "INSERT INTO users (full_name, email, password_hash, role, created_at)
+             VALUES (?, ?, ?, ?, NOW())",
             [$body['name'], $body['email'], $hashedPassword, $role]
         );
 
@@ -100,7 +102,7 @@ $router->post('\/auth/register', function($params) use ($db) {
 
         Response::success([
             'id' => $userId,
-            'name' => $body['name'],
+            'full_name' => $body['name'],
             'email' => $body['email'],
             'role' => $role
         ], 'User registered successfully', 201);
