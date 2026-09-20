@@ -171,6 +171,7 @@
   color: var(--kkp-ink);
   line-height: var(--line-height-normal);
   margin-bottom: var(--spacing-xs);
+  overflow-wrap: anywhere;
 }
 
 .kkp-row-label .kkp-n {
@@ -292,6 +293,15 @@
 }
 
 @media (max-width: 640px) {
+  .kkp-tiles {
+    grid-template-columns: 1fr;
+  }
+
+  .kkp-block,
+  .kkp-tile {
+    padding: var(--spacing-md);
+  }
+
   .kkp-exports {
     margin-left: 0;
     width: 100%;

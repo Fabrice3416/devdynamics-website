@@ -152,6 +152,11 @@
   margin-left: 250px;
   display: flex;
   flex-direction: column;
+  /* Un element flex a min-width:auto par defaut : il refuse de rétrécir sous
+     la largeur minimale de son contenu. Un tableau large elargissait donc
+     toute la page au lieu de defiler, et le telephone affichait un contenu
+     coupe a droite. */
+  min-width: 0;
 }
 
 .admin-header {
@@ -204,6 +209,7 @@
   flex: 1;
   padding: var(--spacing-2xl);
   overflow-y: auto;
+  min-width: 0;
 }
 
 /* PAGE CONTENT */
@@ -270,7 +276,10 @@
   background-color: var(--color-white);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  overflow: hidden;
+  /* En 'hidden', un tableau plus large que l'ecran elargissait la page entiere
+     et se faisait couper sans qu'on puisse atteindre les dernieres colonnes.
+     En 'auto', il defile a l'interieur de sa carte. */
+  overflow-x: auto;
 }
 
 table {
@@ -386,10 +395,36 @@ tbody tr:hover {
     display: block;
   }
 
+  /* L'en-tete reste sur une ligne : en colonne, le nom de l'utilisateur
+     tombait sous un titre qui occupait deja deux lignes. */
   .admin-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-md);
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+  }
+
+  .header-left {
+    gap: var(--spacing-sm);
+    min-width: 0;
+  }
+
+  .header-left h1 {
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-tight);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .header-right {
+    gap: var(--spacing-sm);
+    flex-shrink: 0;
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
   }
 
   .page-header {
@@ -406,9 +441,15 @@ tbody tr:hover {
     grid-template-columns: 1fr;
   }
 
+  /* Les tuiles restent horizontales : empilees et centrees, chacune prenait
+     un tiers d'ecran et il fallait defiler pour voir quatre chiffres. */
   .stat-box {
-    flex-direction: column;
-    text-align: center;
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+  }
+
+  .stat-icon {
+    font-size: 28px;
   }
 
   table {

@@ -96,14 +96,29 @@
   /* Desktop: 1025px+ */
 }
 
-/* Dark Mode Support (optional future enhancement) */
+/* Mode sombre
+   En clair, --color-white est la teinte la PLUS claire : c'est la surface
+   (carte, en-tete) et elle ressort du fond de page --color-lighter-gray.
+   En sombre, la relation doit etre conservee et non inversee : une carte
+   plus sombre que la page disparait dans le fond. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-dark: #f5f5f5;
-    --color-dark-gray: #e0e0e0;
-    --color-gray: #999999;
-    --color-light-gray: #333333;
-    --color-lighter-gray: #1a1a1a;
-    --color-white: #0a0a0a;
+    --color-dark: #f0f0f0;        /* texte principal */
+    --color-dark-gray: #d6d6d6;   /* texte courant */
+    --color-gray: #a0a0a0;        /* texte secondaire */
+    --color-light-gray: #2c2c2c;  /* remplissage discret, bordures */
+    --color-lighter-gray: #121212;/* fond de page */
+    --color-white: #1e1e1e;       /* surface : carte, en-tete, modale */
+
+    /* Le teal de marque ne tient pas le contraste sur fond sombre : #008080
+       tombe a 3,49:1, sous le seuil AA de 4,5:1 pour du texte courant. Les
+       marches ci-dessous sont mesurees contre la surface #1e1e1e. */
+    --color-primary: #00B3B3;         /* 6,43:1 — texte, liens, element actif */
+    --color-primary-dark: #00D0D0;    /* 8,68:1 — survol : en sombre il eclaircit */
+    --color-primary-light: #4DD9D9;
+    --color-primary-lighter: #0B3E3B; /* fond teinte : se detache de la carte (1,40) */
+
+    /* 4,36:1 en clair, juste sous le seuil */
+    --color-error: #ff6b5e;
   }
 }
