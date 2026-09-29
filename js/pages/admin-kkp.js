@@ -21,11 +21,19 @@ async function loadKkp() {
     kkpResponses = responses.data;
     renderKkp();
   } catch (error) {
+    // Ne suggerer la migration que si la base se plaint vraiment d'une table
+    // ou d'une colonne : l'evoquer a chaque erreur envoyait sur une fausse piste.
+    const message = error.message || 'Erreur inconnue';
+    const ressembleAUnSchema = /table|column|colonne|doesn't exist|n'existe pas/i.test(message);
+
     container.innerHTML = `
       <div class="kkp-empty">
         <p><strong>Statistiques indisponibles.</strong></p>
-        <p>${kkpEsc(error.message || 'Erreur inconnue')}</p>
-        <p>Si la table n'existe pas encore, exécute <code>api/sql/kkp_responses.sql</code> sur la base.</p>
+        <p>${kkpEsc(message)}</p>
+        ${ressembleAUnSchema
+          ? `<p>La base semble incomplète : exécute <code>api/sql/kkp_responses.sql</code>
+             puis <code>api/sql/kkp_migration_01_art_et_conflit.sql</code>.</p>`
+          : `<p>Recharge la page. Si l'erreur persiste, déconnecte-toi puis reconnecte-toi.</p>`}
       </div>`;
   }
 }

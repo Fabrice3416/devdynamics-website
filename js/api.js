@@ -46,7 +46,20 @@ class APIClient {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Erreur API');
+        // Un 401 sur une page d'administration signifie une session expiree
+        // ou revoquee. La laisser remonter comme une erreur ordinaire affiche
+        // un message technique a la place de la seule action utile : se
+        // reconnecter. Les pages publiques ne sont pas concernees.
+        if (response.status === 401
+            && /\/pages\/admin-/.test(window.location.pathname)
+            && typeof renvoyerVersConnexion === 'function') {
+          renvoyerVersConnexion();
+          throw new Error('Session expiree');
+        }
+
+        const erreur = new Error(data.message || 'Erreur API');
+        erreur.status = response.status;
+        throw erreur;
       }
 
       return data;
