@@ -126,6 +126,25 @@ class SimplePDF {
     }
 
     /**
+     * Draw text at an absolute position, without moving the cursor.
+     */
+    public function textAt($str, $x, $y) {
+        $font = $this->isBold ? 'F2' : 'F1';
+        $escaped = $this->escape($str);
+        $this->appendStream("BT /{$font} {$this->fontSize} Tf {$x} {$y} Td ({$escaped}) Tj ET\n");
+    }
+
+    /**
+     * Draw a bordered rectangle, optionally filled with a gray level (0-1).
+     * (x, y) is the bottom-left corner.
+     */
+    public function rect($x, $y, $width, $height, $fillGray = null) {
+        $fill = $fillGray === null ? '' : "{$fillGray} g ";
+        $paint = $fillGray === null ? 'S' : 'B';
+        $this->appendStream("q 0.6 G 0.5 w {$fill}{$x} {$y} {$width} {$height} re {$paint} Q\n");
+    }
+
+    /**
      * Embed a JPEG image at the current cursor position.
      * Width is given in points; height defaults to whatever preserves the
      * source aspect ratio. Cursor advances by the image height.

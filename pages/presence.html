@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Page diffusée par lien direct : elle n'a pas vocation à être indexée -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>Feuille de présence | DevDynamics</title>
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
+  <link rel="stylesheet" href="../css/variables.css?v=8">
+  <link rel="stylesheet" href="../css/global.css?v=8">
+  <link rel="stylesheet" href="../css/components.css?v=8">
+  <link rel="stylesheet" href="../css/pages/presence.css?v=8">
+</head>
+<body class="presence-page">
+  <main class="presence-shell">
+    <header class="presence-header">
+      <img src="../assets/images/logo_6.png" alt="DevDynamics" class="presence-logo">
+      <h1>Feuille de présence à la restitution du 2 novembre 2026</h1>
+    </header>
+
+    <form id="presence-form" class="presence-card" novalidate>
+      <!-- Piège à robots : invisible, doit rester vide -->
+      <div class="presence-hp" aria-hidden="true">
+        <label for="presence-website">Ne pas remplir</label>
+        <input type="text" id="presence-website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="presence-field">
+        <label for="presence-last-name">Nom</label>
+        <input type="text" id="presence-last-name" name="last_name" maxlength="80" autocomplete="family-name" required>
+      </div>
+      <div class="presence-field">
+        <label for="presence-first-name">Prénom</label>
+        <input type="text" id="presence-first-name" name="first_name" maxlength="80" autocomplete="given-name" required>
+      </div>
+      <div class="presence-field">
+        <label for="presence-identifier">Identifiant (NIF / NINU)</label>
+        <input type="text" id="presence-identifier" name="identifier" maxlength="30" autocomplete="off" spellcheck="false" required>
+      </div>
+      <fieldset class="presence-field">
+        <legend>Sexe</legend>
+        <div class="presence-choices">
+          <label><input type="radio" name="gender" value="F" required> Féminin</label>
+          <label><input type="radio" name="gender" value="M"> Masculin</label>
+        </div>
+      </fieldset>
+      <div class="presence-field">
+        <label for="presence-age">Âge</label>
+        <input type="number" id="presence-age" name="age" min="5" max="120" inputmode="numeric" required>
+      </div>
+
+      <p class="presence-error" id="presence-error" role="alert" hidden></p>
+      <button type="submit" class="btn btn-primary btn-lg" id="presence-submit">Confirmer ma présence</button>
+    </form>
+
+    <section id="presence-done" class="presence-card presence-done" hidden>
+      <h2>Présence enregistrée</h2>
+      <p>Merci <span id="presence-done-name"></span>, ta présence est bien notée.</p>
+      <button type="button" class="btn btn-outline" id="presence-again">Inscrire une autre personne</button>
+    </section>
+  </main>
+
+  <script src="../js/api.js?v=8"></script>
+  <script src="../js/pages/presence.js?v=8"></script>
+</body>
+</html>

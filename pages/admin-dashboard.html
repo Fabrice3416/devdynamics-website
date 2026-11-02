@@ -4,12 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - DevDynamics Admin</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <link rel="stylesheet" href="../css/variables.css?v=7">
-  <link rel="stylesheet" href="../css/global.css?v=7">
-  <link rel="stylesheet" href="../css/components.css?v=7">
-  <link rel="stylesheet" href="../css/pages/admin.css?v=7">
-  <link rel="stylesheet" href="../css/pages/admin-kkp.css?v=7">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.49.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="../css/variables.css?v=8">
+  <link rel="stylesheet" href="../css/global.css?v=8">
+  <link rel="stylesheet" href="../css/components.css?v=8">
+  <link rel="stylesheet" href="../css/pages/admin.css?v=8">
 </head>
 <body class="admin-page">
   <!-- SIDEBAR -->
@@ -46,8 +45,8 @@
       <a href="#sponsors" class="menu-item" data-page="sponsors">
         <i class="ti ti-heart-handshake"></i> Sponsors
       </a>
-      <a href="#kkp" class="menu-item" data-page="kkp">
-        <i class="ti ti-chart-histogram"></i> Koulè Ki Pale
+      <a href="#presence" class="menu-item" data-page="presence">
+        <i class="ti ti-clipboard-check"></i> Feuille de présence
       </a>
       <a href="#organization" class="menu-item" data-page="organization">
         <i class="ti ti-settings"></i> Organisation
@@ -196,16 +195,18 @@
         </div>
       </section>
 
-      <!-- KOULÈ KI PALE PAGE -->
-      <section id="kkp-page" class="page-content kkp-admin">
+      <!-- FEUILLE DE PRÉSENCE PAGE -->
+      <section id="presence-page" class="page-content">
         <div class="page-header">
-          <h2>Koulè Ki Pale — questionnaires</h2>
+          <h2>Feuille de présence à la restitution du 2 novembre 2026</h2>
+          <button type="button" class="btn btn-primary" id="presence-download">
+            <i class="ti ti-file-text"></i> Télécharger le PDF
+          </button>
         </div>
-        <div id="kkp-content">
+        <div id="presence-content" class="table-container">
           <!-- Chargé dynamiquement -->
         </div>
       </section>
-
 
       <!-- SPONSORS PAGE -->
       <section id="sponsors-page" class="page-content">
@@ -338,10 +339,9 @@
     </div>
   </div>
 
-  <script src="../js/api.js?v=7"></script>
-  <script src="../js/utils.js?v=7"></script>
-  <script src="../js/pages/admin-dashboard.js?v=7"></script>
-  <script src="../js/pages/admin-kkp.js?v=7"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.js"></script>
+  <script src="../js/api.js?v=8"></script>
+  <script src="../js/utils.js?v=8"></script>
+  <script src="../js/pages/admin-dashboard.js?v=8"></script>
+  <script src="../js/pages/admin-presence.js?v=8"></script>
 </body>
 </html>
