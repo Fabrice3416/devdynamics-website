@@ -192,8 +192,8 @@ async function loadPrograms() {
           <tbody>
             ${response.data.map(program => `
               <tr>
-                <td>${program.title}</td>
-                <td>${program.category || '-'}</td>
+                <td>${escapeHtml(program.title)}</td>
+                <td>${escapeHtml(program.category || '-')}</td>
                 <td><span class="badge badge-primary">${program.is_active ? 'Actif' : 'Inactif'}</span></td>
                 <td>
                   <div class="action-buttons">
@@ -249,9 +249,9 @@ async function loadTestimonials() {
           <tbody>
             ${response.data.map(testimonial => `
               <tr>
-                <td>${testimonial.student_name}</td>
-                <td>${testimonial.student_title || '-'}</td>
-                <td>${testimonial.video_url ? `<a href="${testimonial.video_url}" target="_blank" style="color: var(--color-primary);"><i class="ti ti-video"></i> Voir</a>` : '-'}</td>
+                <td>${escapeHtml(testimonial.student_name)}</td>
+                <td>${escapeHtml(testimonial.student_title || '-')}</td>
+                <td>${testimonial.video_url ? `<a href="${escapeHtml(testimonial.video_url)}" target="_blank" style="color: var(--color-primary);"><i class="ti ti-video"></i> Voir</a>` : '-'}</td>
                 <td>${testimonial.rating ? '<i class="ti ti-star-filled" style="color: var(--color-warning);"></i>'.repeat(testimonial.rating) : '-'}</td>
                 <td>
                   <div class="action-buttons">
@@ -303,10 +303,10 @@ async function loadSponsors() {
           <tbody>
             ${response.data.map(sponsor => `
               <tr>
-                <td><img src="${sponsor.logo_url}" alt="${sponsor.name}" style="height: 40px; max-width: 80px; object-fit: contain;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect fill=%27%23e0e0e0%27 width=%27100%27 height=%27100%27/%3E%3Ctext x=%2750%27 y=%2755%27 text-anchor=%27middle%27 fill=%27%23999%27 font-size=%2714%27%3ELogo%3C/text%3E%3C/svg%3E'"></td>
-                <td>${sponsor.name}</td>
+                <td><img src="${escapeHtml(sponsor.logo_url)}" alt="${escapeHtml(sponsor.name)}" style="height: 40px; max-width: 80px; object-fit: contain;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect fill=%27%23e0e0e0%27 width=%27100%27 height=%27100%27/%3E%3Ctext x=%2750%27 y=%2755%27 text-anchor=%27middle%27 fill=%27%23999%27 font-size=%2714%27%3ELogo%3C/text%3E%3C/svg%3E'"></td>
+                <td>${escapeHtml(sponsor.name)}</td>
                 <td>${getTierBadge(sponsor.tier)}</td>
-                <td>${sponsor.website_url ? `<a href="${sponsor.website_url}" target="_blank" style="color: var(--color-primary);"><i class="ti ti-link"></i> Site</a>` : '-'}</td>
+                <td>${sponsor.website_url ? `<a href="${escapeHtml(sponsor.website_url)}" target="_blank" style="color: var(--color-primary);"><i class="ti ti-link"></i> Site</a>` : '-'}</td>
                 <td><span class="badge ${sponsor.is_active ? 'badge-primary' : 'badge-secondary'}">${sponsor.is_active ? 'Actif' : 'Inactif'}</span></td>
                 <td>
                   <div class="action-buttons">
@@ -366,8 +366,8 @@ async function loadBlogPosts() {
           <tbody>
             ${response.data.map(post => `
               <tr>
-                <td>${post.title}</td>
-                <td>${post.category || '-'}</td>
+                <td>${escapeHtml(post.title)}</td>
+                <td>${escapeHtml(post.category || '-')}</td>
                 <td><span class="badge badge-primary">${post.is_published ? 'Oui' : 'Non'}</span></td>
                 <td>
                   <div class="action-buttons">
@@ -487,9 +487,9 @@ async function loadDonations() {
           <tbody>
             ${response.data.map(donation => `
               <tr>
-                <td>${donation.donor_name}</td>
-                <td>${formatCurrency(donation.amount, donation.currency)}</td>
-                <td><span class="badge badge-primary">${donation.status}</span></td>
+                <td>${escapeHtml(donation.donor_name)}</td>
+                <td>${escapeHtml(formatCurrency(donation.amount, donation.currency))}</td>
+                <td><span class="badge badge-primary">${escapeHtml(donation.status)}</span></td>
                 <td>${formatDate(donation.created_at)}</td>
               </tr>
             `).join('')}
@@ -522,10 +522,10 @@ async function loadContactMessages() {
           <tbody>
             ${response.data.map(message => `
               <tr>
-                <td>${message.name}</td>
-                <td>${message.email}</td>
-                <td>${message.subject}</td>
-                <td><span class="badge badge-primary">${message.status}</span></td>
+                <td>${escapeHtml(message.name)}</td>
+                <td>${escapeHtml(message.email)}</td>
+                <td>${escapeHtml(message.subject)}</td>
+                <td><span class="badge badge-primary">${escapeHtml(message.status)}</span></td>
                 <td>
                   <div class="action-buttons">
                     <button class="btn btn-primary btn-sm" onclick="viewMessage(${message.id})">Voir</button>
@@ -596,12 +596,12 @@ async function loadCourses() {
               return `
               <tr>
                 <td>
-                  ${course.title}
+                  ${escapeHtml(course.title)}
                   ${course.course_type ? `<br><small style="color: var(--color-text-light);">${courseTypeLabel[course.course_type] || course.course_type}</small>` : ''}
                 </td>
-                <td>${course.level}</td>
-                <td>${course.duration || '-'}</td>
-                <td>${course.price ? course.price + ' USD' : 'Gratuit'}</td>
+                <td>${escapeHtml(course.level)}</td>
+                <td>${escapeHtml(course.duration || '-')}</td>
+                <td>${course.price ? escapeHtml(course.price) + ' USD' : 'Gratuit'}</td>
                 <td><button class="btn btn-ghost btn-sm" onclick="viewEnrollments(${course.id})">Voir (0)</button></td>
                 <td><span class="badge ${course.is_active ? 'badge-success' : 'badge-secondary'}">${course.is_active ? 'Actif' : 'Inactif'}</span></td>
                 <td>
@@ -736,10 +736,10 @@ window.viewEnrollments = async function(courseId) {
           <tbody>
             ${enrollments.length === 0 ? '<tr><td colspan="6">Aucune inscription</td></tr>' : enrollments.map(enrollment => `
               <tr>
-                <td>${enrollment.student_name}</td>
-                <td>${enrollment.student_email}</td>
-                <td>${enrollment.student_phone || '-'}</td>
-                <td><span class="badge badge-${enrollment.status === 'approved' ? 'success' : enrollment.status === 'rejected' ? 'secondary' : 'primary'}">${enrollment.status}</span></td>
+                <td>${escapeHtml(enrollment.student_name)}</td>
+                <td>${escapeHtml(enrollment.student_email)}</td>
+                <td>${escapeHtml(enrollment.student_phone || '-')}</td>
+                <td><span class="badge badge-${enrollment.status === 'approved' ? 'success' : enrollment.status === 'rejected' ? 'secondary' : 'primary'}">${escapeHtml(enrollment.status)}</span></td>
                 <td>${formatDate(enrollment.created_at)}</td>
                 <td>
                   <div class="action-buttons">
@@ -824,9 +824,9 @@ async function loadUsers() {
           <tbody>
             ${response.data.map(user => `
               <tr>
-                <td>${user.full_name}</td>
-                <td>${user.email}</td>
-                <td><span class="badge badge-primary">${user.role}</span></td>
+                <td>${escapeHtml(user.full_name)}</td>
+                <td>${escapeHtml(user.email)}</td>
+                <td><span class="badge badge-primary">${escapeHtml(user.role)}</span></td>
                 <td>
                   <div class="action-buttons">
                     <button class="btn btn-primary btn-sm" onclick="changeUserRole(${user.id})">Modifier rôle</button>
