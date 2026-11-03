@@ -9,6 +9,11 @@
  */
 
 const ATTENDANCE_TITLE = 'Feuille de présence à la restitution du 2 novembre 2026';
+const ATTENDANCE_CONTACT = [
+    '190, rue 15-16 B, Cap-Haïtien, Haïti',
+    '+509 47 41 8737',
+    'contact@dev-dynamics.org',
+];
 const ATTENDANCE_GENDERS = ['F' => 'Féminin', 'M' => 'Masculin'];
 
 /**
@@ -92,12 +97,16 @@ function attendance_pdf_lines($text, $width, $fontSize) {
  * En-tete DevDynamics, titre et ligne de colonnes : repetes sur chaque page.
  */
 function attendance_pdf_page_top($pdf, array $columns, $pageNumber) {
-    $pdf->image(__DIR__ . '/../../assets/images/logo_6_pdf.jpg', 140);
-    $pdf->moveDown(16);
+    // Logo a gauche, coordonnees collees a la marge droite
+    $top = $pdf->cursorY;
     $pdf->setFont(9);
-    $pdf->text('Association éducative et technologique à but non lucratif en Haïti');
-    $pdf->text('Port-au-Prince, Haïti | contact@dev-dynamics.org | +509 47 41 8737');
-    $pdf->moveDown(6);
+    $right = $pdf->pageWidth - $pdf->marginRight;
+    foreach (ATTENDANCE_CONTACT as $n => $line) {
+        $pdf->textRight($line, $right, $top - 9 - $n * 13);
+    }
+    $pdf->moveDown(8);
+    $pdf->image(__DIR__ . '/../../assets/images/logo_6_pdf.jpg', 140);
+    $pdf->cursorY = $top - 52;
     $pdf->hr();
     $pdf->moveDown(10);
     $pdf->setFont(14, true);

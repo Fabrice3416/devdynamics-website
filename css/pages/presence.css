@@ -95,10 +95,6 @@
   margin-bottom: var(--spacing-sm);
 }
 
-.presence-done p {
-  margin-bottom: var(--spacing-lg);
-}
-
 /* Piège à robots : hors de l'écran, pas display:none que certains scripts repèrent */
 .presence-hp {
   position: absolute;

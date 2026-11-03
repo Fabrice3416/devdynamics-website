@@ -55,9 +55,3 @@ presenceForm.addEventListener('submit', async (event) => {
     presenceSubmit.textContent = 'Confirmer ma présence';
   }
 });
-
-document.getElementById('presence-again').addEventListener('click', () => {
-  presenceForm.reset();
-  presenceDone.hidden = true;
-  presenceForm.hidden = false;
-});
