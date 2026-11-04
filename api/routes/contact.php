@@ -6,6 +6,7 @@
  * GET    /api/contact             - Liste des messages (admin)
  * PUT    /api/contact/:id/status  - Changer le statut (admin)
  * DELETE /api/contact/:id         - Supprimer (admin)
+ * POST   /api/contact/mail-test   - Essayer l'envoi de la notification (admin)
  */
 
 require_once __DIR__ . '/../utils/RateLimit.php';
@@ -89,6 +90,14 @@ $router->post('\/contact', function($params) use ($db) {
 
     Response::success(null, 'Message envoyé', 201);
 });
+
+$router->post('\/contact/mail-test', function($params) {
+    $sent = Mailer::send(
+        'Essai de notification du site',
+        "Ce courriel a été envoyé depuis l'administration du site pour vérifier les notifications.\nAucune action n'est nécessaire."
+    );
+    Response::success(['sent' => (bool) $sent, 'error' => Mailer::$lastError] + Mailer::configuration());
+}, ['adminMiddleware']);
 
 $router->get('\/contact', function($params) use ($db) {
     try {

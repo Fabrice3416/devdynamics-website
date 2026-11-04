@@ -35,39 +35,69 @@ class Mailer {
         return implode("\n", $lines);
     }
 
+    // Raison du dernier echec, sans le mot de passe : PHPMailer ne le cite jamais
+    public static $lastError = null;
+
     /**
      * Rend true si le courriel est parti. Une panne ne remonte jamais au visiteur.
      */
     public static function notifyContact(array $message) {
-        $password = getenv('SMTP_PASSWORD');
-        if (!$password) return false;
+        return self::send(
+            'Message du site : ' . ($message['subject'] ?: $message['name']),
+            self::contactBody($message),
+            $message['email'],
+            $message['name']
+        );
+    }
+
+    /**
+     * Ce que le serveur a lu dans api/.env, pour comprendre un envoi qui echoue.
+     */
+    public static function configuration() {
+        $username = getenv('SMTP_USERNAME') ?: 'contact@dev-dynamics.org';
+        return [
+            'host' => getenv('SMTP_HOST') ?: 'smtp.hostinger.com',
+            'port' => (int) (getenv('SMTP_PORT') ?: 465),
+            'username' => $username,
+            'to' => getenv('NOTIFY_EMAIL') ?: $username,
+            'has_password' => (bool) getenv('SMTP_PASSWORD'),
+        ];
+    }
+
+    public static function send($subject, $body, $replyTo = null, $replyName = '') {
+        self::$lastError = null;
+        $config = self::configuration();
+
+        if (!$config['has_password']) {
+            self::$lastError = 'SMTP_PASSWORD est absent ou vide dans api/.env';
+            error_log('Mailer : ' . self::$lastError);
+            return false;
+        }
 
         try {
-            $username = getenv('SMTP_USERNAME') ?: 'contact@dev-dynamics.org';
-            $port = (int) (getenv('SMTP_PORT') ?: 465);
-
             $mail = new PHPMailer(true);
             $mail->isSMTP();
-            $mail->Host = getenv('SMTP_HOST') ?: 'smtp.hostinger.com';
-            $mail->Port = $port;
+            $mail->Host = $config['host'];
+            $mail->Port = $config['port'];
             $mail->SMTPAuth = true;
-            $mail->Username = $username;
-            $mail->Password = $password;
-            $mail->SMTPSecure = $port === 465 ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Username = $config['username'];
+            $mail->Password = getenv('SMTP_PASSWORD');
+            $mail->SMTPSecure = $config['port'] === 465 ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
             // Le visiteur attend la reponse de l'API : une panne SMTP ne doit pas le bloquer
             $mail->Timeout = 8;
             $mail->CharSet = PHPMailer::CHARSET_UTF8;
 
-            $mail->setFrom($username, getenv('SMTP_FROM_NAME') ?: 'DevDynamics');
-            $mail->addAddress(getenv('NOTIFY_EMAIL') ?: $username);
-            $mail->addReplyTo($message['email'], $message['name']);
-            $mail->Subject = 'Message du site : ' . ($message['subject'] ?: $message['name']);
+            $mail->setFrom($config['username'], getenv('SMTP_FROM_NAME') ?: 'DevDynamics');
+            $mail->addAddress($config['to']);
+            if ($replyTo) $mail->addReplyTo($replyTo, $replyName);
+            $mail->Subject = $subject;
             $mail->isHTML(false);
-            $mail->Body = self::contactBody($message);
+            $mail->Body = $body;
 
             return $mail->send();
         } catch (Exception $e) {
-            error_log('Mailer::notifyContact : ' . $e->getMessage());
+            self::$lastError = $e->getMessage();
+            error_log('Mailer : ' . self::$lastError);
             return false;
         }
     }

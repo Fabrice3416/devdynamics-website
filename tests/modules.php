@@ -115,6 +115,15 @@ $check('la notification porte le message', str_contains($corps, 'Le texte') && s
 putenv('SMTP_PASSWORD');
 $check('sans mot de passe, aucun envoi et aucune erreur', Mailer::notifyContact(['name' => 'M', 'email' => 'm@e.org', 'phone' => null, 'subject' => '', 'message' => 'x']) === false);
 
+$halt = $call('post \\/contact/mail-test');
+$check("essai d'envoi : la raison est donnée", $halt->data['sent'] === false && str_contains($halt->data['error'], 'SMTP_PASSWORD') && $halt->data['has_password'] === false);
+putenv('SMTP_PASSWORD=motdepasse-secret');
+putenv('SMTP_HOST=127.0.0.1');
+putenv('SMTP_PORT=1');
+$halt = $call('post \\/contact/mail-test');
+$check("essai d'envoi : le mot de passe n'est jamais rendu", $halt->data['sent'] === false && !str_contains(json_encode($halt->data), 'motdepasse-secret') && $halt->data['has_password'] === true);
+putenv('SMTP_PASSWORD'); putenv('SMTP_HOST'); putenv('SMTP_PORT');
+
 // ---------- Temoignages ----------
 
 foreach ([

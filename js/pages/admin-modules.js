@@ -127,6 +127,27 @@ async function deleteContactMessage(id) {
   }
 }
 
+document.getElementById('mail-test-btn').addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  const result = document.getElementById('mail-test-result');
+  button.disabled = true;
+  result.hidden = false;
+  result.textContent = 'Envoi en cours…';
+
+  try {
+    const { data } = await api.request('/contact/mail-test', { method: 'POST' });
+    result.innerHTML = `
+      <p><strong>${data.sent ? 'Le serveur a bien envoyé le courriel.' : "L'envoi a échoué."}</strong>
+      ${data.sent ? `Regardez la boîte ${escapeHtml(data.to)}, y compris les indésirables.` : ''}</p>
+      ${data.error ? `<p>Raison : ${escapeHtml(data.error)}</p>` : ''}
+      <p class="fb-note">Serveur ${escapeHtml(data.host)}:${Number(data.port)} · compte ${escapeHtml(data.username)} · destinataire ${escapeHtml(data.to)} · mot de passe ${data.has_password ? 'présent' : 'absent'}</p>`;
+  } catch (error) {
+    result.textContent = error.message || "L'essai a échoué.";
+  } finally {
+    button.disabled = false;
+  }
+});
+
 // ---------- Témoignages ----------
 
 const TESTIMONIAL_STATUS = { pending: 'En attente', approved: 'Publié', rejected: 'Refusé' };
