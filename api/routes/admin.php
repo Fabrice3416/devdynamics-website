@@ -20,7 +20,7 @@ $router->get('\/admin/dashboard/stats', function($params) use ($db) {
             ],
             'contacts' => [
                 'total' => $db->fetchOne("SELECT COUNT(*) as count FROM contact_messages"),
-                'unread' => $db->fetchOne("SELECT COUNT(*) as count FROM contact_messages WHERE status = 'unread'")
+                'unread' => $db->fetchOne("SELECT COUNT(*) as count FROM contact_messages WHERE status = 'new'")
             ],
             'sponsors' => [
                 'total' => $db->fetchOne("SELECT COUNT(*) as count FROM sponsors")

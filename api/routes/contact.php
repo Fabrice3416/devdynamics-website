@@ -38,12 +38,12 @@ $router->post('\/contact', function($params) use ($db) {
     try {
         $db->query(
             "INSERT INTO contact_messages (name, email, phone, subject, message, status, created_at)
-             VALUES (?, ?, ?, ?, ?, 'unread', NOW())",
+             VALUES (?, ?, ?, ?, ?, 'new', NOW())",
             [
                 $body['name'],
                 $body['email'],
                 $body['phone'] ?? null,
-                $body['subject'] ?? null,
+                trim((string) ($body['subject'] ?? '')),
                 $body['message']
             ]
         );
@@ -66,7 +66,7 @@ $router->put('\/contact/:id/status', function($params) use ($db) {
         Response::error('Status is required', 400);
     }
 
-    if (!in_array($body['status'], ['unread', 'read', 'replied'])) {
+    if (!in_array($body['status'], ['new', 'read', 'replied'])) {
         Response::error('Invalid status', 400);
     }
 
