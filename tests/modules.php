@@ -193,6 +193,7 @@ $_SERVER['CONTENT_LENGTH'] = 500000000; $_SERVER['CONTENT_TYPE'] = 'multipart/fo
 $check('envoi trop lourd : 413 au lieu de « Indiquez votre nom »', $call('post \/project-testimonials/collect/:slug', ['slug' => 'p'], [])->getCode() === 413);
 unset($_SERVER['CONTENT_LENGTH'], $_SERVER['CONTENT_TYPE']);
 
+$check('une vidéo MP4 est servie comme MP4', str_contains(file_get_contents("{$ROOT}/api/routes/project-testimonials.php"), "'mp4' => 'video/mp4', 'webm'"));
 $check('le dossier en attente est fermé', str_contains(file_get_contents("{$ROOT}/uploads/videos-attente/.htaccess"), 'Require all denied'));
 $check('le serveur accepte la taille annoncée', (int) parse_ini_file("{$ROOT}/api/.user.ini")['upload_max_filesize'] * 1024 * 1024 > TESTIMONIAL_VIDEO_MAX_BYTES);
 $publiques = file_get_contents("{$ROOT}/js/site.js");

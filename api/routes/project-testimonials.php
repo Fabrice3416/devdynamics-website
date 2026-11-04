@@ -308,7 +308,8 @@ $router->get('\/project-testimonials/:id/video', function($params) use ($db) {
         Response::notFound('Vidéo introuvable');
     }
 
-    $types = array_flip(TESTIMONIAL_VIDEO_TYPES);
+    // Par extension : plusieurs types recus partagent la meme, comme video/x-m4v et video/mp4
+    $types = ['mp4' => 'video/mp4', 'webm' => 'video/webm', 'mov' => 'video/quicktime'];
     header('Content-Type: ' . ($types[pathinfo($name, PATHINFO_EXTENSION)] ?? 'application/octet-stream'));
     header('Content-Length: ' . filesize($path));
     header('X-Content-Type-Options: nosniff');

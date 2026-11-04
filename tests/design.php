@@ -113,6 +113,18 @@ foreach (['formulaire', 'temoignage'] as $page) {
     $check("{$page}.html : non indexee", str_contains(file_get_contents("{$ROOT}/pages/{$page}.html"), 'noindex'));
 }
 
+// Les redirections des anciennes adresses visent des pages qui existent, jamais une page gardee
+$htaccess = file_get_contents("{$ROOT}/.htaccess");
+preg_match_all('#RedirectMatch 301 \S+ /(\S+)#', $htaccess, $cibles);
+foreach (array_unique($cibles[1]) as $cible) {
+    $check("redirection vers {$cible}", is_file("{$ROOT}/{$cible}"));
+}
+preg_match_all('#RedirectMatch 301 \^/pages/\(?([a-z|-]+)\)?\\\\.html#', $htaccess, $anciennes);
+foreach (explode('|', implode('|', $anciennes[1])) as $ancienne) {
+    $check("ancienne adresse bien retirée : {$ancienne}", !is_file("{$ROOT}/pages/{$ancienne}.html"));
+}
+$check('toutes les anciennes adresses sont lues', count(explode('|', implode('|', $anciennes[1]))) === 21);
+
 exec('php ' . escapeshellarg("{$ROOT}/tools/build-layout.php") . ' --check', $sortie, $code);
 $check('en-tete et pied de page a jour dans toutes les pages', $code === 0, implode(' ', $sortie));
 

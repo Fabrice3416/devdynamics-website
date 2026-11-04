@@ -49,9 +49,10 @@ class APIClient {
         // Un 401 sur une page d'administration signifie une session expiree
         // ou revoquee. La laisser remonter comme une erreur ordinaire affiche
         // un message technique a la place de la seule action utile : se
-        // reconnecter. Les pages publiques ne sont pas concernees.
+        // reconnecter. Les pages publiques ne sont pas concernees, ni la page de
+        // connexion, ou un 401 veut seulement dire que le mot de passe est faux.
         if (response.status === 401
-            && /\/pages\/admin-/.test(window.location.pathname)
+            && /\/pages\/admin-(?!login)/.test(window.location.pathname)
             && typeof renvoyerVersConnexion === 'function') {
           renvoyerVersConnexion();
           throw new Error('Session expiree');

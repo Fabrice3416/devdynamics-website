@@ -592,6 +592,9 @@ $router->post('\/forms', function($params) use ($db) {
         $db->commit();
     } catch (Exception $e) {
         $db->rollback();
+        if (strpos($e->getMessage(), 'foreign key constraint') !== false) {
+            Response::error('Ce projet n\'existe plus. Rechargez la page.', 400);
+        }
         Response::error('Création impossible : ' . $e->getMessage(), 500);
     }
     Response::success(['id' => $id], 'Formulaire créé', 201);
