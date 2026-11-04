@@ -52,10 +52,5 @@ Options -Indexes
     Deny from all
 </FilesMatch>
 
-# PHP settings
-<IfModule mod_php7.c>
-    php_value upload_max_filesize 10M
-    php_value post_max_size 10M
-    php_value memory_limit 256M
-    php_value max_execution_time 300
-</IfModule>
+# Limites d'envoi : voir api/.user.ini. Pas de php_value ici : LiteSpeed l'appliquait
+# malgre la condition mod_php7, et plafonnait les envois a 10 Mo.

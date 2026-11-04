@@ -160,7 +160,7 @@ $router->get('\/project-testimonials/collect/:slug', function($params) use ($db)
 
 $router->post('\/project-testimonials/collect/:slug', function($params) use ($db) {
     if (testimonial_post_too_large()) {
-        Response::error('La vidéo dépasse 100 Mo', 413);
+        Response::error("La vidéo est trop lourde pour être envoyée. Envoyez-en une plus courte, ou un lien YouTube.", 413);
     }
     // Avec une video le formulaire arrive en multipart, sinon en JSON
     $body = $_POST ?: Router::getBody();
@@ -319,7 +319,7 @@ $router->get('\/project-testimonials/:id/video', function($params) use ($db) {
 
 $router->post('\/project-testimonials/:id/video', function($params) use ($db) {
     if (testimonial_post_too_large()) {
-        Response::error('La vidéo dépasse 100 Mo', 413);
+        Response::error("La vidéo est trop lourde pour être envoyée. Envoyez-en une plus courte, ou un lien YouTube.", 413);
     }
     $upload = $_FILES['video'] ?? null;
     if (!$upload) {
