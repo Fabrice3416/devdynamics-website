@@ -94,9 +94,10 @@ if (orgElements.length) {
 
 // ---------- Témoignages ----------
 
-function testimonialCard(item, extra) {
+function testimonialCard(item, base, extra) {
   return `
     <figure class="card testimonial fade-in">
+      ${item.video_file ? `<video class="video-file" controls playsinline preload="metadata" src="${base}uploads/videos/${encodeURIComponent(item.video_file)}" aria-label="Vidéo de ${escapeHtml(item.name)}"></video>` : ''}
       ${item.video_id ? `<div class="video-frame"><iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(item.video_id)}" title="Vidéo de ${escapeHtml(item.name)}" loading="lazy" allowfullscreen></iframe></div>` : ''}
       <blockquote>${escapeHtml(item.content)}</blockquote>
       <figcaption><strong>${escapeHtml(item.name)}</strong>${item.role_title ? `, ${escapeHtml(item.role_title)}` : ''}${extra || ''}</figcaption>

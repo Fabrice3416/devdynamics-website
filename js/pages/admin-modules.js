@@ -151,6 +151,15 @@ async function loadProjectTestimonials() {
           <p class="fb-note">${escapeHtml(item.project_name)} · ${escapeHtml(item.created_at)}</p>
           <p class="message-text">${escapeHtml(item.content)}</p>
           ${item.video_id ? `<p><a href="https://www.youtube.com/watch?v=${encodeURIComponent(item.video_id)}" target="_blank" rel="noopener"><i class="ti ti-brand-youtube"></i> Voir la vidéo</a></p>` : ''}
+          <div class="fb-actions testimonial-video" id="testimonial-video-${Number(item.id)}">
+            ${item.video_file ? `
+              <button class="btn btn-secondary btn-sm" onclick="playTestimonialVideo(${Number(item.id)})"><i class="ti ti-player-play"></i> Voir la vidéo envoyée</button>
+              <button class="btn btn-secondary btn-sm" onclick="removeTestimonialVideo(${Number(item.id)})">Retirer la vidéo</button>` : ''}
+            <label class="btn btn-secondary btn-sm">
+              <i class="ti ti-upload"></i> ${item.video_file ? 'Remplacer la vidéo' : 'Ajouter une vidéo'}
+              <input type="file" class="sr-only" accept="video/mp4,video/webm,video/quicktime" onchange="uploadTestimonialVideo(${Number(item.id)}, this)">
+            </label>
+          </div>
           <div class="fb-actions">
             ${item.status !== 'approved' ? `<button class="btn btn-primary btn-sm" onclick="setTestimonial(${Number(item.id)}, 'approved', false)">Publier</button>` : ''}
             ${item.status !== 'rejected' ? `<button class="btn btn-secondary btn-sm" onclick="setTestimonial(${Number(item.id)}, 'rejected', false)">Refuser</button>` : ''}
@@ -169,6 +178,73 @@ async function setTestimonial(id, status, featured) {
     loadProjectTestimonials();
   } catch (error) {
     alert(error.message || 'Le changement a échoué.');
+  }
+}
+
+// Par fetch : une vidéo non publiée n'est lisible qu'avec le jeton admin
+async function playTestimonialVideo(id) {
+  const zone = document.getElementById(`testimonial-video-${id}`);
+  const existing = zone.parentElement.querySelector('video');
+  if (existing) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/project-testimonials/${id}/video`, {
+      headers: { 'Authorization': `Bearer ${api.token}` }
+    });
+    if (!response.ok) throw new Error('Vidéo introuvable.');
+    const video = document.createElement('video');
+    video.controls = true;
+    video.className = 'admin-video';
+    video.src = URL.createObjectURL(await response.blob());
+    zone.after(video);
+  } catch (error) {
+    alert(error.message || 'La vidéo ne peut pas être lue.');
+  }
+}
+
+function uploadTestimonialVideo(id, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 100 * 1024 * 1024) {
+    alert('La vidéo dépasse 100 Mo.');
+    input.value = '';
+    return;
+  }
+
+  const label = input.closest('label');
+  const body = new FormData();
+  body.append('video', file);
+
+  const request = new XMLHttpRequest();
+  request.open('POST', `${API_BASE_URL}/project-testimonials/${id}/video`);
+  request.setRequestHeader('Authorization', `Bearer ${api.token}`);
+  request.upload.addEventListener('progress', (event) => {
+    if (event.lengthComputable) label.textContent = `Envoi : ${Math.round((event.loaded / event.total) * 100)} %`;
+  });
+  request.addEventListener('load', () => {
+    if (request.status >= 200 && request.status < 300) {
+      loadProjectTestimonials();
+      return;
+    }
+    let message = "L'envoi de la vidéo a échoué.";
+    try { message = JSON.parse(request.responseText).message || message; } catch (error) {}
+    alert(message);
+    loadProjectTestimonials();
+  });
+  request.addEventListener('error', () => {
+    alert("L'envoi de la vidéo a échoué. Vérifie ta connexion.");
+    loadProjectTestimonials();
+  });
+  request.send(body);
+}
+
+async function removeTestimonialVideo(id) {
+  if (!confirm('Retirer définitivement cette vidéo ?')) return;
+  try {
+    await api.request(`/project-testimonials/${id}/video`, { method: 'DELETE' });
+    loadProjectTestimonials();
+  } catch (error) {
+    alert(error.message || 'Le retrait a échoué.');
   }
 }
 

@@ -396,6 +396,7 @@ ul { margin: 0 0 1rem; padding-left: 1.25rem; }
 .testimonial figcaption strong { color: var(--text); }
 .video-frame { aspect-ratio: 16 / 9; margin-bottom: 1rem; border-radius: 8px; overflow: hidden; }
 .video-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+.video-file { width: 100%; margin-bottom: 1rem; border-radius: 8px; background: var(--surface-alt); }
 .detail-section { margin-top: 2.5rem; }
 
 /* ---------- Partenaires ---------- */
@@ -475,6 +476,9 @@ ul { margin: 0 0 1rem; padding-left: 1.25rem; }
 .field input:focus, .field textarea:focus, .field select:focus { outline: 0; border-color: var(--link); box-shadow: 0 0 0 3px var(--primary-soft); }
 
 .form-shell { width: min(100% - 2 * var(--gutter), 44rem); }
+.upload-progress { display: flex; align-items: center; gap: 0.75rem; }
+.upload-progress progress { flex: 1; height: 0.6rem; accent-color: var(--primary); }
+.field input[type="file"] { min-height: 44px; padding: 0.45rem; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--text-muted); border-radius: 8px; width: 100%; }
 .form-note { margin: 0; font-size: 0.9rem; color: var(--text-muted); }
 .preview-banner { margin-bottom: 1.5rem; padding: 0.75rem 1rem; font-weight: 600; color: var(--on-primary-soft); background: var(--primary-soft); border-radius: var(--radius); }
 

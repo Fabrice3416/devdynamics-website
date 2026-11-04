@@ -144,7 +144,7 @@ async function loadProjectTestimonials(slug, container) {
     container.insertAdjacentHTML('beforeend', `
       <div class="detail-section">
         <h2>Témoignages</h2>
-        <div class="grid">${data.map(item => testimonialCard(item)).join('')}</div>
+        <div class="grid">${data.map(item => testimonialCard(item, '../')).join('')}</div>
       </div>`);
   } catch (error) {
     // Les témoignages accompagnent la fiche : leur absence ne l'empêche pas de s'afficher

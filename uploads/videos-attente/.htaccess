@@ -1,0 +1,3 @@
+# Videos de temoignages pas encore publies : jamais accessibles directement.
+# L'administration les lit par l'API, avec son jeton.
+Require all denied

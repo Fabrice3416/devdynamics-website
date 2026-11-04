@@ -36,7 +36,7 @@ async function loadHomeShowcase() {
   try {
     const { data } = await api.request('/project-testimonials/featured');
     if (data.length > 0) {
-      document.getElementById('home-testimonials').innerHTML = data.map(item => testimonialCard(item,
+      document.getElementById('home-testimonials').innerHTML = data.map(item => testimonialCard(item, '',
         ` <br><a href="pages/realisation.html?p=${encodeURIComponent(item.project_slug)}">${escapeHtml(item.project_name)}</a>`
       )).join('');
       document.getElementById('home-testimonials-section').hidden = false;
@@ -92,11 +92,20 @@ async function loadTestimonialForm() {
         <textarea id="testimonial-content" name="content" maxlength="3000" required></textarea>
       </div>
       <div class="field">
-        <label for="testimonial-video">Lien d'une vidéo YouTube <span class="optional">(facultatif)</span></label>
+        <label for="testimonial-file">Votre vidéo <span class="optional">(facultatif)</span></label>
+        <p class="help">MP4, WebM ou MOV, 100 Mo au plus. Sur une connexion lente, préférez un lien YouTube.</p>
+        <input type="file" id="testimonial-file" name="video" accept="video/mp4,video/webm,video/quicktime">
+      </div>
+      <div class="field">
+        <label for="testimonial-video">Ou le lien d'une vidéo YouTube <span class="optional">(facultatif)</span></label>
         <input type="url" id="testimonial-video" name="video_url" inputmode="url" placeholder="https://">
       </div>
       <div class="field">
-        <label class="consent"><input type="checkbox" name="consent" required> J'accepte que ce témoignage, mon nom et ma fonction soient publiés sur le site de DevDynamics.</label>
+        <label class="consent"><input type="checkbox" name="consent" required> J'accepte que ce témoignage, ma vidéo éventuelle, mon nom et ma fonction soient publiés sur le site de DevDynamics.</label>
+      </div>
+      <div class="upload-progress" id="testimonial-progress" hidden>
+        <progress max="100" value="0" aria-label="Envoi en cours"></progress>
+        <span id="testimonial-progress-label"></span>
       </div>
       <p class="form-status" id="testimonial-status" role="alert" hidden></p>
       <div class="actions"><button type="submit" class="btn btn-primary">Envoyer</button></div>
@@ -116,29 +125,60 @@ async function loadTestimonialForm() {
     event.preventDefault();
     status.hidden = true;
 
-    const data = Object.fromEntries(new FormData(form).entries());
-    data.consent = form.elements.consent.checked ? 1 : 0;
+    const data = new FormData(form);
+    const consent = form.elements.consent.checked;
+    const video = form.elements.video.files[0];
 
-    if (!data.name.trim()) return fail('Indiquez votre nom.');
-    if (!data.content.trim()) return fail('Écrivez votre témoignage.');
-    if (!data.consent) return fail('Votre accord pour la publication est nécessaire.');
+    if (!data.get('name').trim()) return fail('Indiquez votre nom.');
+    if (!data.get('content').trim()) return fail('Écrivez votre témoignage.');
+    if (!consent) return fail('Votre accord pour la publication est nécessaire.');
+    if (video && video.size > 100 * 1024 * 1024) return fail('La vidéo dépasse 100 Mo. Envoyez-en une plus courte, ou un lien YouTube.');
+    if (!video) data.delete('video');
+    data.set('consent', '1');
 
     submit.disabled = true;
     submit.textContent = 'Envoi en cours…';
 
+    const progress = document.getElementById('testimonial-progress');
+    progress.hidden = !video;
+
     try {
-      await api.request(`/project-testimonials/collect/${encodeURIComponent(slug)}`, {
-        method: 'POST',
-        body: JSON.stringify(data)
+      await sendTestimonial(slug, data, (percent) => {
+        progress.querySelector('progress').value = percent;
+        document.getElementById('testimonial-progress-label').textContent = `${percent} %`;
       });
       document.getElementById('testimonial-title').textContent = 'Merci !';
       testimonialMessage('Votre témoignage a bien été reçu. Il sera publié après validation.');
       window.scrollTo(0, 0);
     } catch (error) {
-      fail(error.message || "L'envoi a échoué. Vérifiez votre connexion et réessayez.");
+      progress.hidden = true;
+      fail(error.message);
       submit.disabled = false;
       submit.textContent = 'Envoyer';
     }
+  });
+}
+
+// XMLHttpRequest plutôt que fetch : seul lui donne l'avancement de l'envoi,
+// indispensable pour une vidéo sur une connexion lente.
+function sendTestimonial(slug, data, onProgress) {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open('POST', `${API_BASE_URL}/project-testimonials/collect/${encodeURIComponent(slug)}`);
+    request.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
+    });
+    request.addEventListener('load', () => {
+      if (request.status >= 200 && request.status < 300) {
+        resolve();
+        return;
+      }
+      let message = request.status === 413 ? 'La vidéo est trop lourde pour être envoyée.' : "L'envoi a échoué. Réessayez dans un instant.";
+      try { message = JSON.parse(request.responseText).message || message; } catch (error) {}
+      reject(new Error(message));
+    });
+    request.addEventListener('error', () => reject(new Error("L'envoi a échoué. Vérifiez votre connexion et réessayez.")));
+    request.send(data);
   });
 }
 

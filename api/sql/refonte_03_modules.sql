@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS project_testimonials (
     role_title  VARCHAR(160) NULL,
     content     TEXT NOT NULL,
     video_id    VARCHAR(20) NULL COMMENT 'Identifiant YouTube',
+    video_file  VARCHAR(80) NULL COMMENT 'Nom du fichier envoye, sans chemin',
     status      ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
     featured    TINYINT(1) NOT NULL DEFAULT 0,
     created_at  TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,

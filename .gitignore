@@ -80,3 +80,6 @@ api/clear-*.php
 # Images envoyees depuis l'administration : elles vivent sur le serveur
 /uploads/*
 !/uploads/.htaccess
+!/uploads/videos-attente/
+/uploads/videos-attente/*
+!/uploads/videos-attente/.htaccess

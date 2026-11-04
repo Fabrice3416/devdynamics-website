@@ -152,10 +152,51 @@ $lecture = end($db->log)[0];
 $check("l'accueil ne lit que les témoignages publiés et choisis", str_contains($lecture, "t.status = 'approved'") && str_contains($lecture, 't.featured = 1'));
 
 $db->log = [];
+$db->one = ['video_file' => null];
 $call('put \/project-testimonials/:id', ['id' => 1], ['status' => 'rejected', 'featured' => 1]);
 $check("un témoignage refusé quitte l'accueil", end($db->log)[1][1] === 0);
 $call('put \/project-testimonials/:id', ['id' => 1], ['status' => 'approved', 'featured' => 1]);
 $check('un témoignage publié peut aller sur l\'accueil', end($db->log)[1][1] === 1);
+$db->one = null;
+$check('témoignage inconnu : 404', $call('put \/project-testimonials/:id', ['id' => 9], ['status' => 'approved'])->getCode() === 404);
+
+// ---------- Videos ----------
+
+$dir = sys_get_temp_dir() . '/videos-test-' . uniqid();
+mkdir("{$dir}/videos-attente", 0755, true);
+$mp4 = "{$dir}/a.mp4";
+file_put_contents($mp4, "\x00\x00\x00\x18ftypmp42\x00\x00\x00\x00mp42isom" . str_repeat("\x00", 64));
+$mov = "{$dir}/a.mov";
+file_put_contents($mov, "\x00\x00\x00\x14ftypqt  \x00\x00\x00\x00qt  " . str_repeat("\x00", 64));
+$php = "{$dir}/photo.mp4";
+file_put_contents($php, '<?php echo 1;');
+$check('un MP4 passe', testimonial_video_check($mp4, filesize($mp4), UPLOAD_ERR_OK)[0] === 'mp4');
+$check("un MOV d'iPhone passe", testimonial_video_check($mov, filesize($mov), UPLOAD_ERR_OK)[0] === 'mov');
+$check('du PHP déguisé en MP4 est refusé', testimonial_video_check($php, filesize($php), UPLOAD_ERR_OK)[1] !== null);
+$check('plus de 100 Mo est refusé', testimonial_video_check($mp4, TESTIMONIAL_VIDEO_MAX_BYTES + 1, UPLOAD_ERR_OK)[1] !== null);
+$check('une limite du serveur dépassée est dite clairement', str_contains(testimonial_video_check($mp4, 0, UPLOAD_ERR_INI_SIZE)[1], '100 Mo'));
+
+$name = 'abc.mp4';
+rename($mp4, "{$dir}/videos-attente/{$name}");
+$check('en attente : compté dans le plafond', testimonial_pending_bytes($dir) > 0);
+$check('publier déplace la vidéo', testimonial_sync_video($name, true, $dir) && is_file("{$dir}/videos/{$name}") && !is_file("{$dir}/videos-attente/{$name}"));
+$check('republier ne casse rien', testimonial_sync_video($name, true, $dir));
+$check('refuser la retire du public', testimonial_sync_video($name, false, $dir) && !is_file("{$dir}/videos/{$name}") && is_file("{$dir}/videos-attente/{$name}"));
+$check('sans vidéo : rien à déplacer', testimonial_sync_video(null, true, $dir));
+$check('fichier disparu : signalé', testimonial_sync_video('absent.mp4', true, $dir) === false);
+testimonial_delete_video($name, $dir);
+$check('supprimer efface le fichier', !is_file("{$dir}/videos-attente/{$name}") && !is_file("{$dir}/videos/{$name}"));
+array_map('unlink', [$mov, $php]);
+rmdir("{$dir}/videos"); rmdir("{$dir}/videos-attente"); rmdir($dir);
+
+$_SERVER['CONTENT_LENGTH'] = 500000000; $_SERVER['CONTENT_TYPE'] = 'multipart/form-data; boundary=x';
+$check('envoi trop lourd : 413 au lieu de « Indiquez votre nom »', $call('post \/project-testimonials/collect/:slug', ['slug' => 'p'], [])->getCode() === 413);
+unset($_SERVER['CONTENT_LENGTH'], $_SERVER['CONTENT_TYPE']);
+
+$check('le dossier en attente est fermé', str_contains(file_get_contents("{$ROOT}/uploads/videos-attente/.htaccess"), 'Require all denied'));
+$check('le serveur accepte la taille annoncée', (int) parse_ini_file("{$ROOT}/api/.user.ini")['upload_max_filesize'] * 1024 * 1024 > TESTIMONIAL_VIDEO_MAX_BYTES);
+$publiques = file_get_contents("{$ROOT}/js/site.js");
+$check('le site ne lit que le dossier publié', str_contains($publiques, 'uploads/videos/') && !str_contains($publiques, 'videos-attente'));
 
 // ---------- Partenaires ----------
 
