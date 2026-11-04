@@ -10,48 +10,26 @@
 $router = Router::getInstance();
 $db = Database::getInstance();
 
-// Get dashboard statistics (admin only)
-$router->get('\/admin/dashboard/stats', function($params) use ($db) {
+// Chaque compteur est lu a part : une table indisponible ne fait pas tomber tout l'ecran
+function admin_count($db, $sql) {
     try {
-        $stats = [
-            'donations' => [
-                'total' => $db->fetchOne("SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total FROM donations WHERE payment_status = 'completed'"),
-                'pending' => $db->fetchOne("SELECT COUNT(*) as count FROM donations WHERE payment_status = 'pending'")
-            ],
-            'contacts' => [
-                'total' => $db->fetchOne("SELECT COUNT(*) as count FROM contact_messages"),
-                'unread' => $db->fetchOne("SELECT COUNT(*) as count FROM contact_messages WHERE status = 'new'")
-            ],
-            'sponsors' => [
-                'total' => $db->fetchOne("SELECT COUNT(*) as count FROM sponsors")
-            ],
-            'programs' => [
-                'total' => $db->fetchOne("SELECT COUNT(*) as count FROM programs")
-            ],
-            'courses' => [
-                'total' => $db->fetchOne("SELECT COUNT(*) as count FROM courses"),
-                'active' => $db->fetchOne("SELECT COUNT(*) as count FROM courses WHERE is_active = 1")
-            ],
-            'students' => [
-                'total' => $db->fetchOne("SELECT COUNT(*) as count FROM students")
-            ],
-            'enrollments' => [
-                'total' => $db->fetchOne("SELECT COUNT(*) as count FROM course_enrollments"),
-                'active' => $db->fetchOne("SELECT COUNT(*) as count FROM course_enrollments WHERE status = 'enrolled'")
-            ],
-            'blog' => [
-                'total' => $db->fetchOne("SELECT COUNT(*) as count FROM blog_posts"),
-                'published' => $db->fetchOne("SELECT COUNT(*) as count FROM blog_posts WHERE status = 'published'")
-            ]
-        ];
-
-        Response::success($stats);
+        return (int) $db->fetchOne($sql)['total'];
     } catch (Exception $e) {
-        Response::error('Failed to fetch dashboard stats: ' . $e->getMessage(), 500);
+        error_log('admin_count : ' . $e->getMessage());
+        return null;
     }
+}
+
+$router->get('\/admin/dashboard/stats', function($params) use ($db) {
+    Response::success([
+        'messages_new' => admin_count($db, "SELECT COUNT(*) AS total FROM contact_messages WHERE status = 'new'"),
+        'testimonials_pending' => admin_count($db, "SELECT COUNT(*) AS total FROM project_testimonials WHERE status = 'pending'"),
+        'forms_open' => admin_count($db, "SELECT COUNT(*) AS total FROM forms WHERE status = 'open'"),
+        'responses_week' => admin_count($db, "SELECT COUNT(*) AS total FROM form_responses WHERE created_at >= NOW() - INTERVAL 7 DAY"),
+        'projects_published' => admin_count($db, "SELECT COUNT(*) AS total FROM projects WHERE status = 'published'"),
+    ]);
 }, ['adminMiddleware']);
 
-// List all users (admin only)
 $router->get('\/admin/users', function($params) use ($db) {
     try {
         $users = $db->fetchAll(

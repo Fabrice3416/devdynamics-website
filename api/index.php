@@ -31,18 +31,8 @@ require_once __DIR__ . '/middleware/auth.php';
 
 // Load all routes
 require_once __DIR__ . '/routes/auth.php';
-require_once __DIR__ . '/routes/students.php';
-require_once __DIR__ . '/routes/courses.php';
-require_once __DIR__ . '/routes/course-content.php';
-require_once __DIR__ . '/routes/quiz-management.php';
-require_once __DIR__ . '/routes/certificates.php';
-require_once __DIR__ . '/routes/programs.php';
-require_once __DIR__ . '/routes/blog.php';
-require_once __DIR__ . '/routes/donations.php';
 require_once __DIR__ . '/routes/contact.php';
 require_once __DIR__ . '/routes/organization.php';
-require_once __DIR__ . '/routes/testimonials.php';
-require_once __DIR__ . '/routes/sponsors.php';
 require_once __DIR__ . '/routes/admin.php';
 require_once __DIR__ . '/routes/attendance.php';
 require_once __DIR__ . '/routes/projects.php';

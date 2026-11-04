@@ -24,6 +24,7 @@ $pages = array_map(fn($p) => "{$ROOT}/{$p}", [
 $aVenir = [];
 
 $css = file_get_contents("{$ROOT}/css/site.css");
+$cssAdmin = file_get_contents("{$ROOT}/css/pages/admin.css");
 
 // ---------- Contrastes ----------
 
@@ -59,6 +60,7 @@ $paires = [
     ['on-primary-soft', 'primary-soft', 4.5],
     ['footer-text', 'footer-bg', 4.5], ['footer-muted', 'footer-bg', 4.5],
     ['danger', 'surface', 4.5], ['success', 'surface', 4.5],
+    ['footer-text', 'sidebar-hover', 4.5],
     ['border', 'surface', 1.2],
     ['on-logo-plate', 'logo-plate', 4.5],
 ];
@@ -80,11 +82,13 @@ $regles = preg_replace('/^:root[^{]*\{.*?^\}/ms', '', $regles);
 $regles = preg_replace('/@media \(prefers-color-scheme: dark\) \{\s*:root:not\(\[data-theme="light"\]\) \{.*?\}\s*\}/s', '', $regles);
 preg_match_all('/#[0-9a-f]{3,8}\b(?![^{]*\{)|\b(?:white|black)\b(?![^{]*\{)|rgba?\(/i', $regles, $durs);
 $check('aucune couleur en dur hors des variables', !$durs[0], implode(', ', array_unique($durs[0])));
+preg_match_all('/#[0-9a-f]{3,8}\b(?![^{]*\{)|\b(?:white|black)\b(?![^{]*\{)|rgba?\(/i', preg_replace('/\/\*.*?\*\//s', '', $cssAdmin), $dursAdmin);
+$check('admin : aucune couleur en dur', !$dursAdmin[0], implode(', ', array_unique($dursAdmin[0])));
 
 // ---------- Pages ----------
 
 $emoji = '/[\x{1F000}-\x{1FAFF}\x{2600}-\x{27BF}\x{FE0F}\x{2B50}\x{2705}\x{2B06}]/u';
-foreach (array_merge($pages, ["{$ROOT}/css/site.css", "{$ROOT}/js/site.js", "{$ROOT}/js/pages/realisations.js", "{$ROOT}/js/pages/admin-projects.js", "{$ROOT}/js/pages/formulaire.js", "{$ROOT}/js/pages/admin-forms.js", "{$ROOT}/js/pages/vitrine.js", "{$ROOT}/js/pages/admin-modules.js"]) as $fichier) {
+foreach (array_merge($pages, ["{$ROOT}/pages/admin-dashboard.html", "{$ROOT}/pages/admin-login.html", "{$ROOT}/pages/presence.html", "{$ROOT}/css/pages/admin.css", "{$ROOT}/js/pages/admin-dashboard.js", "{$ROOT}/js/pages/admin-login.js", "{$ROOT}/js/utils.js", "{$ROOT}/js/api.js", "{$ROOT}/css/site.css", "{$ROOT}/js/site.js", "{$ROOT}/js/pages/realisations.js", "{$ROOT}/js/pages/admin-projects.js", "{$ROOT}/js/pages/formulaire.js", "{$ROOT}/js/pages/admin-forms.js", "{$ROOT}/js/pages/vitrine.js", "{$ROOT}/js/pages/admin-modules.js"]) as $fichier) {
     $check('aucun emoji : ' . basename($fichier), !preg_match($emoji, file_get_contents($fichier)));
 }
 

@@ -1,514 +1,38 @@
 // ============================================
-// ADMIN DASHBOARD SCRIPT
+// ADMINISTRATION — navigation, tableau de bord, utilisateurs
 // ============================================
 
-// CHECK AUTHENTICATION IMMEDIATELY (before page renders)
+// Avant l'affichage : une session invalide ne doit rien voir de l'interface
 (function() {
   if (!sessionAdminValide()) {
     renvoyerVersConnexion();
-    // Stop script execution
     throw new Error('Access denied - redirecting');
   }
 })();
 
-let currentPage = 'dashboard';
-let editingId = null;
+const PAGE_TITLES = {
+  dashboard: 'Tableau de bord',
+  projects: 'Projets',
+  forms: 'Formulaires',
+  testimonials: 'Témoignages',
+  contact: 'Messages',
+  partners: 'Partenaires',
+  organization: 'Organisation',
+  presence: 'Feuille de présence',
+  users: 'Utilisateurs'
+};
 
-document.addEventListener('DOMContentLoaded', async () => {
-  // Double-check authentication (defensive programming)
-  if (!sessionAdminValide()) {
-    renvoyerVersConnexion();
-    return;
-  }
-
-  const user = getStorage('user');
-
-  if (user) {
-    document.getElementById('user-name').textContent = user.full_name;
-  }
-
-  // Initialize
-  initNavigation();
-  initMobileMenu();
-  initLogout();
-  loadDashboard();
-  setupFormHandlers();
-});
-
-// Navigation
-function initNavigation() {
-  const menuItems = document.querySelectorAll('.menu-item[data-page]');
-  
-  menuItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      const page = item.dataset.page;
-      switchPage(page);
-    });
-  });
-
-  const quickLinks = document.querySelectorAll('.quick-link[data-page]');
-  quickLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      const page = link.dataset.page;
-      switchPage(page);
-    });
-  });
-}
-
-function switchPage(page) {
-  // Hide all pages
-  document.querySelectorAll('.page-content').forEach(p => {
-    p.classList.remove('active');
-  });
-
-  // Show selected page
-  const pageElement = document.getElementById(`${page}-page`);
-  if (pageElement) {
-    pageElement.classList.add('active');
-  }
-
-  // Update menu
-  document.querySelectorAll('.menu-item').forEach(item => {
-    item.classList.remove('active');
-  });
-  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
-
-  // Update title
-  const titles = {
-    dashboard: 'Tableau de bord',
-    programs: 'Programmes',
-    testimonials: 'Témoignages',
-    blog: 'Articles de Blog',
-    donations: 'Dons',
-    contact: 'Messages de Contact',
-    courses: 'Gestion des Cours',
-    partners: 'Partenaires',
-    projects: 'Projets',
-    forms: 'Formulaires',
-    presence: 'Feuille de présence',
-    organization: 'Informations de l\'Organisation',
-    users: 'Utilisateurs'
-  };
-  document.getElementById('page-title').textContent = titles[page] || 'Page';
-
-  // Load page data
-  loadPageData(page);
-
-  currentPage = page;
-}
-
-async function loadPageData(page) {
-  switch(page) {
-    case 'programs':
-      loadPrograms();
-      break;
-    case 'testimonials':
-      loadProjectTestimonials();
-      break;
-    case 'partners':
-      loadPartners();
-      break;
-    case 'blog':
-      loadBlogPosts();
-      break;
-    case 'donations':
-      loadDonations();
-      break;
-    case 'contact':
-      loadContactMessages();
-      break;
-    case 'courses':
-      loadCourses();
-      break;
-    case 'projects':
-      loadProjects();
-      break;
-    case 'forms':
-      loadForms();
-      break;
-    case 'presence':
-      loadPresence();
-      break;
-    case 'organization':
-      loadOrganizationForm();
-      break;
-    case 'users':
-      loadUsers();
-      break;
-  }
-}
-
-// Dashboard
-async function loadDashboard() {
-  try {
-    const response = await api.getDashboardStats();
-    if (response.success) {
-      const stats = response.data;
-
-      // Update stats with data from backend
-      if (document.getElementById('stat-donations')) {
-        document.getElementById('stat-donations').textContent = stats.donations?.total?.total || '0 FCFA';
-      }
-      if (document.getElementById('stat-contacts')) {
-        document.getElementById('stat-contacts').textContent = stats.contacts?.unread?.count || 0;
-      }
-      if (document.getElementById('stat-sponsors')) {
-        document.getElementById('stat-sponsors').textContent = stats.sponsors?.total?.count || 0;
-      }
-      if (document.getElementById('stat-programs')) {
-        document.getElementById('stat-programs').textContent = stats.programs?.total?.count || 0;
-      }
-      if (document.getElementById('stat-courses')) {
-        document.getElementById('stat-courses').textContent = stats.courses?.total?.count || 0;
-      }
-      if (document.getElementById('stat-students')) {
-        document.getElementById('stat-students').textContent = stats.students?.total?.count || 0;
-      }
-      if (document.getElementById('stat-enrollments')) {
-        document.getElementById('stat-enrollments').textContent = stats.enrollments?.total?.count || 0;
-      }
-      if (document.getElementById('stat-blog')) {
-        document.getElementById('stat-blog').textContent = stats.blog?.published?.count || 0;
-      }
-
-      console.log('Dashboard stats loaded:', stats);
-    }
-  } catch (error) {
-    console.error('Erreur chargement stats:', error);
-  }
-
-}
-
-// Programs
-async function loadPrograms() {
-  try {
-    const response = await api.getPrograms();
-    if (response.success) {
-      const container = document.getElementById('programs-list');
-      container.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Titre</th>
-              <th>Catégorie</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${response.data.map(program => `
-              <tr>
-                <td>${escapeHtml(program.title)}</td>
-                <td>${escapeHtml(program.category || '-')}</td>
-                <td><span class="badge badge-primary">${program.is_active ? 'Actif' : 'Inactif'}</span></td>
-                <td>
-                  <div class="action-buttons">
-                    <button class="btn btn-primary btn-sm" onclick="editProgram(${program.id})">Modifier</button>
-                    <button class="btn btn-secondary btn-sm" onclick="deleteProgram(${program.id})">Supprimer</button>
-                  </div>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-  } catch (error) {
-    console.error('Erreur chargement programmes:', error);
-  }
-}
-
-function editProgram(id) {
-  editingId = id;
-  openModal('program-modal');
-}
-
-async function deleteProgram(id) {
-  if (confirm('Êtes-vous sûr?')) {
-    try {
-      await api.deleteProgram(id);
-      showNotification('Programme supprimé', 'success');
-      loadPrograms();
-    } catch (error) {
-      showNotification('Erreur lors de la suppression', 'error');
-    }
-  }
-}
-
-// Testimonials
-async function loadTestimonials() {
-  try {
-    const response = await api.getTestimonials();
-    if (response.success) {
-      const container = document.getElementById('testimonials-list');
-      container.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Titre</th>
-              <th>Vidéo</th>
-              <th>Note</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${response.data.map(testimonial => `
-              <tr>
-                <td>${escapeHtml(testimonial.student_name)}</td>
-                <td>${escapeHtml(testimonial.student_title || '-')}</td>
-                <td>${testimonial.video_url ? `<a href="${escapeHtml(testimonial.video_url)}" target="_blank" style="color: var(--color-primary);"><i class="ti ti-video"></i> Voir</a>` : '-'}</td>
-                <td>${testimonial.rating ? '<i class="ti ti-star-filled" style="color: var(--color-warning);"></i>'.repeat(testimonial.rating) : '-'}</td>
-                <td>
-                  <div class="action-buttons">
-                    <button class="btn btn-primary btn-sm" onclick="editTestimonial(${testimonial.id})">Modifier</button>
-                    <button class="btn btn-secondary btn-sm" onclick="deleteTestimonial(${testimonial.id})">Supprimer</button>
-                  </div>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-  } catch (error) {
-    console.error('Erreur chargement témoignages:', error);
-  }
-}
-
-async function deleteTestimonial(id) {
-  if (confirm('Êtes-vous sûr?')) {
-    try {
-      await api.deleteTestimonial(id);
-      showNotification('Témoignage supprimé', 'success');
-      loadTestimonials();
-    } catch (error) {
-      showNotification('Erreur lors de la suppression', 'error');
-    }
-  }
-}
-
-// Sponsors
-async function loadSponsors() {
-  try {
-    const response = await api.getAllSponsors();
-    if (response.success) {
-      const container = document.getElementById('sponsors-list');
-      container.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Logo</th>
-              <th>Nom</th>
-              <th>Niveau</th>
-              <th>Site web</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${response.data.map(sponsor => `
-              <tr>
-                <td><img src="${escapeHtml(sponsor.logo_url)}" alt="${escapeHtml(sponsor.name)}" style="height: 40px; max-width: 80px; object-fit: contain;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect fill=%27%23e0e0e0%27 width=%27100%27 height=%27100%27/%3E%3Ctext x=%2750%27 y=%2755%27 text-anchor=%27middle%27 fill=%27%23999%27 font-size=%2714%27%3ELogo%3C/text%3E%3C/svg%3E'"></td>
-                <td>${escapeHtml(sponsor.name)}</td>
-                <td>${getTierBadge(sponsor.tier)}</td>
-                <td>${sponsor.website_url ? `<a href="${escapeHtml(sponsor.website_url)}" target="_blank" style="color: var(--color-primary);"><i class="ti ti-link"></i> Site</a>` : '-'}</td>
-                <td><span class="badge ${sponsor.is_active ? 'badge-primary' : 'badge-secondary'}">${sponsor.is_active ? 'Actif' : 'Inactif'}</span></td>
-                <td>
-                  <div class="action-buttons">
-                    <button class="btn btn-primary btn-sm" onclick="editSponsor(${sponsor.id})">Modifier</button>
-                    <button class="btn btn-secondary btn-sm" onclick="deleteSponsor(${sponsor.id})">Supprimer</button>
-                  </div>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-  } catch (error) {
-    console.error('Erreur chargement sponsors:', error);
-  }
-}
-
-function getTierBadge(tier) {
-  const badges = {
-    platinum: '<i class="ti ti-diamond"></i> Platine',
-    gold: '<i class="ti ti-medal-2"></i> Or',
-    silver: '<i class="ti ti-medal"></i> Argent',
-    bronze: '🥉 Bronze'
-  };
-  return badges[tier] || tier;
-}
-
-async function deleteSponsor(id) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer ce sponsor?')) {
-    try {
-      await api.deleteSponsor(id);
-      showNotification('Sponsor supprimé', 'success');
-      loadSponsors();
-    } catch (error) {
-      showNotification('Erreur lors de la suppression', 'error');
-    }
-  }
-}
-
-// Blog
-async function loadBlogPosts() {
-  try {
-    const response = await api.getBlogPosts(1, 100);
-    if (response.success) {
-      const container = document.getElementById('blog-list');
-      container.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Titre</th>
-              <th>Catégorie</th>
-              <th>Publié</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${response.data.map(post => `
-              <tr>
-                <td>${escapeHtml(post.title)}</td>
-                <td>${escapeHtml(post.category || '-')}</td>
-                <td><span class="badge badge-primary">${post.is_published ? 'Oui' : 'Non'}</span></td>
-                <td>
-                  <div class="action-buttons">
-                    <button class="btn btn-primary btn-sm" onclick="editBlogPost(${post.id})">Modifier</button>
-                    <button class="btn btn-secondary btn-sm" onclick="deleteBlogPost(${post.id})">Supprimer</button>
-                  </div>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-  } catch (error) {
-    console.error('Erreur chargement blog:', error);
-  }
-}
-
-async function deleteBlogPost(id) {
-  if (confirm('Êtes-vous sûr?')) {
-    try {
-      await api.deleteBlogPost(id);
-      showNotification('Article supprimé', 'success');
-      loadBlogPosts();
-    } catch (error) {
-      showNotification('Erreur lors de la suppression', 'error');
-    }
-  }
-}
-
-async function editBlogPost(id) {
-  try {
-    // Get all blog posts and find the one we want
-    const response = await api.getBlogPosts(1, 100);
-    const post = response.data.find(p => p.id === id);
-
-    if (!post) {
-      showNotification('Article non trouvé', 'error');
-      return;
-    }
-
-    // Populate form
-    document.getElementById('blog-title').value = post.title || '';
-    document.getElementById('blog-slug').value = post.slug || '';
-    document.getElementById('blog-excerpt').value = post.excerpt || '';
-    document.getElementById('blog-content').value = post.content || '';
-    document.getElementById('blog-category').value = post.category || '';
-    document.getElementById('blog-featured-image').value = post.featured_image || '';
-    document.getElementById('blog-is-published').checked = post.is_published || false;
-
-    // Update modal title and set editing ID
-    document.getElementById('blog-modal-title').textContent = 'Modifier l\'article';
-    editingId = id;
-
-    openModal('blog-modal');
-  } catch (error) {
-    console.error('Error loading blog post:', error);
-    showNotification('Erreur lors du chargement de l\'article', 'error');
-  }
-}
-
-async function handleBlogSubmit(e) {
-  e.preventDefault();
-
-  const formData = getFormData(e.target);
-
-  // Convert checkbox to boolean
-  formData.is_published = document.getElementById('blog-is-published').checked;
-
-  // Debug: log user info
-  const user = getStorage('user');
-  console.log('Current user:', user);
-  console.log('User role:', user?.role);
-  console.log('Has token:', !!api.token);
-
-  try {
-    if (editingId) {
-      await api.updateBlogPost(editingId, formData);
-      showNotification('Article mis à jour avec succès', 'success');
-    } else {
-      await api.createBlogPost(formData);
-      showNotification('Article créé avec succès', 'success');
-    }
-
-    closeModal('blog-modal');
-    loadBlogPosts();
-    editingId = null;
-  } catch (error) {
-    console.error('Error saving blog post:', error);
-    console.error('Error details:', error.message);
-
-    // Show more detailed error message
-    let errorMessage = error.message || 'Erreur lors de l\'enregistrement';
-    if (error.message?.includes('Accès refusé') || error.message?.includes('administrateur')) {
-      errorMessage = 'Erreur: Vous n\'avez pas les permissions nécessaires. Veuillez vous reconnecter.';
-    }
-    showNotification(errorMessage, 'error');
-  }
-}
-
-// Donations
-async function loadDonations() {
-  try {
-    const response = await api.getDonations();
-    if (response.success) {
-      const container = document.getElementById('donations-list');
-      container.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Donateur</th>
-              <th>Montant</th>
-              <th>Statut</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${response.data.map(donation => `
-              <tr>
-                <td>${escapeHtml(donation.donor_name)}</td>
-                <td>${escapeHtml(formatCurrency(donation.amount, donation.currency))}</td>
-                <td><span class="badge badge-primary">${escapeHtml(donation.status)}</span></td>
-                <td>${formatDate(donation.created_at)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-  } catch (error) {
-    console.error('Erreur chargement dons:', error);
-  }
-}
+const PAGE_LOADERS = {
+  dashboard: () => loadDashboard(),
+  projects: () => loadProjects(),
+  forms: () => loadForms(),
+  testimonials: () => loadProjectTestimonials(),
+  contact: () => loadContactMessages(),
+  partners: () => loadPartners(),
+  organization: () => loadOrganizationForm(),
+  presence: () => loadPresence(),
+  users: () => loadUsers()
+};
 
 function escapeHtml(s) {
   if (s === null || s === undefined) return '';
@@ -517,488 +41,125 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-function escapeAttr(s) {
-  return escapeHtml(s);
+function setSidebarOpen(open) {
+  document.getElementById('admin-sidebar').classList.toggle('active', open);
+  document.getElementById('sidebar-backdrop').hidden = !open;
+  const toggle = document.querySelector('.mobile-menu-toggle');
+  toggle.setAttribute('aria-expanded', String(open));
+  toggle.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
 }
 
-// Courses
-let currentCourseId = null;
+function switchPage(page) {
+  if (!PAGE_TITLES[page]) page = 'dashboard';
 
-async function loadCourses() {
+  document.querySelectorAll('.page-content').forEach(section => {
+    section.classList.toggle('active', section.id === `${page}-page`);
+  });
+  document.querySelectorAll('.menu-item[data-page]').forEach((item) => {
+    const active = item.dataset.page === page;
+    item.classList.toggle('active', active);
+    if (active) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
+  });
+  document.getElementById('page-title').textContent = PAGE_TITLES[page];
+  document.title = `${PAGE_TITLES[page]} | Administration DevDynamics`;
+  setSidebarOpen(false);
+  PAGE_LOADERS[page]();
+}
+
+// ---------- Tableau de bord ----------
+
+async function loadDashboard() {
+  const container = document.getElementById('dashboard-stats');
+  const tiles = [
+    ['messages_new', 'Messages non lus', 'contact'],
+    ['testimonials_pending', 'Témoignages en attente', 'testimonials'],
+    ['forms_open', 'Formulaires ouverts', 'forms'],
+    ['responses_week', 'Réponses sur 7 jours', 'forms'],
+    ['projects_published', 'Projets publiés', 'projects']
+  ];
+
   try {
-    const response = await api.getAllCourses();
-    if (response.success) {
-      const container = document.getElementById('courses-list');
-      container.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Titre</th>
-              <th>Niveau</th>
-              <th>Durée</th>
-              <th>Prix</th>
-              <th>Inscriptions</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${response.data.map(course => {
-              const courseTypeLabel = {
-                'online': '💻 En ligne',
-                'physical': '📍 Présentiel'
-              };
-              return `
-              <tr>
-                <td>
-                  ${escapeHtml(course.title)}
-                  ${course.course_type ? `<br><small style="color: var(--color-text-light);">${courseTypeLabel[course.course_type] || course.course_type}</small>` : ''}
-                </td>
-                <td>${escapeHtml(course.level)}</td>
-                <td>${escapeHtml(course.duration || '-')}</td>
-                <td>${course.price ? escapeHtml(course.price) + ' USD' : 'Gratuit'}</td>
-                <td><button class="btn btn-ghost btn-sm" onclick="viewEnrollments(${course.id})">Voir (0)</button></td>
-                <td><span class="badge ${course.is_active ? 'badge-success' : 'badge-secondary'}">${course.is_active ? 'Actif' : 'Inactif'}</span></td>
-                <td>
-                  <div class="action-buttons">
-                    ${course.course_type === 'online' ? `<button class="btn btn-primary btn-sm" onclick="manageCourseContent(${course.id})">Gérer le contenu</button>` : ''}
-                    <button class="btn btn-primary btn-sm" onclick="editCourse(${course.id})">Modifier</button>
-                    <button class="btn ${course.is_active ? 'btn-ghost' : 'btn-success'} btn-sm" onclick="toggleCourseStatus(${course.id}, ${!course.is_active})">${course.is_active ? 'Désactiver' : 'Activer'}</button>
-                    <button class="btn btn-secondary btn-sm" onclick="deleteCourse(${course.id})">Supprimer</button>
-                  </div>
-                </td>
-              </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      `;
-    }
+    const { data } = await api.request('/admin/dashboard/stats');
+    container.innerHTML = tiles.map(([key, label, page]) => `
+      <button type="button" class="stat-card" onclick="switchPage('${page}')">
+        <span class="stat-value">${data[key] === null ? '-' : Number(data[key])}</span>
+        <span class="stat-label">${label}</span>
+      </button>`).join('');
   } catch (error) {
-    console.error('Erreur chargement cours:', error);
+    container.textContent = error.message || 'Lecture impossible. Recharge la page.';
   }
 }
 
-// Setup course form
-document.getElementById('add-course-btn')?.addEventListener('click', () => {
-  currentCourseId = null;
-  document.getElementById('course-form').reset();
-  openModal('course-modal');
-});
+// ---------- Utilisateurs ----------
 
-document.getElementById('course-form')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const formData = getFormData(e.target);
-
-  // Debug: Log form data to check course_type value
-  console.log('Form data being sent:', formData);
-  console.log('Course type value:', formData.course_type);
-
-  try {
-    if (currentCourseId) {
-      await api.updateCourse(currentCourseId, {...formData, is_active: true});
-      showNotification('Cours mis à jour avec succès', 'success');
-    } else {
-      await api.createCourse(formData);
-      showNotification('Cours créé avec succès', 'success');
-    }
-    closeModal('course-modal');
-    loadCourses();
-  } catch (error) {
-    showNotification('Erreur lors de l\'enregistrement', 'error');
-  }
-});
-
-window.editCourse = async function(id) {
-  try {
-    const response = await api.getCourse(id);
-    if (response.success) {
-      const course = response.data;
-      currentCourseId = id;
-
-      document.getElementById('course-title').value = course.title || '';
-      document.getElementById('course-description').value = course.description || '';
-      document.getElementById('course-type').value = course.course_type || 'physical';
-      document.getElementById('course-duration').value = course.duration || '';
-      document.getElementById('course-level').value = course.level || 'debutant';
-      document.getElementById('course-instructor').value = course.instructor || '';
-      document.getElementById('course-price').value = course.price || 0;
-      document.getElementById('course-max-students').value = course.max_students || 30;
-      document.getElementById('course-start-date').value = course.start_date ? course.start_date.split('T')[0] : '';
-      document.getElementById('course-end-date').value = course.end_date ? course.end_date.split('T')[0] : '';
-      document.getElementById('course-schedule').value = course.schedule || '';
-      document.getElementById('course-category').value = course.category || '';
-      document.getElementById('course-thumbnail').value = course.thumbnail_url || '';
-      document.getElementById('course-intro-video').value = course.intro_video_url || '';
-
-      // Trigger course type change to show/hide appropriate fields
-      document.getElementById('course-type').dispatchEvent(new Event('change'));
-
-      openModal('course-modal');
-    }
-  } catch (error) {
-    showNotification('Erreur lors du chargement', 'error');
-  }
-}
-
-window.toggleCourseStatus = async function(id, newStatus) {
-  try {
-    const course = await api.getCourse(id);
-    if (course.success) {
-      await api.updateCourse(id, { ...course.data, is_active: newStatus });
-      showNotification(`Cours ${newStatus ? 'activé' : 'désactivé'} avec succès`, 'success');
-      loadCourses();
-    }
-  } catch (error) {
-    showNotification('Erreur lors de la mise à jour', 'error');
-  }
-}
-
-window.deleteCourse = async function(id) {
-  if (!confirm('Êtes-vous sûr de vouloir supprimer ce cours ?')) return;
-
-  try {
-    await api.deleteCourse(id);
-    showNotification('Cours supprimé avec succès', 'success');
-    loadCourses();
-  } catch (error) {
-    showNotification('Erreur lors de la suppression', 'error');
-  }
-}
-
-window.viewEnrollments = async function(courseId) {
-  try {
-    const response = await api.getCourseEnrollments(courseId);
-    if (response.success) {
-      const enrollments = response.data;
-      const container = document.getElementById('courses-list');
-      container.innerHTML = `
-        <div class="mb-lg">
-          <button class="btn btn-ghost" onclick="loadCourses()">← Retour aux cours</button>
-        </div>
-        <h3>Inscriptions au cours</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Étudiant</th>
-              <th>Email</th>
-              <th>Téléphone</th>
-              <th>Statut</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${enrollments.length === 0 ? '<tr><td colspan="6">Aucune inscription</td></tr>' : enrollments.map(enrollment => `
-              <tr>
-                <td>${escapeHtml(enrollment.student_name)}</td>
-                <td>${escapeHtml(enrollment.student_email)}</td>
-                <td>${escapeHtml(enrollment.student_phone || '-')}</td>
-                <td><span class="badge badge-${enrollment.status === 'approved' ? 'success' : enrollment.status === 'rejected' ? 'secondary' : 'primary'}">${escapeHtml(enrollment.status)}</span></td>
-                <td>${formatDate(enrollment.created_at)}</td>
-                <td>
-                  <div class="action-buttons">
-                    ${enrollment.status === 'pending' ? `
-                      <button class="btn btn-primary btn-sm" onclick="approveEnrollment(${enrollment.id})">Approuver</button>
-                      <button class="btn btn-secondary btn-sm" onclick="rejectEnrollment(${enrollment.id}, ${courseId})">Rejeter</button>
-                    ` : '-'}
-                  </div>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-  } catch (error) {
-    console.error('Erreur chargement inscriptions:', error);
-  }
-}
-
-// Navigate to course content builder
-window.manageCourseContent = function(courseId) {
-  window.location.href = `admin-course-builder.html?courseId=${courseId}`;
-}
-
-async function approveEnrollment(id) {
-  try {
-    await api.updateEnrollmentStatus(id, 'approved');
-    showNotification('Inscription approuvée', 'success');
-    // Reload current view
-    const courseId = document.querySelector('[onclick*="viewEnrollments"]')?.getAttribute('onclick').match(/\d+/)[0];
-    if (courseId) viewEnrollments(courseId);
-  } catch (error) {
-    showNotification('Erreur', 'error');
-  }
-}
-
-async function rejectEnrollment(id, courseId) {
-  try {
-    await api.updateEnrollmentStatus(id, 'rejected');
-    showNotification('Inscription rejetée', 'success');
-    viewEnrollments(courseId);
-  } catch (error) {
-    showNotification('Erreur', 'error');
-  }
-}
-
-// Organization
-// Users
 async function loadUsers() {
+  const container = document.getElementById('users-list');
+  container.textContent = 'Chargement…';
+
   try {
-    const response = await api.getUsers();
-    if (response.success) {
-      const container = document.getElementById('users-list');
-      container.innerHTML = `
-        <table>
-          <thead>
+    const { data } = await api.request('/admin/users');
+    const current = getStorage('user');
+
+    // Les comptes étudiants sont retirés avec les cours : ils ne s'administrent plus ici
+    const users = data.filter(user => user.role !== 'student');
+
+    container.innerHTML = `
+      <table class="table-stack">
+        <thead><tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${users.map(user => `
             <tr>
-              <th>Nom</th>
-              <th>Email</th>
-              <th>Rôle</th>
-              <th>Actions</th>
+              <td data-label="Nom">${escapeHtml(user.full_name)}</td>
+              <td data-label="E-mail">${escapeHtml(user.email)}</td>
+              <td data-label="Rôle"><span class="badge badge-primary">${escapeHtml(user.role)}</span></td>
+              <td>${current && current.id === user.id ? 'Votre compte' : `<button class="btn btn-secondary btn-sm" onclick="deleteUser(${Number(user.id)})">Supprimer</button>`}</td>
             </tr>
-          </thead>
-          <tbody>
-            ${response.data.map(user => `
-              <tr>
-                <td>${escapeHtml(user.full_name)}</td>
-                <td>${escapeHtml(user.email)}</td>
-                <td><span class="badge badge-primary">${escapeHtml(user.role)}</span></td>
-                <td>
-                  <div class="action-buttons">
-                    <button class="btn btn-primary btn-sm" onclick="changeUserRole(${user.id})">Modifier rôle</button>
-                    <button class="btn btn-secondary btn-sm" onclick="deleteUser(${user.id})">Supprimer</button>
-                  </div>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
+          `).join('')}
+        </tbody>
+      </table>`;
   } catch (error) {
-    console.error('Erreur chargement utilisateurs:', error);
+    container.textContent = error.message || 'Lecture impossible. Recharge la page.';
   }
 }
 
 async function deleteUser(id) {
-  if (confirm('Êtes-vous sûr?')) {
-    try {
-      await api.deleteUser(id);
-      showNotification('Utilisateur supprimé', 'success');
-      loadUsers();
-    } catch (error) {
-      showNotification('Erreur lors de la suppression', 'error');
-    }
+  if (!confirm('Supprimer définitivement ce compte ?')) return;
+  try {
+    await api.request(`/admin/users/${id}`, { method: 'DELETE' });
+    loadUsers();
+  } catch (error) {
+    alert(error.message || 'La suppression a échoué.');
   }
 }
 
-// Form handlers
-function setupFormHandlers() {
-  const programForm = document.getElementById('program-form');
-  if (programForm) {
-    programForm.addEventListener('submit', handleProgramSubmit);
-  }
+// ---------- Démarrage ----------
 
-  const blogForm = document.getElementById('blog-form');
-  if (blogForm) {
-    blogForm.addEventListener('submit', handleBlogSubmit);
-  }
+document.addEventListener('DOMContentLoaded', () => {
+  const user = getStorage('user');
+  if (user) document.getElementById('user-name').textContent = user.full_name;
 
-  const testimonialForm = document.getElementById('testimonial-form');
-  if (testimonialForm) {
-    testimonialForm.addEventListener('submit', handleTestimonialSubmit);
-  }
-
-  const sponsorForm = document.getElementById('sponsor-form');
-  if (sponsorForm) {
-    sponsorForm.addEventListener('submit', handleSponsorSubmit);
-  }
-
-  document.getElementById('add-program-btn')?.addEventListener('click', () => {
-    editingId = null;
-    openModal('program-modal');
-  });
-
-  // Blog button - open blog modal
-  document.getElementById('add-blog-btn')?.addEventListener('click', () => {
-    editingId = null;
-    document.getElementById('blog-form').reset();
-    document.getElementById('blog-modal-title').textContent = 'Ajouter un article de blog';
-    openModal('blog-modal');
-  });
-
-  // Testimonial button - open testimonial modal
-  document.getElementById('add-testimonial-btn')?.addEventListener('click', () => {
-    editingId = null;
-    document.getElementById('testimonial-form').reset();
-    openModal('testimonial-modal');
-  });
-
-  // Sponsor button - open sponsor modal
-  document.getElementById('add-sponsor-btn')?.addEventListener('click', () => {
-    editingId = null;
-    document.getElementById('sponsor-form').reset();
-    openModal('sponsor-modal');
-  });
-
-  // Auto-generate slug from title
-  const blogTitleInput = document.getElementById('blog-title');
-  const blogSlugInput = document.getElementById('blog-slug');
-  if (blogTitleInput && blogSlugInput) {
-    blogTitleInput.addEventListener('input', (e) => {
-      // Only auto-generate if slug is empty or was auto-generated
-      if (!editingId || blogSlugInput.value === '') {
-        const slug = e.target.value
-          .toLowerCase()
-          .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
-          .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
-          .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
-        blogSlugInput.value = slug;
-      }
+  document.querySelectorAll('.menu-item[data-page]').forEach((item) => {
+    item.addEventListener('click', (event) => {
+      event.preventDefault();
+      history.replaceState(null, '', `#${item.dataset.page}`);
+      switchPage(item.dataset.page);
     });
-  }
-
-  // Setup course type change handler
-  setupCourseTypeLogic();
-}
-
-// Course type logic - show/hide fields based on type
-function setupCourseTypeLogic() {
-  const courseTypeSelect = document.getElementById('course-type');
-  if (!courseTypeSelect) return;
-
-  const scheduleField = document.getElementById('course-schedule')?.closest('.form-group');
-  const thumbnailGroup = document.getElementById('course-thumbnail-group');
-  const introVideoGroup = document.getElementById('course-intro-video-group');
-
-  courseTypeSelect.addEventListener('change', () => {
-    const courseType = courseTypeSelect.value;
-
-    if (courseType === 'online') {
-      // Online courses: show thumbnail and video fields
-      if (thumbnailGroup) thumbnailGroup.style.display = 'block';
-      if (introVideoGroup) introVideoGroup.style.display = 'block';
-
-      // Make schedule optional
-      if (scheduleField) {
-        const label = scheduleField.querySelector('label');
-        if (label) label.textContent = 'Horaire (optionnel)';
-        scheduleField.style.opacity = '0.7';
-      }
-    } else if (courseType === 'physical') {
-      // Physical courses: hide online-specific fields
-      if (thumbnailGroup) thumbnailGroup.style.display = 'none';
-      if (introVideoGroup) introVideoGroup.style.display = 'none';
-
-      // Make schedule required
-      if (scheduleField) {
-        const label = scheduleField.querySelector('label');
-        if (label) label.textContent = 'Horaire';
-        scheduleField.style.opacity = '1';
-      }
-    } else {
-      // No type selected: hide all optional fields
-      if (thumbnailGroup) thumbnailGroup.style.display = 'none';
-      if (introVideoGroup) introVideoGroup.style.display = 'none';
-      if (scheduleField) {
-        const label = scheduleField.querySelector('label');
-        if (label) label.textContent = 'Horaire';
-        scheduleField.style.opacity = '1';
-      }
-    }
   });
 
-  // Trigger initial state
-  courseTypeSelect.dispatchEvent(new Event('change'));
-}
+  document.querySelector('.mobile-menu-toggle').addEventListener('click', () => {
+    setSidebarOpen(!document.getElementById('admin-sidebar').classList.contains('active'));
+  });
+  document.getElementById('sidebar-backdrop').addEventListener('click', () => setSidebarOpen(false));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setSidebarOpen(false);
+  });
 
-async function handleProgramSubmit(e) {
-  e.preventDefault();
-  const data = getFormData(this);
-
-  try {
-    if (editingId) {
-      await api.updateProgram(editingId, data);
-      showNotification('Programme mis à jour', 'success');
-    } else {
-      await api.createProgram(data);
-      showNotification('Programme créé', 'success');
-    }
-    closeModal('program-modal');
-    loadPrograms();
-  } catch (error) {
-    showNotification('Erreur', 'error');
-  }
-}
-
-async function handleTestimonialSubmit(e) {
-  e.preventDefault();
-  const data = getFormData(this);
-
-  try {
-    if (editingId) {
-      await api.updateTestimonial(editingId, data);
-      showNotification('Témoignage mis à jour', 'success');
-    } else {
-      await api.createTestimonial(data);
-      showNotification('Témoignage créé', 'success');
-    }
-    closeModal('testimonial-modal');
-    loadTestimonials();
-  } catch (error) {
-    console.error('Error saving testimonial:', error);
-    showNotification('Erreur lors de la sauvegarde du témoignage', 'error');
-  }
-}
-
-async function handleSponsorSubmit(e) {
-  e.preventDefault();
-  const data = getFormData(this);
-
-  try {
-    if (editingId) {
-      await api.updateSponsor(editingId, data);
-      showNotification('Sponsor mis à jour', 'success');
-    } else {
-      await api.createSponsor(data);
-      showNotification('Sponsor créé', 'success');
-    }
-    closeModal('sponsor-modal');
-    loadSponsors();
-  } catch (error) {
-    console.error('Error saving sponsor:', error);
-    showNotification('Erreur lors de la sauvegarde du sponsor', 'error');
-  }
-}
-
-// Logout
-function initLogout() {
   document.getElementById('logout-btn').addEventListener('click', () => {
     api.logout();
+    removeStorage('user');
     window.location.href = 'admin-login.html';
   });
-}
 
-// Mobile Menu
-function initMobileMenu() {
-  const menuToggle = document.querySelector('.mobile-menu-toggle');
-  const sidebar = document.querySelector('.admin-sidebar');
-
-  if (!menuToggle || !sidebar) return;
-
-  menuToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('active');
-  });
-
-  // Close sidebar when clicking on a menu item (mobile only)
-  const menuItems = document.querySelectorAll('.menu-item');
-  menuItems.forEach(item => {
-    item.addEventListener('click', () => {
-      if (window.innerWidth <= 768) {
-        sidebar.classList.remove('active');
-      }
-    });
-  });
-}
+  switchPage(window.location.hash.slice(1) || 'dashboard');
+});

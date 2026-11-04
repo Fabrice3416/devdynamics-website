@@ -171,7 +171,7 @@ function sessionAdminValide() {
   const user = getStorage('user');
   return Boolean(localStorage.getItem('auth_token'))
     && Boolean(user)
-    && (user.role === 'admin' || user.role === 'editor');
+    && user.role === 'admin';
 }
 
 /**

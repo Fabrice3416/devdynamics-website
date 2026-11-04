@@ -24,6 +24,8 @@
   --on-accent: #1a1a1a;
   --logo-plate: #ffffff;
   --on-logo-plate: #16282b;
+  --sidebar-hover: #1d4144;
+  --scrim: #0f2a2ccc;
   --footer-bg: #0f2a2c;
   --footer-text: #e6efef;
   --footer-muted: #b4c6c7;
@@ -53,6 +55,7 @@
     --link: #4dd9d9;
     --primary-soft: #0b3e3b;
     --on-primary-soft: #c9f2f0;
+    --sidebar-hover: #1b2a2c;
     --footer-bg: #0c1718;
     --danger: #ff9d96;
     --success: #6fdcb0;
@@ -73,6 +76,7 @@
   --link: #4dd9d9;
   --primary-soft: #0b3e3b;
   --on-primary-soft: #c9f2f0;
+  --sidebar-hover: #1b2a2c;
   --footer-bg: #0c1718;
   --danger: #ff9d96;
   --success: #6fdcb0;

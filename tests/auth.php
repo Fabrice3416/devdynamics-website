@@ -212,7 +212,7 @@ check('les rôles acceptés correspondent à l’enum', $rolesCode, SCHEMA_ROLES
 
 // Le front ne doit plus tester un role qui n'existe pas
 $fichiersFront = [
-    'js/pages/admin-login.js', 'js/pages/admin-dashboard.js', 'js/pages/admin-course-builder.js',
+    'js/pages/admin-login.js', 'js/pages/admin-dashboard.js',
 ];
 $rolesFront = [];
 foreach ($fichiersFront as $f) {
