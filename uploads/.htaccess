@@ -1,0 +1,5 @@
+# Fichiers envoyes depuis l'administration : des images, jamais du code.
+Options -ExecCGI -Indexes
+<FilesMatch "(?i)\.(php[0-9]*|phtml|phar|pl|py|cgi|sh|html?|svg|js)$">
+    Require all denied
+</FilesMatch>

@@ -66,7 +66,7 @@ $pdf = attendance_pdf($rows);
 $check('le PDF commence par son en-tête', str_starts_with($pdf, '%PDF-'));
 $check('le logo est intégré', str_contains($pdf, '/DCTDecode'));
 $check('le titre porte ses accents', str_contains($pdf, mb_convert_encoding(ATTENDANCE_TITLE, 'Windows-1252', 'UTF-8')));
-foreach (ATTENDANCE_CONTACT as $line) {
+foreach (PDF_LETTERHEAD_CONTACT as $line) {
     $check("l'en-tête porte : {$line}", str_contains($pdf, mb_convert_encoding($line, 'Windows-1252', 'UTF-8')));
 }
 $check("l'ancienne adresse a disparu", !str_contains($pdf, 'Port-au-Prince'));

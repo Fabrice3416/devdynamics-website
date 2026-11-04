@@ -3,199 +3,134 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - DevDynamics Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <title>Administration | DevDynamics</title>
+  <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.49.0/dist/tabler-icons.min.css">
-  <link rel="stylesheet" href="../css/variables.css?v=10">
-  <link rel="stylesheet" href="../css/global.css?v=10">
-  <link rel="stylesheet" href="../css/components.css?v=10">
-  <link rel="stylesheet" href="../css/pages/admin.css?v=10">
+  <link rel="stylesheet" href="../css/site.css?v=13">
+  <link rel="stylesheet" href="../css/pages/admin.css?v=13">
 </head>
 <body class="admin-page">
-  <!-- SIDEBAR -->
-  <aside class="admin-sidebar">
+  <aside class="admin-sidebar" id="admin-sidebar" aria-label="Menu de l'administration">
     <div class="sidebar-header">
-      <div class="logo">
-        <img src="../assets/images/logo_6_white.png" alt="DevDynamics Logo" class="logo-img">
-      </div>
-      <button class="sidebar-toggle"><i class="ti ti-menu-2"></i></button>
+      <a href="../index.html"><img src="../assets/images/logo_6_white.png" alt="DevDynamics, retour au site" width="184" height="31"></a>
     </div>
-
     <nav class="sidebar-menu">
-      <a href="#dashboard" class="menu-item active" data-page="dashboard">
-        <i class="ti ti-chart-bar"></i> Tableau de bord
-      </a>
-      <a href="#programs" class="menu-item" data-page="programs">
-        <i class="ti ti-book"></i> Programmes
-      </a>
-      <a href="#testimonials" class="menu-item" data-page="testimonials">
-        <i class="ti ti-star"></i> Témoignages
-      </a>
-      <a href="#blog" class="menu-item" data-page="blog">
-        <i class="ti ti-file-text"></i> Blog
-      </a>
-      <a href="#courses" class="menu-item" data-page="courses">
-        <i class="ti ti-certificate"></i> Cours
-      </a>
-      <a href="#donations" class="menu-item" data-page="donations">
-        <i class="ti ti-coin"></i> Dons
-      </a>
-      <a href="#contact" class="menu-item" data-page="contact">
-        <i class="ti ti-mail"></i> Messages
-      </a>
-      <a href="#sponsors" class="menu-item" data-page="sponsors">
-        <i class="ti ti-heart-handshake"></i> Sponsors
-      </a>
-      <a href="#presence" class="menu-item" data-page="presence">
-        <i class="ti ti-clipboard-check"></i> Feuille de présence
-      </a>
-      <a href="#organization" class="menu-item" data-page="organization">
-        <i class="ti ti-settings"></i> Organisation
-      </a>
-      <a href="#users" class="menu-item" data-page="users">
-        <i class="ti ti-users"></i> Utilisateurs
-      </a>
-      <button id="logout-btn" class="menu-item logout">
-        <i class="ti ti-logout"></i> Déconnexion
-      </button>
+      <a href="#dashboard" class="menu-item active" data-page="dashboard"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Tableau de bord</a>
+      <a href="#projects" class="menu-item" data-page="projects"><i class="ti ti-folders" aria-hidden="true"></i> Projets</a>
+      <a href="#forms" class="menu-item" data-page="forms"><i class="ti ti-forms" aria-hidden="true"></i> Formulaires</a>
+      <a href="#testimonials" class="menu-item" data-page="testimonials"><i class="ti ti-message-star" aria-hidden="true"></i> Témoignages</a>
+      <a href="#contact" class="menu-item" data-page="contact"><i class="ti ti-mail" aria-hidden="true"></i> Messages <span class="menu-badge" id="contact-badge" hidden></span></a>
+      <a href="#partners" class="menu-item" data-page="partners"><i class="ti ti-heart-handshake" aria-hidden="true"></i> Partenaires</a>
+      <a href="#organization" class="menu-item" data-page="organization"><i class="ti ti-building" aria-hidden="true"></i> Organisation</a>
+      <a href="#presence" class="menu-item" data-page="presence"><i class="ti ti-clipboard-check" aria-hidden="true"></i> Feuille de présence</a>
+      <a href="#users" class="menu-item" data-page="users"><i class="ti ti-users" aria-hidden="true"></i> Utilisateurs</a>
+      <button type="button" id="logout-btn" class="menu-item logout"><i class="ti ti-logout" aria-hidden="true"></i> Déconnexion</button>
     </nav>
   </aside>
+  <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
 
-  <!-- MAIN CONTENT -->
   <main class="admin-main">
-    <!-- HEADER -->
     <header class="admin-header">
-      <div class="header-left">
-        <button class="mobile-menu-toggle"><i class="ti ti-menu-2"></i></button>
-        <h1 id="page-title">Tableau de bord</h1>
-      </div>
-      <div class="header-right">
-        <div class="user-info">
-          <span id="user-name">Admin</span>
-          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23008080'/%3E%3Ctext x='50' y='68' font-size='46' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E" alt="User" class="user-avatar">
-        </div>
-      </div>
+      <button type="button" class="mobile-menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="admin-sidebar"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+      <h1 id="page-title">Tableau de bord</h1>
+      <span class="admin-user" id="user-name"></span>
     </header>
 
-    <!-- CONTENT AREA -->
     <div class="admin-content">
-      <!-- DASHBOARD PAGE -->
       <section id="dashboard-page" class="page-content active">
-        <div class="stats-grid">
-          <div class="stat-box">
-            <div class="stat-icon"><i class="ti ti-coin"></i></div>
-            <div class="stat-details">
-              <div class="stat-label">Dons reçus</div>
-              <div class="stat-value" id="stat-donations">0</div>
-            </div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-icon"><i class="ti ti-mail"></i></div>
-            <div class="stat-details">
-              <div class="stat-label">Messages non lus</div>
-              <div class="stat-value" id="stat-contacts">0</div>
-            </div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-icon"><i class="ti ti-heart-handshake"></i></div>
-            <div class="stat-details">
-              <div class="stat-label">Sponsors actifs</div>
-              <div class="stat-value" id="stat-sponsors">0</div>
-            </div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-icon"><i class="ti ti-book"></i></div>
-            <div class="stat-details">
-              <div class="stat-label">Programmes actifs</div>
-              <div class="stat-value" id="stat-programs">0</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-2 mt-2xl">
-          <div class="card">
-            <div class="card-body">
-              <h3 class="card-title">Bienvenue!</h3>
-              <p>Vous êtes connecté en tant qu'administrateur. Utilisez le menu latéral pour gérer le contenu du site.</p>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-body">
-              <h3 class="card-title">Raccourcis rapides</h3>
-              <ul style="list-style: none; margin: 0;">
-                <li><a href="#" class="quick-link" data-page="programs">+ Ajouter un programme</a></li>
-                <li><a href="#" class="quick-link" data-page="blog">+ Écrire un article</a></li>
-                <li><a href="#" class="quick-link" data-page="contact">Voir les messages</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
+        <div class="stat-grid" id="dashboard-stats"></div>
       </section>
 
-      <!-- PROGRAMS PAGE -->
-      <section id="programs-page" class="page-content">
+      <section id="projects-page" class="page-content">
         <div class="page-header">
-          <h2>Programmes</h2>
-          <button id="add-program-btn" class="btn btn-primary">+ Ajouter un programme</button>
+          <h2>Projets</h2>
+          <button type="button" class="btn btn-primary" id="add-project-btn">
+            <i class="ti ti-plus"></i> Ajouter un projet
+          </button>
         </div>
-        <div id="programs-list" class="table-container">
-          <!-- Loaded dynamically -->
+        <div id="projects-list" class="table-container">
+          <!-- Chargé dynamiquement -->
         </div>
       </section>
 
-      <!-- TESTIMONIALS PAGE -->
+      <section id="forms-page" class="page-content">
+        <div class="page-header">
+          <h2 id="forms-heading">Formulaires</h2>
+          <div class="action-buttons" id="forms-actions"></div>
+        </div>
+        <div id="forms-content">
+          <!-- Chargé dynamiquement -->
+        </div>
+      </section>
+
       <section id="testimonials-page" class="page-content">
         <div class="page-header">
           <h2>Témoignages</h2>
-          <button id="add-testimonial-btn" class="btn btn-primary">+ Ajouter un témoignage</button>
         </div>
         <div id="testimonials-list" class="table-container">
           <!-- Loaded dynamically -->
         </div>
       </section>
 
-      <!-- BLOG PAGE -->
-      <section id="blog-page" class="page-content">
-        <div class="page-header">
-          <h2>Articles de Blog</h2>
-          <button id="add-blog-btn" class="btn btn-primary">+ Écrire un article</button>
-        </div>
-        <div id="blog-list" class="table-container">
-          <!-- Loaded dynamically -->
-        </div>
-      </section>
-
-      <!-- COURSES PAGE -->
-      <section id="courses-page" class="page-content">
-        <div class="page-header">
-          <h2>Gestion des Cours</h2>
-          <button id="add-course-btn" class="btn btn-primary">+ Ajouter un cours</button>
-        </div>
-        <div id="courses-list" class="table-container">
-          <!-- Loaded dynamically -->
-        </div>
-      </section>
-
-      <!-- DONATIONS PAGE -->
-      <section id="donations-page" class="page-content">
-        <div class="page-header">
-          <h2>Dons</h2>
-        </div>
-        <div id="donations-list" class="table-container">
-          <!-- Loaded dynamically -->
-        </div>
-      </section>
-
-      <!-- CONTACT PAGE -->
       <section id="contact-page" class="page-content">
         <div class="page-header">
-          <h2>Messages de Contact</h2>
+          <h2>Messages reçus</h2>
         </div>
         <div id="contact-list" class="table-container">
           <!-- Loaded dynamically -->
         </div>
       </section>
 
-      <!-- FEUILLE DE PRÉSENCE PAGE -->
+      <section id="partners-page" class="page-content">
+        <div class="page-header">
+          <h2>Partenaires</h2>
+          <button type="button" class="btn btn-primary" id="add-partner-btn"><i class="ti ti-plus"></i> Ajouter un partenaire</button>
+        </div>
+        <div id="partners-list" class="table-container">
+          <!-- Chargé dynamiquement -->
+        </div>
+      </section>
+
+      <section id="organization-page" class="page-content">
+        <div class="page-header">
+          <h2>Informations de l'organisation</h2>
+        </div>
+        <form id="organization-form" class="form-card">
+          <div class="form-group">
+            <label for="org-name">Nom</label>
+            <input type="text" id="org-name" name="name" maxlength="255" required>
+          </div>
+          <div class="form-group">
+            <label for="org-email">E-mail</label>
+            <input type="email" id="org-email" name="email" maxlength="255" required>
+          </div>
+          <div class="form-group">
+            <label for="org-phone">Téléphone</label>
+            <input type="tel" id="org-phone" name="phone" maxlength="20">
+          </div>
+          <div class="form-group">
+            <label for="org-address">Adresse</label>
+            <input type="text" id="org-address" name="address">
+          </div>
+          <div class="form-group">
+            <label for="org-mission">Mission</label>
+            <textarea id="org-mission" name="mission" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="org-description">Notre histoire (remplace le texte de la page Qui sommes-nous)</label>
+            <textarea id="org-description" name="description" rows="6"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </form>
+
+        <div class="page-header" style="margin-top:var(--spacing-xl);">
+          <h2>Fondateurs</h2>
+          <button type="button" class="btn btn-primary" id="add-founder-btn"><i class="ti ti-plus"></i> Ajouter un fondateur</button>
+        </div>
+        <div id="founders-list" class="table-container"></div>
+      </section>
+
       <section id="presence-page" class="page-content">
         <div class="page-header">
           <h2>Feuille de présence à la restitution du 2 novembre 2026</h2>
@@ -208,52 +143,6 @@
         </div>
       </section>
 
-      <!-- SPONSORS PAGE -->
-      <section id="sponsors-page" class="page-content">
-        <div class="page-header">
-          <h2>Sponsors</h2>
-          <button id="add-sponsor-btn" class="btn btn-primary">+ Ajouter un sponsor</button>
-        </div>
-        <div id="sponsors-list" class="table-container">
-          <!-- Loaded dynamically -->
-        </div>
-      </section>
-
-      <!-- ORGANIZATION PAGE -->
-      <section id="organization-page" class="page-content">
-        <div class="page-header">
-          <h2>Informations de l'Organisation</h2>
-        </div>
-        <form id="organization-form" class="form-card">
-          <div class="form-group">
-            <label for="org-name">Nom</label>
-            <input type="text" id="org-name" name="name" required>
-          </div>
-          <div class="form-group">
-            <label for="org-email">Email</label>
-            <input type="email" id="org-email" name="email" required>
-          </div>
-          <div class="form-group">
-            <label for="org-phone">Téléphone</label>
-            <input type="tel" id="org-phone" name="phone">
-          </div>
-          <div class="form-group">
-            <label for="org-whatsapp">WhatsApp</label>
-            <input type="tel" id="org-whatsapp" name="whatsapp_number">
-          </div>
-          <div class="form-group">
-            <label for="org-mission">Mission</label>
-            <textarea id="org-mission" name="mission" rows="4"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="org-vision">Vision</label>
-            <textarea id="org-vision" name="vision" rows="4"></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
-        </form>
-      </section>
-
-      <!-- USERS PAGE -->
       <section id="users-page" class="page-content">
         <div class="page-header">
           <h2>Utilisateurs</h2>
@@ -262,86 +151,158 @@
           <!-- Loaded dynamically -->
         </div>
       </section>
+
     </div>
   </main>
 
-  <!-- MODALS -->
-  <div id="program-modal" class="modal">
+  <div id="message-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">Ajouter/Modifier un programme</h2>
-        <button type="button" class="modal-close" onclick="closeModal('program-modal')">&times;</button>
+        <h2 class="modal-title">Message reçu</h2>
+        <button type="button" class="modal-close" onclick="closeModal('message-modal')" aria-label="Fermer">&times;</button>
       </div>
-      <form id="program-form" class="modal-body">
+      <div class="modal-body" id="message-body"></div>
+    </div>
+  </div>
+
+  <div id="partner-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="partner-modal-title">Partenaire</h2>
+        <button type="button" class="modal-close" onclick="closeModal('partner-modal')" aria-label="Fermer">&times;</button>
+      </div>
+      <form id="partner-form" class="modal-body">
         <div class="form-group">
-          <label for="program-title">Titre</label>
-          <input type="text" id="program-title" name="title" required>
+          <label for="partner-name">Nom</label>
+          <input type="text" id="partner-name" name="name" maxlength="200" required>
         </div>
         <div class="form-group">
-          <label for="program-description">Description</label>
-          <textarea id="program-description" name="description" required></textarea>
+          <label for="partner-logo-file">Logo (PNG, JPEG ou WebP, 2 Mo au plus)</label>
+          <input type="file" id="partner-logo-file" accept="image/png,image/jpeg,image/webp">
+          <input type="hidden" name="logo_url">
+          <p id="partner-logo-state"></p>
         </div>
-        <div class="form-group">
-          <label for="program-category">Catégorie</label>
-          <input type="text" id="program-category" name="category">
-        </div>
+        <label class="fb-inline"><input type="checkbox" name="is_active"> Visible sur le site</label>
         <div class="modal-footer">
-          <button type="button" class="btn btn-ghost" onclick="closeModal('program-modal')">Annuler</button>
-          <button type="submit" class="btn btn-primary">Enregistrer</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('partner-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="partner-save">Enregistrer</button>
         </div>
       </form>
     </div>
   </div>
 
-
-  <!-- SPONSOR MODAL -->
-  <div id="sponsor-modal" class="modal">
+  <div id="founder-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">Ajouter/Modifier un sponsor</h2>
-        <button type="button" class="modal-close" onclick="closeModal('sponsor-modal')">&times;</button>
+        <h2 class="modal-title" id="founder-modal-title">Fondateur</h2>
+        <button type="button" class="modal-close" onclick="closeModal('founder-modal')" aria-label="Fermer">&times;</button>
       </div>
-      <form id="sponsor-form" class="modal-body">
+      <form id="founder-form" class="modal-body">
         <div class="form-group">
-          <label for="sponsor-name">Nom du sponsor</label>
-          <input type="text" id="sponsor-name" name="name" required>
+          <label for="founder-name">Nom</label>
+          <input type="text" id="founder-name" name="name" maxlength="255" required>
         </div>
         <div class="form-group">
-          <label for="sponsor-logo">URL du logo</label>
-          <input type="url" id="sponsor-logo" name="logo_url" required placeholder="https://example.com/logo.png">
+          <label for="founder-role">Fonction</label>
+          <input type="text" id="founder-role" name="role" maxlength="255" required>
         </div>
         <div class="form-group">
-          <label for="sponsor-website">Site web</label>
-          <input type="url" id="sponsor-website" name="website_url" placeholder="https://example.com">
+          <label for="founder-order">Ordre d'affichage</label>
+          <input type="number" id="founder-order" name="order_position" min="0">
         </div>
         <div class="form-group">
-          <label for="sponsor-description">Description</label>
-          <textarea id="sponsor-description" name="description" rows="3"></textarea>
+          <label for="founder-image-file">Photo (facultatif)</label>
+          <input type="file" id="founder-image-file" accept="image/png,image/jpeg,image/webp">
+          <input type="hidden" name="image_url">
+          <p id="founder-image-state"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('founder-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="founder-save">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="project-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="project-modal-title">Projet</h2>
+        <button type="button" class="modal-close" onclick="closeModal('project-modal')" aria-label="Fermer">&times;</button>
+      </div>
+      <form id="project-form" class="modal-body">
+        <div class="form-group">
+          <label for="project-name">Nom</label>
+          <input type="text" id="project-name" name="name" maxlength="200" required>
         </div>
         <div class="form-group">
-          <label for="sponsor-tier">Niveau</label>
-          <select id="sponsor-tier" name="tier" required>
-            <option value="platinum">Platine</option>
-            <option value="gold">Or</option>
-            <option value="silver">Argent</option>
-            <option value="bronze">Bronze</option>
+          <label for="project-type">Type</label>
+          <select id="project-type" name="type">
+            <option value="formation">Formation</option>
+            <option value="produit">Produit</option>
+            <option value="mission">Mission</option>
+            <option value="autre">Autre</option>
           </select>
         </div>
         <div class="form-group">
-          <label for="sponsor-order">Ordre d'affichage</label>
-          <input type="number" id="sponsor-order" name="order_position" value="0" min="0">
+          <label for="project-status">Statut</label>
+          <select id="project-status" name="status">
+            <option value="draft">Brouillon (invisible sur le site)</option>
+            <option value="published">Publié</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="project-start">Début (sert aussi à trier la liste)</label>
+          <input type="date" id="project-start" name="start_date">
+        </div>
+        <div class="form-group">
+          <label for="project-end">Fin</label>
+          <input type="date" id="project-end" name="end_date">
+        </div>
+        <div class="form-group">
+          <label for="project-period">Période affichée (remplace les dates, ex. « Été 2025 »)</label>
+          <input type="text" id="project-period" name="period_label" maxlength="120">
+        </div>
+        <div class="form-group">
+          <label for="project-summary">Résumé</label>
+          <textarea id="project-summary" name="summary" rows="2" maxlength="400" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="project-description">Description</label>
+          <textarea id="project-description" name="description" rows="5"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="project-participants">Nombre de participants</label>
+          <input type="number" id="project-participants" name="participants" min="0">
+        </div>
+        <div class="form-group">
+          <label for="project-speakers">Intervenants</label>
+          <input type="text" id="project-speakers" name="speakers" maxlength="255">
+        </div>
+        <div class="form-group">
+          <label for="project-url">Lien externe</label>
+          <input type="url" id="project-url" name="external_url" maxlength="500" placeholder="https://">
+        </div>
+        <div class="form-group">
+          <label for="project-image-file">Image (PNG, JPEG ou WebP, 2 Mo au plus)</label>
+          <input type="file" id="project-image-file" accept="image/png,image/jpeg,image/webp">
+          <input type="hidden" id="project-image" name="image_url">
+          <p id="project-image-state"></p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-ghost" onclick="closeModal('sponsor-modal')">Annuler</button>
-          <button type="submit" class="btn btn-primary">Enregistrer</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('project-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="project-save">Enregistrer</button>
         </div>
       </form>
     </div>
   </div>
 
-  <script src="../js/api.js?v=10"></script>
-  <script src="../js/utils.js?v=10"></script>
-  <script src="../js/pages/admin-dashboard.js?v=10"></script>
-  <script src="../js/pages/admin-presence.js?v=10"></script>
+  <script src="../js/api.js?v=13"></script>
+  <script src="../js/utils.js?v=13"></script>
+  <script src="../js/pages/admin-dashboard.js?v=13"></script>
+  <script src="../js/pages/admin-projects.js?v=13"></script>
+  <script src="../js/pages/admin-modules.js?v=13"></script>
+  <script src="../js/pages/admin-forms.js?v=13"></script>
+  <script src="../js/pages/admin-presence.js?v=13"></script>
 </body>
 </html>

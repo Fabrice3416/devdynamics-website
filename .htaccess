@@ -1,0 +1,10 @@
+# Anciennes adresses du site, retirees a la refonte.
+# Seules ces adresses exactes sont touchees : api/, bousol/, keskle/ et le reste
+# gardent leurs propres regles.
+<IfModule mod_alias.c>
+    RedirectMatch 301 ^/pages/(cours-list|course-details|course-content|checkout|payment-success|payment-pending|student-login|student-register|student-dashboard|student-certificates|certificate-view|verify-certificate|programmes|blog|blog-post)\.html$ /pages/realisations.html
+    RedirectMatch 301 ^/pages/temoignages\.html$ /pages/realisations.html
+    RedirectMatch 301 ^/pages/sponsors\.html$ /pages/partenaires.html
+    RedirectMatch 301 ^/pages/equipe\.html$ /pages/a-propos.html
+    RedirectMatch 301 ^/pages/(candidature|fiche-etude-enseignant|admin-course-builder)\.html$ /index.html
+</IfModule>
