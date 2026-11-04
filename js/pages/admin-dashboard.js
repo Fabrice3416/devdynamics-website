@@ -85,6 +85,7 @@ function switchPage(page) {
     contact: 'Messages de Contact',
     courses: 'Gestion des Cours',
     sponsors: 'Sponsors',
+    projects: 'Projets',
     presence: 'Feuille de présence',
     organization: 'Informations de l\'Organisation',
     users: 'Utilisateurs'
@@ -119,6 +120,9 @@ async function loadPageData(page) {
       break;
     case 'courses':
       loadCourses();
+      break;
+    case 'projects':
+      loadProjects();
       break;
     case 'presence':
       loadPresence();

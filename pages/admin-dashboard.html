@@ -45,6 +45,9 @@
       <a href="#sponsors" class="menu-item" data-page="sponsors">
         <i class="ti ti-heart-handshake"></i> Sponsors
       </a>
+      <a href="#projects" class="menu-item" data-page="projects">
+        <i class="ti ti-folders"></i> Projets
+      </a>
       <a href="#presence" class="menu-item" data-page="presence">
         <i class="ti ti-clipboard-check"></i> Feuille de présence
       </a>
@@ -195,6 +198,19 @@
         </div>
       </section>
 
+      <!-- PROJETS PAGE -->
+      <section id="projects-page" class="page-content">
+        <div class="page-header">
+          <h2>Projets</h2>
+          <button type="button" class="btn btn-primary" id="add-project-btn">
+            <i class="ti ti-plus"></i> Ajouter un projet
+          </button>
+        </div>
+        <div id="projects-list" class="table-container">
+          <!-- Chargé dynamiquement -->
+        </div>
+      </section>
+
       <!-- FEUILLE DE PRÉSENCE PAGE -->
       <section id="presence-page" class="page-content">
         <div class="page-header">
@@ -266,6 +282,79 @@
   </main>
 
   <!-- MODALS -->
+  <div id="project-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="project-modal-title">Projet</h2>
+        <button type="button" class="modal-close" onclick="closeModal('project-modal')" aria-label="Fermer">&times;</button>
+      </div>
+      <form id="project-form" class="modal-body">
+        <div class="form-group">
+          <label for="project-name">Nom</label>
+          <input type="text" id="project-name" name="name" maxlength="200" required>
+        </div>
+        <div class="form-group">
+          <label for="project-type">Type</label>
+          <select id="project-type" name="type">
+            <option value="formation">Formation</option>
+            <option value="produit">Produit</option>
+            <option value="mission">Mission</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="project-status">Statut</label>
+          <select id="project-status" name="status">
+            <option value="draft">Brouillon (invisible sur le site)</option>
+            <option value="published">Publié</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="project-start">Début (sert aussi à trier la liste)</label>
+          <input type="date" id="project-start" name="start_date">
+        </div>
+        <div class="form-group">
+          <label for="project-end">Fin</label>
+          <input type="date" id="project-end" name="end_date">
+        </div>
+        <div class="form-group">
+          <label for="project-period">Période affichée (remplace les dates, ex. « Été 2025 »)</label>
+          <input type="text" id="project-period" name="period_label" maxlength="120">
+        </div>
+        <div class="form-group">
+          <label for="project-summary">Résumé</label>
+          <textarea id="project-summary" name="summary" rows="2" maxlength="400" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="project-description">Description</label>
+          <textarea id="project-description" name="description" rows="5"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="project-participants">Nombre de participants</label>
+          <input type="number" id="project-participants" name="participants" min="0">
+        </div>
+        <div class="form-group">
+          <label for="project-speakers">Intervenants</label>
+          <input type="text" id="project-speakers" name="speakers" maxlength="255">
+        </div>
+        <div class="form-group">
+          <label for="project-url">Lien externe</label>
+          <input type="url" id="project-url" name="external_url" maxlength="500" placeholder="https://">
+        </div>
+        <div class="form-group">
+          <label for="project-image-file">Image (PNG, JPEG ou WebP, 2 Mo au plus)</label>
+          <input type="file" id="project-image-file" accept="image/png,image/jpeg,image/webp">
+          <input type="hidden" id="project-image" name="image_url">
+          <p id="project-image-state"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('project-modal')">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="project-save">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div id="program-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -342,6 +431,7 @@
   <script src="../js/api.js?v=10"></script>
   <script src="../js/utils.js?v=10"></script>
   <script src="../js/pages/admin-dashboard.js?v=10"></script>
+  <script src="../js/pages/admin-projects.js?v=10"></script>
   <script src="../js/pages/admin-presence.js?v=10"></script>
 </body>
 </html>

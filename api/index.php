@@ -45,6 +45,8 @@ require_once __DIR__ . '/routes/testimonials.php';
 require_once __DIR__ . '/routes/sponsors.php';
 require_once __DIR__ . '/routes/admin.php';
 require_once __DIR__ . '/routes/attendance.php';
+require_once __DIR__ . '/routes/projects.php';
+require_once __DIR__ . '/routes/uploads.php';
 
 // Initialize Router
 $router = Router::getInstance();

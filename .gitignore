@@ -76,3 +76,7 @@ api/clear-*.php
 
 # Gabarits PAIESC de reference (hors depot)
 /bousol_documents/
+
+# Images envoyees depuis l'administration : elles vivent sur le serveur
+/uploads/*
+!/uploads/.htaccess
