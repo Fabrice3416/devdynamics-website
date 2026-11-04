@@ -33,7 +33,7 @@
 Options -Indexes
 
 # Protect sensitive files
-<FilesMatch "^\.env$">
+<FilesMatch "^\.(env|user\.ini)$">
     Order allow,deny
     Deny from all
 </FilesMatch>

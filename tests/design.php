@@ -125,6 +125,10 @@ foreach (explode('|', implode('|', $anciennes[1])) as $ancienne) {
 }
 $check('toutes les anciennes adresses sont lues', count(explode('|', implode('|', $anciennes[1]))) === 21);
 
+foreach (['tests', 'tools', 'api/lib', 'api/routes', 'api/utils', 'api/middleware', 'api/config'] as $interne) {
+    $check("{$interne}/ fermé au web", str_contains((string) @file_get_contents("{$ROOT}/{$interne}/.htaccess"), 'Require all denied'));
+}
+
 exec('php ' . escapeshellarg("{$ROOT}/tools/build-layout.php") . ' --check', $sortie, $code);
 $check('en-tete et pied de page a jour dans toutes les pages', $code === 0, implode(' ', $sortie));
 
