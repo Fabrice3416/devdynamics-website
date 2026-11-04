@@ -36,6 +36,8 @@ async function loadProjects() {
               <td>
                 <div class="action-buttons">
                   <button class="btn btn-primary btn-sm" onclick="editProject(${Number(project.id)})">Modifier</button>
+                  <button class="btn btn-secondary btn-sm" onclick="toggleTestimonials(${Number(project.id)})">${Number(project.testimonials_open) ? 'Fermer la collecte' : 'Ouvrir la collecte'}</button>
+                  ${Number(project.testimonials_open) ? `<button class="btn btn-secondary btn-sm" onclick="copyTestimonialLink(${Number(project.id)}, this)">Lien témoignage</button>` : ''}
                   <button class="btn btn-secondary btn-sm" onclick="deleteProject(${Number(project.id)})">Supprimer</button>
                 </div>
               </td>
@@ -70,6 +72,28 @@ function editProject(id) {
   openProjectForm(projectsById[id]);
 }
 
+async function toggleTestimonials(id) {
+  try {
+    await api.request(`/projects/${id}/testimonials`, {
+      method: 'PUT',
+      body: JSON.stringify({ open: !Number(projectsById[id].testimonials_open) })
+    });
+    loadProjects();
+  } catch (error) {
+    alert(error.message || 'Le changement a échoué.');
+  }
+}
+
+async function copyTestimonialLink(id, button) {
+  const link = `${window.location.origin}/pages/temoignage.html?p=${encodeURIComponent(projectsById[id].slug)}`;
+  try {
+    await navigator.clipboard.writeText(link);
+    button.textContent = 'Lien copié';
+  } catch (error) {
+    prompt('Copie ce lien :', link);
+  }
+}
+
 async function deleteProject(id) {
   if (!confirm(`Supprimer définitivement « ${projectsById[id].name} » ?`)) return;
 
@@ -83,8 +107,6 @@ async function deleteProject(id) {
 
 document.getElementById('add-project-btn').addEventListener('click', () => openProjectForm(null));
 
-// L'envoi passe par fetch sans Content-Type : le navigateur doit poser lui-même
-// la frontière du multipart.
 document.getElementById('project-image-file').addEventListener('change', async (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -95,21 +117,11 @@ document.getElementById('project-image-file').addEventListener('change', async (
   save.disabled = true;
 
   try {
-    const body = new FormData();
-    body.append('file', file);
-    const response = await fetch(`${API_BASE_URL}/uploads`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${api.token}` },
-      body
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.message);
-
-    document.getElementById('project-image').value = result.data.path;
+    document.getElementById('project-image').value = await uploadAdminImage(file);
     state.textContent = 'Image envoyée.';
   } catch (error) {
     event.target.value = '';
-    state.textContent = error.message || "L'envoi de l'image a échoué.";
+    state.textContent = error.message;
   } finally {
     save.disabled = false;
   }

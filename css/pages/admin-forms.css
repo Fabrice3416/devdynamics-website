@@ -32,3 +32,15 @@
 .fr-legend li { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem; }
 .fr-swatch { width: 0.8rem; height: 0.8rem; border-radius: 2px; flex-shrink: 0; }
 .fr-table { overflow-x: auto; }
+
+/* ---------- Messages, témoignages, partenaires ---------- */
+
+.menu-badge { margin-left: auto; min-width: 1.4rem; padding: 0 0.4rem; font-size: 0.75rem; font-weight: 700; line-height: 1.4rem; text-align: center; color: #1a1a1a; background: #FF6B6B; border-radius: 999px; }
+.row-unread td { font-weight: 600; }
+.message-meta { display: grid; gap: var(--spacing-sm); margin: 0 0 var(--spacing-md); }
+.message-meta dt { font-size: var(--font-size-sm); color: var(--color-gray); }
+.message-meta dd { margin: 0; overflow-wrap: anywhere; }
+.message-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* Un logo garde son fond clair : beaucoup sont sombres sur transparent */
+.logo-plate { display: inline-flex; padding: 0.3rem; background: #ffffff; border-radius: 4px; }
+.logo-plate img { max-height: 40px; max-width: 100px; object-fit: contain; }

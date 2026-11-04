@@ -50,7 +50,7 @@
     </div>
 
     <section class="section">
-      <div class="container"><div class="reading reveal">
+      <div class="container"><div class="reading reveal" id="history">
         <h2>Notre histoire</h2>
         <p>DevDynamics a été fondée en août 2021 par Rodely JEAN, Fabrice SAINTILMA et Gueslander Lynx LAURENT.</p>
         <p>Nous avons d'abord formé des débutants à la création de sites web avec HTML, CSS et JavaScript : trois cohortes se sont succédé de novembre 2024 à août 2025. L'été 2025, deux formations courtes ont suivi, l'une sur la gestion des réseaux sociaux, l'autre sur le dépannage cellulaire.</p>
@@ -61,7 +61,7 @@
     <section class="section section-alt">
       <div class="container">
         <h2 class="reveal">Les fondateurs</h2>
-        <div class="grid">
+        <div class="grid" id="founders">
           <article class="card person reveal">
             <span class="icon-badge"><i class="ti ti-briefcase" aria-hidden="true"></i></span>
             <h3>Rodely JEAN</h3>
@@ -104,9 +104,9 @@
         <div>
           <h2>Coordonnées</h2>
           <ul>
-            <li>190, rue 15-16 B, Cap-Haïtien, Haïti</li>
-            <li><a href="tel:+50947418737">+509 47 41 8737</a></li>
-            <li><a href="mailto:contact@dev-dynamics.org">contact@dev-dynamics.org</a></li>
+            <li data-org="address">190, rue 15-16 B, Cap-Haïtien, Haïti</li>
+            <li><a href="tel:+50947418737" data-org="phone">+509 47 41 8737</a></li>
+            <li><a href="mailto:contact@dev-dynamics.org" data-org="email">contact@dev-dynamics.org</a></li>
           </ul>
         </div>
       </div>
@@ -118,5 +118,6 @@
   <!-- /layout:footer -->
 
   <script src="../js/site.js?v=10"></script>
+  <script src="../js/pages/vitrine.js?v=10"></script>
 </body>
 </html>

@@ -127,12 +127,27 @@ async function loadProjectDetail() {
           </dl>
         </aside>
       </div>`;
+    loadProjectTestimonials(slug, container);
   } catch (error) {
     if (error.status === 404) {
       notFound();
     } else {
       showProjectError(container, 'Cette réalisation ne peut pas être affichée pour le moment. Réessayez dans un instant.');
     }
+  }
+}
+
+async function loadProjectTestimonials(slug, container) {
+  try {
+    const { data } = await api.request(`/project-testimonials/project/${encodeURIComponent(slug)}`);
+    if (data.length === 0) return;
+    container.insertAdjacentHTML('beforeend', `
+      <div class="detail-section">
+        <h2>Témoignages</h2>
+        <div class="grid">${data.map(item => testimonialCard(item)).join('')}</div>
+      </div>`);
+  } catch (error) {
+    // Les témoignages accompagnent la fiche : leur absence ne l'empêche pas de s'afficher
   }
 }
 

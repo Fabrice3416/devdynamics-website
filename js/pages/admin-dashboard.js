@@ -84,7 +84,7 @@ function switchPage(page) {
     donations: 'Dons',
     contact: 'Messages de Contact',
     courses: 'Gestion des Cours',
-    sponsors: 'Sponsors',
+    partners: 'Partenaires',
     projects: 'Projets',
     forms: 'Formulaires',
     presence: 'Feuille de présence',
@@ -105,10 +105,10 @@ async function loadPageData(page) {
       loadPrograms();
       break;
     case 'testimonials':
-      loadTestimonials();
+      loadProjectTestimonials();
       break;
-    case 'sponsors':
-      loadSponsors();
+    case 'partners':
+      loadPartners();
       break;
     case 'blog':
       loadBlogPosts();
@@ -510,59 +510,6 @@ async function loadDonations() {
   }
 }
 
-// Contact Messages
-async function loadContactMessages() {
-  try {
-    const response = await api.getContactMessages();
-    if (response.success) {
-      const container = document.getElementById('contact-list');
-      container.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Email</th>
-              <th>Sujet</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${response.data.map(message => `
-              <tr>
-                <td>${escapeHtml(message.name)}</td>
-                <td>${escapeHtml(message.email)}</td>
-                <td>${escapeHtml(message.subject)}</td>
-                <td><span class="badge badge-primary">${escapeHtml(message.status)}</span></td>
-                <td>
-                  <div class="action-buttons">
-                    <button class="btn btn-primary btn-sm" onclick="viewMessage(${message.id})">Voir</button>
-                    <button class="btn btn-secondary btn-sm" onclick="deleteContactMessage(${message.id})">Supprimer</button>
-                  </div>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-  } catch (error) {
-    console.error('Erreur chargement messages:', error);
-  }
-}
-
-async function deleteContactMessage(id) {
-  if (confirm('Êtes-vous sûr?')) {
-    try {
-      await api.deleteContactMessage(id);
-      showNotification('Message supprimé', 'success');
-      loadContactMessages();
-    } catch (error) {
-      showNotification('Erreur lors de la suppression', 'error');
-    }
-  }
-}
-
 function escapeHtml(s) {
   if (s === null || s === undefined) return '';
   return String(s)
@@ -796,23 +743,6 @@ async function rejectEnrollment(id, courseId) {
 }
 
 // Organization
-async function loadOrganizationForm() {
-  try {
-    const response = await api.getOrganizationInfo();
-    if (response.success) {
-      const org = response.data;
-      document.getElementById('org-name').value = org.name || '';
-      document.getElementById('org-email').value = org.email || '';
-      document.getElementById('org-phone').value = org.phone || '';
-      document.getElementById('org-whatsapp').value = org.whatsapp_number || '';
-      document.getElementById('org-mission').value = org.mission || '';
-      document.getElementById('org-vision').value = org.vision || '';
-    }
-  } catch (error) {
-    console.error('Erreur chargement organisation:', error);
-  }
-}
-
 // Users
 async function loadUsers() {
   try {
@@ -866,11 +796,6 @@ async function deleteUser(id) {
 
 // Form handlers
 function setupFormHandlers() {
-  const orgForm = document.getElementById('organization-form');
-  if (orgForm) {
-    orgForm.addEventListener('submit', handleOrganizationSubmit);
-  }
-
   const programForm = document.getElementById('program-form');
   if (programForm) {
     programForm.addEventListener('submit', handleProgramSubmit);
@@ -987,18 +912,6 @@ function setupCourseTypeLogic() {
 
   // Trigger initial state
   courseTypeSelect.dispatchEvent(new Event('change'));
-}
-
-async function handleOrganizationSubmit(e) {
-  e.preventDefault();
-  const data = getFormData(this);
-
-  try {
-    await api.updateOrganizationInfo(data);
-    showNotification('Informations mises à jour', 'success');
-  } catch (error) {
-    showNotification('Erreur lors de la mise à jour', 'error');
-  }
 }
 
 async function handleProgramSubmit(e) {

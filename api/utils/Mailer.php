@@ -1,132 +1,74 @@
 <?php
 /**
- * Mailer — sends a multipart/mixed email (text + HTML alternative + PDF
- * attachment) using PHP's mail(). On Hostinger this routes through their
- * outbound mail server.
+ * Notifications par e-mail, via le SMTP de la boite DevDynamics.
  *
- * Several headers and structural choices below are deliberate to reduce
- * the chance of the message landing in spam:
- *  - The From address defaults to the configured ACP_NOTIFY_EMAIL (a real
- *    Hostinger mailbox covered by the domain's SPF), instead of a forged
- *    noreply@ address that no SPF record claims.
- *  - A Date and a Message-ID header are added (their absence is itself a
- *    spam signal).
- *  - A multipart/alternative body provides a text/plain fallback, which
- *    every reputable mailer ships and several filters expect.
- *  - The envelope sender (-f flag) is aligned with the From domain so SPF
- *    checks pass.
+ * Configuration dans api/.env : SMTP_HOST, SMTP_PORT, SMTP_USERNAME,
+ * SMTP_PASSWORD, SMTP_FROM_NAME, NOTIFY_EMAIL. Sans mot de passe, rien n'est
+ * envoye : le message reste enregistre et visible dans l'administration.
  */
+
+require_once __DIR__ . '/../lib/PHPMailer/Exception.php';
+require_once __DIR__ . '/../lib/PHPMailer/PHPMailer.php';
+require_once __DIR__ . '/../lib/PHPMailer/SMTP.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
 
 class Mailer {
     /**
-     * Send an HTML email with a PDF attachment.
-     *
-     * @param string $to          recipient address
-     * @param string $subject     email subject (UTF-8)
-     * @param string $bodyHtml    HTML body
-     * @param string $pdfPath     path to the PDF on disk
-     * @param string $pdfName     attachment filename
-     * @param string|null $from   sender address (defaults to env config)
-     * @param string|null $replyTo
-     * @return bool
+     * Le corps du courriel de notification. Du texte brut : un message de
+     * visiteur ne doit jamais pouvoir y injecter du HTML.
      */
-    public static function sendWithPdf($to, $subject, $bodyHtml, $pdfPath, $pdfName, $from = null, $replyTo = null) {
-        if (!file_exists($pdfPath)) {
-            error_log("Mailer: PDF not found at {$pdfPath}");
-            return false;
-        }
-
-        // Resolve the From address: explicit param > SMTP_FROM > ACP_NOTIFY_EMAIL > recipient.
-        // Sending FROM the recipient mailbox is a working last resort because
-        // we know that mailbox is real and covered by the domain's SPF.
-        if (!$from) {
-            $from = getenv('SMTP_FROM') ?: (getenv('ACP_NOTIFY_EMAIL') ?: $to);
-        }
-        $fromName = getenv('SMTP_FROM_NAME') ?: 'DevDynamics — ACP';
-        $fromDomain = self::extractDomain($from);
-
-        $boundaryMixed = 'mix_' . md5(uniqid('', true));
-        $boundaryAlt   = 'alt_' . md5(uniqid('', true));
-        $eol = "\r\n";
-
-        $messageId = '<' . md5(uniqid('', true) . microtime(true)) . '@' . $fromDomain . '>';
-        $date = date('r');
-
-        $headers = [];
-        $headers[] = 'From: ' . self::encodeHeaderName($fromName) . " <{$from}>";
-        $headers[] = 'Reply-To: ' . ($replyTo ?: $from);
-        $headers[] = "Date: {$date}";
-        $headers[] = "Message-ID: {$messageId}";
-        $headers[] = 'MIME-Version: 1.0';
-        $headers[] = "Content-Type: multipart/mixed; boundary=\"{$boundaryMixed}\"";
-        $headers[] = 'X-Mailer: DevDynamics-ACP/1.1';
-        $headers[] = 'X-Auto-Response-Suppress: All';
-
-        $bodyText = self::htmlToText($bodyHtml);
-        $pdfData  = chunk_split(base64_encode(file_get_contents($pdfPath)));
-        $safeName = preg_replace('/[^A-Za-z0-9._-]/', '_', $pdfName);
-
-        // multipart/mixed
-        //   ├─ multipart/alternative
-        //   │    ├─ text/plain
-        //   │    └─ text/html
-        //   └─ application/pdf (attachment)
-        $body  = "--{$boundaryMixed}{$eol}";
-        $body .= "Content-Type: multipart/alternative; boundary=\"{$boundaryAlt}\"{$eol}{$eol}";
-
-        $body .= "--{$boundaryAlt}{$eol}";
-        $body .= "Content-Type: text/plain; charset=UTF-8{$eol}";
-        $body .= "Content-Transfer-Encoding: 8bit{$eol}{$eol}";
-        $body .= $bodyText . $eol . $eol;
-
-        $body .= "--{$boundaryAlt}{$eol}";
-        $body .= "Content-Type: text/html; charset=UTF-8{$eol}";
-        $body .= "Content-Transfer-Encoding: 8bit{$eol}{$eol}";
-        $body .= $bodyHtml . $eol . $eol;
-        $body .= "--{$boundaryAlt}--{$eol}{$eol}";
-
-        $body .= "--{$boundaryMixed}{$eol}";
-        $body .= "Content-Type: application/pdf; name=\"{$safeName}\"{$eol}";
-        $body .= "Content-Transfer-Encoding: base64{$eol}";
-        $body .= "Content-Disposition: attachment; filename=\"{$safeName}\"{$eol}{$eol}";
-        $body .= $pdfData . $eol;
-        $body .= "--{$boundaryMixed}--{$eol}";
-
-        $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-        // -f sets the envelope sender used by the receiving server for SPF.
-        // Aligning it with the From domain is what makes SPF actually pass.
-        $sent = @mail($to, $encodedSubject, $body, implode($eol, $headers), "-f{$from}");
-        if (!$sent) {
-            error_log("Mailer: mail() failed sending to {$to}");
-        }
-        return $sent;
+    public static function contactBody(array $message) {
+        $lines = [
+            'Nouveau message reçu depuis le site dev-dynamics.org.',
+            '',
+            'Nom : ' . $message['name'],
+            'E-mail : ' . $message['email'],
+            'Téléphone : ' . ($message['phone'] ?: 'non indiqué'),
+            'Sujet : ' . ($message['subject'] ?: 'non indiqué'),
+            '',
+            $message['message'],
+            '',
+            '--',
+            'Répondre à ce courriel écrit directement à la personne.',
+        ];
+        return implode("\n", $lines);
     }
 
     /**
-     * Quick HTML → plain-text conversion for the multipart/alternative
-     * fallback. Not perfect, but enough to give spam filters a real
-     * text/plain part to score.
+     * Rend true si le courriel est parti. Une panne ne remonte jamais au visiteur.
      */
-    private static function htmlToText($html) {
-        $text = preg_replace('/<br\s*\/?>/i', "\n", $html);
-        $text = preg_replace('/<\/(p|div|h[1-6]|li|tr)>/i', "\n", $text);
-        $text = strip_tags($text);
-        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $text = preg_replace("/[ \t]+/", ' ', $text);
-        $text = preg_replace("/\n{3,}/", "\n\n", $text);
-        return trim($text);
-    }
+    public static function notifyContact(array $message) {
+        $password = getenv('SMTP_PASSWORD');
+        if (!$password) return false;
 
-    private static function encodeHeaderName($name) {
-        // RFC 2047 encoding for non-ASCII characters in display names
-        if (preg_match('/[\x80-\xff]/', $name)) {
-            return '=?UTF-8?B?' . base64_encode($name) . '?=';
+        try {
+            $username = getenv('SMTP_USERNAME') ?: 'contact@dev-dynamics.org';
+            $port = (int) (getenv('SMTP_PORT') ?: 465);
+
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = getenv('SMTP_HOST') ?: 'smtp.hostinger.com';
+            $mail->Port = $port;
+            $mail->SMTPAuth = true;
+            $mail->Username = $username;
+            $mail->Password = $password;
+            $mail->SMTPSecure = $port === 465 ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
+            // Le visiteur attend la reponse de l'API : une panne SMTP ne doit pas le bloquer
+            $mail->Timeout = 8;
+            $mail->CharSet = PHPMailer::CHARSET_UTF8;
+
+            $mail->setFrom($username, getenv('SMTP_FROM_NAME') ?: 'DevDynamics');
+            $mail->addAddress(getenv('NOTIFY_EMAIL') ?: $username);
+            $mail->addReplyTo($message['email'], $message['name']);
+            $mail->Subject = 'Message du site : ' . ($message['subject'] ?: $message['name']);
+            $mail->isHTML(false);
+            $mail->Body = self::contactBody($message);
+
+            return $mail->send();
+        } catch (Exception $e) {
+            error_log('Mailer::notifyContact : ' . $e->getMessage());
+            return false;
         }
-        return $name;
-    }
-
-    private static function extractDomain($email) {
-        $parts = explode('@', $email);
-        return count($parts) === 2 ? $parts[1] : 'localhost';
     }
 }

@@ -68,6 +68,41 @@ document.querySelectorAll('[data-copy]').forEach((button) => {
   });
 });
 
+// ---------- Coordonnées ----------
+
+// Les coordonnées écrites dans la page valent si l'API ne répond pas. Celles de
+// l'administration les remplacent dès qu'elles arrivent.
+const orgElements = document.querySelectorAll('[data-org]');
+
+if (orgElements.length) {
+  fetch(new URL('api/organization', document.querySelector('script[src*="js/site.js"]').src.split('js/site.js')[0]))
+    .then((response) => (response.ok ? response.json() : null))
+    .then((result) => {
+      if (!result || !result.data) return;
+      const organization = result.data;
+      orgElements.forEach((element) => {
+        const value = organization[element.dataset.org];
+        if (!value) return;
+        element.textContent = value;
+        if (element.dataset.org === 'email') element.href = `mailto:${value}`;
+        if (element.dataset.org === 'phone') element.href = `tel:${value.replace(/[^+0-9]/g, '')}`;
+      });
+      window.dispatchEvent(new CustomEvent('organization-loaded', { detail: organization }));
+    })
+    .catch(() => {});
+}
+
+// ---------- Témoignages ----------
+
+function testimonialCard(item, extra) {
+  return `
+    <figure class="card testimonial fade-in">
+      ${item.video_id ? `<div class="video-frame"><iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(item.video_id)}" title="Vidéo de ${escapeHtml(item.name)}" loading="lazy" allowfullscreen></iframe></div>` : ''}
+      <blockquote>${escapeHtml(item.content)}</blockquote>
+      <figcaption><strong>${escapeHtml(item.name)}</strong>${item.role_title ? `, ${escapeHtml(item.role_title)}` : ''}${extra || ''}</figcaption>
+    </figure>`;
+}
+
 // ---------- Formulaire de contact ----------
 
 const contactForm = document.getElementById('contact-form');

@@ -18,6 +18,11 @@
  * fichier : aucune requete de lecture ne la selectionne.
  */
 
+require_once __DIR__ . '/../utils/RateLimit.php';
+
+// Large : une salle entiere repond souvent depuis la meme connexion
+const FORM_MAX_PER_HOUR = 300;
+
 const FORM_FIELD_TYPES = ['text', 'textarea', 'number', 'date', 'single', 'multiple', 'select', 'scale', 'yesno'];
 const FORM_OPTION_TYPES = ['single', 'multiple', 'select'];
 const FORM_CHART_TYPES = ['single', 'multiple', 'select', 'scale', 'yesno', 'number'];
@@ -521,6 +526,10 @@ $router->post('\/forms/public/:slug/responses', function($params) use ($db) {
         [$values, $error] = form_validate_answers(form_load_fields($db, $form['id']), $body['answers'] ?? []);
         if ($error !== null) {
             Response::error($error, 400);
+        }
+
+        if (rate_limited($db, 'form', FORM_MAX_PER_HOUR, 3600)) {
+            Response::error('Trop de réponses envoyées depuis cette connexion. Réessayez plus tard.', 429);
         }
 
         $db->beginTransaction();

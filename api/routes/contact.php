@@ -1,112 +1,124 @@
 <?php
 /**
- * Contact Routes
- * GET    /api/contact - Get contact messages (admin)
- * POST   /api/contact - Submit contact form (public)
- * PUT    /api/contact/:id/status - Update message status (admin)
- * DELETE /api/contact/:id - Delete message (admin)
+ * Messages de contact
+ *
+ * POST   /api/contact             - Envoyer un message (public)
+ * GET    /api/contact             - Liste des messages (admin)
+ * PUT    /api/contact/:id/status  - Changer le statut (admin)
+ * DELETE /api/contact/:id         - Supprimer (admin)
  */
+
+require_once __DIR__ . '/../utils/RateLimit.php';
+require_once __DIR__ . '/../utils/Mailer.php';
+
+const CONTACT_MAX_PER_HOUR = 10;
+
+/**
+ * Controle la saisie. Rend [valeurs, null] ou [null, message d'erreur].
+ */
+function contact_validate(array $body) {
+    $text = function ($key) use ($body) {
+        $value = $body[$key] ?? '';
+        return is_scalar($value) ? trim((string) $value) : '';
+    };
+
+    $name = $text('name');
+    $email = $text('email');
+    $phone = $text('phone');
+    $subject = $text('subject');
+    $message = $text('message');
+
+    if ($name === '' || mb_strlen($name) > 255) {
+        return [null, 'Indiquez votre nom'];
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 255) {
+        return [null, 'Indiquez une adresse e-mail valide'];
+    }
+    if (mb_strlen($phone) > 20) {
+        return [null, 'Le numéro de téléphone est trop long'];
+    }
+    if (mb_strlen($subject) > 255) {
+        return [null, 'Le sujet est trop long'];
+    }
+    if ($message === '' || mb_strlen($message) > 10000) {
+        return [null, 'Écrivez votre message (10 000 caractères au plus)'];
+    }
+
+    return [[
+        'name' => $name,
+        'email' => $email,
+        'phone' => $phone === '' ? null : $phone,
+        'subject' => $subject,
+        'message' => $message,
+    ], null];
+}
 
 $router = Router::getInstance();
 $db = Database::getInstance();
 
-// Get all contact messages (admin only)
-$router->get('\/contact', function($params) use ($db) {
-    try {
-        $messages = $db->fetchAll(
-            "SELECT * FROM contact_messages ORDER BY created_at DESC"
-        );
-
-        Response::success($messages);
-    } catch (Exception $e) {
-        Response::error('Failed to fetch messages: ' . $e->getMessage(), 500);
-    }
-}, ['adminMiddleware']);
-
-// Submit contact form (public)
 $router->post('\/contact', function($params) use ($db) {
     $body = Router::getBody();
 
-    if (empty($body['name']) || empty($body['email']) || empty($body['message'])) {
-        Response::error('Name, email and message are required', 400);
+    // Piege a robots : un champ invisible que seul un script remplit
+    if (!empty($body['website'])) {
+        Response::success(null, 'Message envoyé', 201);
     }
 
-    if (!filter_var($body['email'], FILTER_VALIDATE_EMAIL)) {
-        Response::error('Invalid email format', 400);
+    [$values, $error] = contact_validate($body);
+    if ($error !== null) {
+        Response::error($error, 400);
+    }
+
+    if (rate_limited($db, 'contact', CONTACT_MAX_PER_HOUR, 3600)) {
+        Response::error('Trop de messages envoyés. Réessayez plus tard ou écrivez à contact@dev-dynamics.org.', 429);
     }
 
     try {
         $db->query(
-            "INSERT INTO contact_messages (name, email, phone, subject, message, status, created_at)
-             VALUES (?, ?, ?, ?, ?, 'new', NOW())",
-            [
-                $body['name'],
-                $body['email'],
-                $body['phone'] ?? null,
-                trim((string) ($body['subject'] ?? '')),
-                $body['message']
-            ]
+            "INSERT INTO contact_messages (name, email, phone, subject, message, status)
+             VALUES (?, ?, ?, ?, ?, 'new')",
+            array_values($values)
         );
-
-        $messageId = $db->lastInsertId();
-
-        Response::success([
-            'message_id' => $messageId
-        ], 'Message sent successfully', 201);
     } catch (Exception $e) {
-        Response::error('Failed to send message: ' . $e->getMessage(), 500);
+        error_log('contact : ' . $e->getMessage());
+        Response::error("Le message n'a pas pu être enregistré. Écrivez à contact@dev-dynamics.org.", 500);
     }
+
+    // Apres l'enregistrement : une panne de messagerie ne perd pas le message
+    Mailer::notifyContact($values);
+
+    Response::success(null, 'Message envoyé', 201);
 });
 
-// Update message status (admin only)
-$router->put('\/contact/:id/status', function($params) use ($db) {
-    $body = Router::getBody();
-
-    if (empty($body['status'])) {
-        Response::error('Status is required', 400);
-    }
-
-    if (!in_array($body['status'], ['new', 'read', 'replied'])) {
-        Response::error('Invalid status', 400);
-    }
-
+$router->get('\/contact', function($params) use ($db) {
     try {
-        $message = $db->fetchOne(
-            "SELECT id FROM contact_messages WHERE id = ? LIMIT 1",
-            [$params['id']]
-        );
-
-        if (!$message) {
-            Response::notFound('Message not found');
-        }
-
-        $db->query(
-            "UPDATE contact_messages SET status = ? WHERE id = ?",
-            [$body['status'], $params['id']]
-        );
-
-        Response::success(null, 'Message status updated');
+        Response::success($db->fetchAll(
+            "SELECT id, name, email, phone, subject, message, status, created_at
+             FROM contact_messages ORDER BY created_at DESC, id DESC"
+        ));
     } catch (Exception $e) {
-        Response::error('Failed to update message: ' . $e->getMessage(), 500);
+        Response::error('Lecture impossible : ' . $e->getMessage(), 500);
     }
 }, ['adminMiddleware']);
 
-// Delete message (admin only)
+$router->put('\/contact/:id/status', function($params) use ($db) {
+    $status = Router::getBody()['status'] ?? '';
+    if (!in_array($status, ['new', 'read', 'replied'], true)) {
+        Response::error('Statut invalide', 400);
+    }
+    try {
+        $db->query("UPDATE contact_messages SET status = ? WHERE id = ?", [$status, $params['id']]);
+    } catch (Exception $e) {
+        Response::error('Modification impossible : ' . $e->getMessage(), 500);
+    }
+    Response::success(null, 'Statut modifié');
+}, ['adminMiddleware']);
+
 $router->delete('\/contact/:id', function($params) use ($db) {
     try {
-        $message = $db->fetchOne(
-            "SELECT id FROM contact_messages WHERE id = ? LIMIT 1",
-            [$params['id']]
-        );
-
-        if (!$message) {
-            Response::notFound('Message not found');
-        }
-
         $db->query("DELETE FROM contact_messages WHERE id = ?", [$params['id']]);
-
-        Response::success(null, 'Message deleted successfully');
     } catch (Exception $e) {
-        Response::error('Failed to delete message: ' . $e->getMessage(), 500);
+        Response::error('Suppression impossible : ' . $e->getMessage(), 500);
     }
+    Response::success(null, 'Message supprimé');
 }, ['adminMiddleware']);
