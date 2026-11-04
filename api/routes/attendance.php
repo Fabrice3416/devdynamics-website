@@ -8,12 +8,9 @@
  * GET    /api/attendance/export  - Feuille de presence en PDF (admin)
  */
 
+require_once __DIR__ . '/../utils/PdfLetterhead.php';
+
 const ATTENDANCE_TITLE = 'Feuille de présence à la restitution du 2 novembre 2026';
-const ATTENDANCE_CONTACT = [
-    '190, rue 15-16 B, Cap-Haïtien, Haïti',
-    '+509 47 41 8737',
-    'contact@dev-dynamics.org',
-];
 const ATTENDANCE_GENDERS = ['F' => 'Féminin', 'M' => 'Masculin'];
 
 /**
@@ -97,21 +94,7 @@ function attendance_pdf_lines($text, $width, $fontSize) {
  * En-tete DevDynamics, titre et ligne de colonnes : repetes sur chaque page.
  */
 function attendance_pdf_page_top($pdf, array $columns, $pageNumber) {
-    // Logo a gauche, coordonnees collees a la marge droite
-    $top = $pdf->cursorY;
-    $pdf->setFont(9);
-    $right = $pdf->pageWidth - $pdf->marginRight;
-    foreach (ATTENDANCE_CONTACT as $n => $line) {
-        $pdf->textRight($line, $right, $top - 9 - $n * 13);
-    }
-    $pdf->moveDown(8);
-    $pdf->image(__DIR__ . '/../../assets/images/logo_6_pdf.jpg', 140);
-    $pdf->cursorY = $top - 52;
-    $pdf->hr();
-    $pdf->moveDown(10);
-    $pdf->setFont(14, true);
-    $pdf->text(ATTENDANCE_TITLE);
-    $pdf->moveDown(8);
+    pdf_letterhead($pdf, ATTENDANCE_TITLE);
 
     $pdf->setFont(8);
     $pdf->textAt('Page ' . $pageNumber, $pdf->marginLeft, $pdf->marginBottom - 20);

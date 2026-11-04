@@ -18,7 +18,7 @@ $check = function ($label, $ok, $detail = '') use (&$failures) {
 // Pages du nouveau site. A etendre a chaque phase.
 $pages = array_map(fn($p) => "{$ROOT}/{$p}", [
     'index.html', 'pages/a-propos.html', 'pages/essor.html', 'pages/soutenir.html',
-    'pages/contact.html', 'pages/confidentialite.html', 'pages/realisations.html', 'pages/realisation.html',
+    'pages/contact.html', 'pages/confidentialite.html', 'pages/realisations.html', 'pages/realisation.html', 'pages/formulaire.html',
 ]);
 // Liens du menu vers des pages des phases suivantes. A vider avant la bascule.
 $aVenir = ['partenaires.html'];
@@ -83,7 +83,7 @@ $check('aucune couleur en dur hors des variables', !$durs[0], implode(', ', arra
 // ---------- Pages ----------
 
 $emoji = '/[\x{1F000}-\x{1FAFF}\x{2600}-\x{27BF}\x{FE0F}\x{2B50}\x{2705}\x{2B06}]/u';
-foreach (array_merge($pages, ["{$ROOT}/css/site.css", "{$ROOT}/js/site.js", "{$ROOT}/js/pages/realisations.js", "{$ROOT}/js/pages/admin-projects.js"]) as $fichier) {
+foreach (array_merge($pages, ["{$ROOT}/css/site.css", "{$ROOT}/js/site.js", "{$ROOT}/js/pages/realisations.js", "{$ROOT}/js/pages/admin-projects.js", "{$ROOT}/js/pages/formulaire.js", "{$ROOT}/js/pages/admin-forms.js"]) as $fichier) {
     $check('aucun emoji : ' . basename($fichier), !preg_match($emoji, file_get_contents($fichier)));
 }
 
@@ -103,6 +103,8 @@ foreach ($pages as $page) {
         $check("{$nom} : lien {$chemin}", is_file(dirname($page) . '/' . $chemin));
     }
 }
+
+$check('formulaire.html : non indexee', str_contains(file_get_contents("{$ROOT}/pages/formulaire.html"), 'noindex'));
 
 exec('php ' . escapeshellarg("{$ROOT}/tools/build-layout.php") . ' --check', $sortie, $code);
 $check('en-tete et pied de page a jour dans toutes les pages', $code === 0, implode(' ', $sortie));

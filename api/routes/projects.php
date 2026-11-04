@@ -193,6 +193,9 @@ $router->delete('\/projects/:id', function($params) use ($db) {
     try {
         $db->query("DELETE FROM projects WHERE id = ?", [$params['id']]);
     } catch (Exception $e) {
+        if (strpos($e->getMessage(), 'foreign key constraint') !== false) {
+            Response::error('Ce projet porte des formulaires : supprimez-les d\'abord', 409);
+        }
         Response::error('Suppression impossible : ' . $e->getMessage(), 500);
     }
     Response::success(null, 'Projet supprimé');

@@ -155,6 +155,8 @@ class Database {
      * Rollback transaction
      */
     public function rollback() {
+        // Une erreur survenue avant le debut de la transaction ne doit pas en lever une seconde
+        if (!$this->connection->inTransaction()) return false;
         return $this->connection->rollBack();
     }
 }

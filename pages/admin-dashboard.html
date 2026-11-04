@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../css/global.css?v=10">
   <link rel="stylesheet" href="../css/components.css?v=10">
   <link rel="stylesheet" href="../css/pages/admin.css?v=10">
+  <link rel="stylesheet" href="../css/pages/admin-forms.css?v=10">
 </head>
 <body class="admin-page">
   <!-- SIDEBAR -->
@@ -47,6 +48,9 @@
       </a>
       <a href="#projects" class="menu-item" data-page="projects">
         <i class="ti ti-folders"></i> Projets
+      </a>
+      <a href="#forms" class="menu-item" data-page="forms">
+        <i class="ti ti-forms"></i> Formulaires
       </a>
       <a href="#presence" class="menu-item" data-page="presence">
         <i class="ti ti-clipboard-check"></i> Feuille de présence
@@ -207,6 +211,17 @@
           </button>
         </div>
         <div id="projects-list" class="table-container">
+          <!-- Chargé dynamiquement -->
+        </div>
+      </section>
+
+      <!-- FORMULAIRES PAGE -->
+      <section id="forms-page" class="page-content">
+        <div class="page-header">
+          <h2 id="forms-heading">Formulaires</h2>
+          <div class="action-buttons" id="forms-actions"></div>
+        </div>
+        <div id="forms-content">
           <!-- Chargé dynamiquement -->
         </div>
       </section>
@@ -432,6 +447,7 @@
   <script src="../js/utils.js?v=10"></script>
   <script src="../js/pages/admin-dashboard.js?v=10"></script>
   <script src="../js/pages/admin-projects.js?v=10"></script>
+  <script src="../js/pages/admin-forms.js?v=10"></script>
   <script src="../js/pages/admin-presence.js?v=10"></script>
 </body>
 </html>
