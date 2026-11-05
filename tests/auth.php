@@ -21,7 +21,7 @@ const SCHEMA_USERS = [
 ];
 
 // Valeurs acceptees par l'enum users.role
-const SCHEMA_ROLES = ['admin', 'editor', 'student'];
+const SCHEMA_ROLES = ['admin', 'editor'];
 
 // ---------- Doublures ----------
 
@@ -283,7 +283,7 @@ function middlewareAvecRole($role) {
 
 check('un admin passe editorMiddleware', middlewareAvecRole('admin'), 200);
 check('un editor passe editorMiddleware', middlewareAvecRole('editor'), 200);
-check('un student est refusé', middlewareAvecRole('student'), 403);
+check('un ancien jeton student est refusé', middlewareAvecRole('student'), 403);
 check('le rôle instructor n’existe plus', function_exists('instructorMiddleware'), false);
 check('editorMiddleware a remplacé instructorMiddleware', function_exists('editorMiddleware'), true);
 

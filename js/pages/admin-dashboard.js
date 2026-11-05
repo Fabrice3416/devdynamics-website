@@ -101,14 +101,11 @@ async function loadUsers() {
     const { data } = await api.request('/admin/users');
     const current = getStorage('user');
 
-    // Les comptes étudiants sont retirés avec les cours : ils ne s'administrent plus ici
-    const users = data.filter(user => user.role !== 'student');
-
     container.innerHTML = `
       <table class="table-stack">
         <thead><tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Actions</th></tr></thead>
         <tbody>
-          ${users.map(user => `
+          ${data.map(user => `
             <tr>
               <td data-label="Nom">${escapeHtml(user.full_name)}</td>
               <td data-label="E-mail">${escapeHtml(user.email)}</td>

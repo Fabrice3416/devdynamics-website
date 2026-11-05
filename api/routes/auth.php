@@ -93,10 +93,11 @@ $router->post('\/auth/register', function($params) use ($db) {
         // Hash password
         $hashedPassword = password_hash($body['password'], PASSWORD_BCRYPT);
 
-        // Les seuls roles que la colonne accepte sont admin, editor et student
-        $role = $body['role'] ?? 'student';
-        if (!in_array($role, ['admin', 'editor', 'student'])) {
-            $role = 'student';
+        // Les seuls roles que la colonne accepte sont admin et editor. Par defaut le
+        // moins eleve : un role oublie ne doit jamais ouvrir l'administration.
+        $role = $body['role'] ?? 'editor';
+        if (!in_array($role, ['admin', 'editor'], true)) {
+            $role = 'editor';
         }
 
         $db->query(

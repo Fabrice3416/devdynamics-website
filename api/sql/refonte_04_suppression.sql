@@ -33,3 +33,7 @@ DROP TABLE IF EXISTS acp_candidatures;
 DROP TABLE IF EXISTS acp_counters;
 DROP TABLE IF EXISTS acp_fiches_counters;
 DROP TABLE IF EXISTS acp_fiches_etude;
+
+-- Aucun compte étudiant ne reste (vérifié le 05/11/2026) : le rôle disparaît avec les cours.
+-- S'arrête sur une erreur si un compte l'utilisait encore, sans rien modifier.
+ALTER TABLE users MODIFY role ENUM('admin','editor') DEFAULT 'editor';

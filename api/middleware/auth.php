@@ -47,7 +47,7 @@ function adminMiddleware() {
 /**
  * Verify admin or editor role middleware
  *
- * La colonne users.role est un enum ('admin','editor','student') : le role
+ * La colonne users.role est un enum ('admin','editor') : le role
  * 'instructor' que ce code testait ne pouvait jamais exister.
  */
 function editorMiddleware() {
