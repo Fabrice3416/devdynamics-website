@@ -6,6 +6,19 @@ const PROJECT_TYPE_LABELS = { formation: 'Formation', produit: 'Produit', missio
 const PROJECT_STATUS_LABELS = { draft: 'Brouillon', published: 'Publié', hidden: 'Masqué' };
 let projectsById = {};
 
+// Même écriture que sur le site public (js/pages/realisations.js)
+function adminProjectPeriod(project) {
+  if (project.period_label) return project.period_label;
+  if (!project.start_date) return '-';
+  const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+  const month = (date) => {
+    const [year, number] = date.split('-');
+    return `${months[Number(number) - 1]} ${year}`;
+  };
+  const text = project.end_date ? `${month(project.start_date)} - ${month(project.end_date)}` : month(project.start_date);
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 async function loadProjects() {
   const container = document.getElementById('projects-list');
   container.textContent = 'Chargement…';
@@ -31,7 +44,7 @@ async function loadProjects() {
             <tr>
               <td>${escapeHtml(project.name)}</td>
               <td>${PROJECT_TYPE_LABELS[project.type] || escapeHtml(project.type)}</td>
-              <td>${escapeHtml(project.period_label || project.start_date || '-')}</td>
+              <td>${escapeHtml(adminProjectPeriod(project))}</td>
               <td>${project.participants === null ? '-' : escapeHtml(project.participants)}</td>
               <td><span class="badge badge-${project.status === 'published' ? 'success' : 'secondary'}">${PROJECT_STATUS_LABELS[project.status] || escapeHtml(project.status)}</span></td>
               <td>
