@@ -7,13 +7,16 @@
  * GET    /api/projects/:slug  - Fiche d'un projet publie (public)
  * POST   /api/projects        - Creer un projet (admin)
  * PUT    /api/projects/:id    - Modifier un projet (admin)
+ * PUT    /api/projects/:id/status - Publier, masquer (admin)
  * DELETE /api/projects/:id    - Supprimer un projet (admin)
  */
 
 const PROJECT_TYPES = ['formation', 'produit', 'mission', 'autre'];
-const PROJECT_STATUSES = ['draft', 'published'];
+// draft : en preparation. hidden : pret, mais l'admin choisit de ne pas l'afficher.
+// Seul published apparait sur le site.
+const PROJECT_STATUSES = ['draft', 'published', 'hidden'];
 
-// Colonnes visibles du public : ni brouillon ni date technique
+// Colonnes visibles du public : ni statut ni date technique
 const PROJECT_PUBLIC_COLUMNS = 'id, slug, name, type, start_date, end_date, period_label, summary, description, participants, speakers, external_url, image_url';
 
 function project_slug($name) {
@@ -184,9 +187,28 @@ $router->put('\/projects/:id', function($params) use ($db) {
             array_merge(array_values($values), [$params['id']])
         );
     } catch (Exception $e) {
+        if (strpos($e->getMessage(), 'truncated') !== false) {
+            Response::error('Ce statut demande le script api/sql/refonte_05_projets_masques.sql', 409);
+        }
         Response::error('Modification impossible : ' . $e->getMessage(), 500);
     }
     Response::success(null, 'Projet modifié');
+}, ['adminMiddleware']);
+
+$router->put('\/projects/:id/status', function($params) use ($db) {
+    $status = Router::getBody()['status'] ?? '';
+    if (!in_array($status, PROJECT_STATUSES, true)) {
+        Response::error('Statut invalide', 400);
+    }
+    try {
+        $db->query("UPDATE projects SET status = ? WHERE id = ?", [$status, $params['id']]);
+    } catch (Exception $e) {
+        if (strpos($e->getMessage(), 'truncated') !== false) {
+            Response::error('Ce statut demande le script api/sql/refonte_05_projets_masques.sql', 409);
+        }
+        Response::error('Modification impossible : ' . $e->getMessage(), 500);
+    }
+    Response::success(null, 'Statut modifié');
 }, ['adminMiddleware']);
 
 $router->delete('\/projects/:id', function($params) use ($db) {

@@ -7,8 +7,8 @@
   <title>Administration | DevDynamics</title>
   <link rel="icon" type="image/jpeg" href="../assets/images/new_icon_2.jpg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.49.0/dist/tabler-icons.min.css">
-  <link rel="stylesheet" href="../css/site.css?v=14">
-  <link rel="stylesheet" href="../css/pages/admin.css?v=14">
+  <link rel="stylesheet" href="../css/site.css?v=15">
+  <link rel="stylesheet" href="../css/pages/admin.css?v=15">
 </head>
 <body class="admin-page">
   <aside class="admin-sidebar" id="admin-sidebar" aria-label="Menu de l'administration">
@@ -249,8 +249,9 @@
         <div class="form-group">
           <label for="project-status">Statut</label>
           <select id="project-status" name="status">
-            <option value="draft">Brouillon (invisible sur le site)</option>
-            <option value="published">Publié</option>
+            <option value="draft">Brouillon (en préparation, absent du site)</option>
+            <option value="published">Publié (affiché sur le site)</option>
+            <option value="hidden">Masqué (prêt, mais absent du site)</option>
           </select>
         </div>
         <div class="form-group">
@@ -299,12 +300,12 @@
     </div>
   </div>
 
-  <script src="../js/api.js?v=14"></script>
-  <script src="../js/utils.js?v=14"></script>
-  <script src="../js/pages/admin-dashboard.js?v=14"></script>
-  <script src="../js/pages/admin-projects.js?v=14"></script>
-  <script src="../js/pages/admin-modules.js?v=14"></script>
-  <script src="../js/pages/admin-forms.js?v=14"></script>
-  <script src="../js/pages/admin-presence.js?v=14"></script>
+  <script src="../js/api.js?v=15"></script>
+  <script src="../js/utils.js?v=15"></script>
+  <script src="../js/pages/admin-dashboard.js?v=15"></script>
+  <script src="../js/pages/admin-projects.js?v=15"></script>
+  <script src="../js/pages/admin-modules.js?v=15"></script>
+  <script src="../js/pages/admin-forms.js?v=15"></script>
+  <script src="../js/pages/admin-presence.js?v=15"></script>
 </body>
 </html>

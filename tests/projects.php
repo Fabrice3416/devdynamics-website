@@ -103,6 +103,18 @@ $call('get \/projects/:slug', ['slug' => 'x']);
 $check('la fiche publique exclut les brouillons', str_contains(end($db->queries)[0], "status = 'published'"));
 $check('le public ne reçoit pas le statut', !str_contains(PROJECT_PUBLIC_COLUMNS, 'status'));
 
+// ---------- Projet masque ----------
+
+$check('le statut masqué est accepté', project_validate(['status' => 'hidden'] + $valid)[1] === null);
+$db->queries = [];
+$check('masquer un projet', $call('put \\/projects/:id/status', ['id' => 3], ['status' => 'hidden'])->getCode() === 200);
+$check('le statut masqué est écrit', end($db->queries)[1] === ['hidden', 3]);
+$check('un statut inconnu est refusé', $call('put \\/projects/:id/status', ['id' => 3], ['status' => 'cache'])->getCode() === 400);
+$migration = file_get_contents("{$ROOT}/api/sql/refonte_05_projets_masques.sql");
+$check('le schéma connaît les trois statuts', str_contains($migration, "ENUM('" . implode("','", PROJECT_STATUSES) . "')"));
+$testimonials = file_get_contents("{$ROOT}/api/routes/project-testimonials.php");
+$check('les témoignages d\'un projet masqué restent hors du site', substr_count($testimonials, "p.status = 'published'") === 2);
+
 // ---------- Écriture ----------
 
 $db->duplicates = 1;

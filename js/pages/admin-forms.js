@@ -152,7 +152,7 @@ async function openFormBuilder(id) {
             <div class="form-group">
               <label for="fb-project">Projet</label>
               <select id="fb-project" name="project_id" required>
-                ${projects.map(project => `<option value="${Number(project.id)}"${form && Number(form.project_id) === Number(project.id) ? ' selected' : ''}>${escapeHtml(project.name)}${project.status === 'draft' ? ' (brouillon)' : ''}</option>`).join('')}
+                ${projects.map(project => `<option value="${Number(project.id)}"${form && Number(form.project_id) === Number(project.id) ? ' selected' : ''}>${escapeHtml(project.name)}${project.status === 'published' ? '' : ` (${project.status === 'hidden' ? 'masqué' : 'brouillon'})`}</option>`).join('')}
               </select>
             </div>
             <div class="form-group">

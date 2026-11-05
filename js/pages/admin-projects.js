@@ -3,6 +3,7 @@
 // ============================================
 
 const PROJECT_TYPE_LABELS = { formation: 'Formation', produit: 'Produit', mission: 'Mission', autre: 'Autre' };
+const PROJECT_STATUS_LABELS = { draft: 'Brouillon', published: 'Publié', hidden: 'Masqué' };
 let projectsById = {};
 
 async function loadProjects() {
@@ -32,10 +33,13 @@ async function loadProjects() {
               <td>${PROJECT_TYPE_LABELS[project.type] || escapeHtml(project.type)}</td>
               <td>${escapeHtml(project.period_label || project.start_date || '-')}</td>
               <td>${project.participants === null ? '-' : escapeHtml(project.participants)}</td>
-              <td><span class="badge badge-${project.status === 'published' ? 'success' : 'secondary'}">${project.status === 'published' ? 'Publié' : 'Brouillon'}</span></td>
+              <td><span class="badge badge-${project.status === 'published' ? 'success' : 'secondary'}">${PROJECT_STATUS_LABELS[project.status] || escapeHtml(project.status)}</span></td>
               <td>
                 <div class="action-buttons">
                   <button class="btn btn-primary btn-sm" onclick="editProject(${Number(project.id)})">Modifier</button>
+                  ${project.status === 'published'
+                    ? `<button class="btn btn-secondary btn-sm" onclick="setProjectStatus(${Number(project.id)}, 'hidden')">Masquer du site</button>`
+                    : `<button class="btn btn-secondary btn-sm" onclick="setProjectStatus(${Number(project.id)}, 'published')">Afficher sur le site</button>`}
                   <button class="btn btn-secondary btn-sm" onclick="toggleTestimonials(${Number(project.id)})">${Number(project.testimonials_open) ? 'Fermer la collecte' : 'Ouvrir la collecte'}</button>
                   ${Number(project.testimonials_open) ? `<button class="btn btn-secondary btn-sm" onclick="copyTestimonialLink(${Number(project.id)}, this)">Lien témoignage</button>` : ''}
                   <button class="btn btn-secondary btn-sm" onclick="deleteProject(${Number(project.id)})">Supprimer</button>
@@ -70,6 +74,15 @@ function openProjectForm(project) {
 
 function editProject(id) {
   openProjectForm(projectsById[id]);
+}
+
+async function setProjectStatus(id, status) {
+  try {
+    await api.request(`/projects/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
+    loadProjects();
+  } catch (error) {
+    alert(error.message || 'Le changement a échoué.');
+  }
 }
 
 async function toggleTestimonials(id) {

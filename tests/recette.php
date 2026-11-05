@@ -120,6 +120,13 @@ check('modification relue', data($fiche)['name'] === 'Nom changé' && (int) data
 status_is('modifier un absent', req('PUT', '/projects/999999', $draft, $token), 404);
 status_is('suppression du doublon', req('DELETE', "/projects/{$pid2}", null, $token), 200);
 
+status_is('masquer', req('PUT', "/projects/{$pid}/status", ['status' => 'hidden'], $token), 200);
+status_is('masqué : fiche absente', req('GET', '/projects/ete-a-l-ecole'), 404);
+check('masqué : hors de la liste', !in_array('ete-a-l-ecole', array_column(data(req('GET', '/projects')), 'slug'), true));
+check("masqué : présent dans l'admin", array_column(data(req('GET', '/projects/all', null, $token)), 'status', 'slug')['ete-a-l-ecole'] === 'hidden');
+status_is('réafficher', req('PUT', "/projects/{$pid}/status", ['status' => 'published'], $token), 200);
+status_is('réaffiché : fiche présente', req('GET', '/projects/ete-a-l-ecole'), 200);
+
 section('Images');
 $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAEBgIApD5fRAAAAABJRU5ErkJggg==');
 status_is('envoi sans jeton', req('POST', '/uploads', [], null, ['file' => ['a.png', $png, 'image/png']]), 401);
